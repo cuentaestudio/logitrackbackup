@@ -23,7 +23,7 @@ interface LoginPageProps {
 }
 
 function LoginPage({ onLogin }: LoginPageProps) {
-  const isDev = true
+  const showDemoUsers = import.meta.env.VITE_SHOW_DEMO_USERS === 'true'
   const navigate = useNavigate()
   const [credentials, setCredentials] = useState<LoginCredentials>({
     dni: '',
@@ -191,7 +191,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
           </Box>
 
           {/* Demo credentials */}
-          {isDev && (
+          {showDemoUsers && (
             <Box>
               <Divider sx={{ my: 3 }}>
                 <Typography variant="caption" color="text.disabled" fontWeight={600}>

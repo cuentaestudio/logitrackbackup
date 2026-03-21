@@ -39,8 +39,6 @@ import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded'
 import SupportAgentRoundedIcon from '@mui/icons-material/SupportAgentRounded'
 import WarehouseRoundedIcon from '@mui/icons-material/WarehouseRounded'
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
-import type { User, LoginCredentials } from '../../types'
-import { authService } from '../../services/authService'
 import warehouseImage from '../../assets/warehouse.jpg'
 
 type ReviewCategory = 'entrega' | 'vehiculo' | 'general'
@@ -233,9 +231,6 @@ export default function LandingPage() {
   })
   const [reviewError, setReviewError] = useState('')
   const [reviewSent, setReviewSent] = useState(false)
-  const [loginData, setLoginData] = useState<LoginCredentials>({ dni: '', password: '' })
-  const [loginError, setLoginError] = useState('')
-  const [loginLoading, setLoginLoading] = useState(false)
 
   const heroRef = useRef<HTMLElement | null>(null)
   const aboutRef = useRef<HTMLElement | null>(null)
@@ -274,41 +269,6 @@ export default function LandingPage() {
     setMenuOpen(false)
   }
 
-  const goToUserHome = (user: User) => {
-    navigate(user.role === 'transportista' ? '/transportista' : '/app')
-  }
-
-  const handleLogin = async () => {
-    setLoginError('')
-
-    if (!loginData.dni || !loginData.password) {
-      setLoginError('Completá DNI y contraseña para ingresar.')
-      return
-    }
-
-    if (!authService.isValidDni(loginData.dni)) {
-      setLoginError('El DNI debe tener 8 dígitos.')
-      return
-    }
-
-    setLoginLoading(true)
-
-    try {
-      const user = await authService.login(loginData)
-      if (!user) {
-        setLoginError('Credenciales inválidas. Probá con una cuenta demo.')
-        return
-      }
-
-      localStorage.setItem('user', JSON.stringify(user))
-      goToUserHome(user)
-    } catch {
-      setLoginError('No se pudo iniciar sesión en este momento.')
-    } finally {
-      setLoginLoading(false)
-    }
-  }
-
   const handleReviewSubmit = () => {
     if (!reviewForm.name.trim() || !reviewForm.comment.trim()) {
       setReviewError('Completá tu nombre y comentario para dejar la reseña.')
@@ -341,16 +301,11 @@ export default function LandingPage() {
     setReviewSent(true)
   }
 
-  const fillDemo = (dni: string) => {
-    setLoginData({ dni, password: 'password123' })
-    setLoginError('')
-  }
-
   const navItems: Array<{ label: string; ref: React.RefObject<HTMLElement | null> }> = [
     { label: 'Inicio', ref: heroRef },
     { label: 'Solución', ref: aboutRef },
     { label: 'Reseñas', ref: reviewsRef },
-    { label: 'Ingresar', ref: loginRef },
+    { label: 'Acceso', ref: loginRef },
   ]
 
   return (
@@ -404,7 +359,7 @@ export default function LandingPage() {
               ))}
               <Button
                 variant="contained"
-                onClick={() => scrollTo(loginRef)}
+                onClick={() => navigate('/login')}
                 sx={{
                   ml: 1,
                   borderRadius: '999px',
@@ -413,7 +368,7 @@ export default function LandingPage() {
                   boxShadow: '0 10px 22px rgba(2,136,209,0.28)',
                 }}
               >
-                Entrar
+                Ingresar
               </Button>
             </Stack>
 
@@ -543,7 +498,7 @@ export default function LandingPage() {
                   size="large"
                   variant="contained"
                   endIcon={<ArrowForwardRoundedIcon />}
-                  onClick={() => scrollTo(loginRef)}
+                  onClick={() => navigate('/login')}
                   sx={{
                     px: 3.5,
                     py: 1.4,
@@ -554,7 +509,7 @@ export default function LandingPage() {
                     '&:hover': { background: '#E1F5FE', transform: 'translateY(-2px)' },
                   }}
                 >
-                  Iniciar sesión
+                  Ir a iniciar sesión
                 </Button>
                 <Button
                   size="large"
@@ -903,71 +858,45 @@ export default function LandingPage() {
       <Box component="section" ref={loginRef} sx={{ py: { xs: 8, md: 10 }, bgcolor: '#071D31' }}>
         <Container maxWidth="lg">
           <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={7}>
               <Typography sx={{ color: '#4FC3F7', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: '0.8rem' }}>
-                Acceso rápido
+                Acceso a la plataforma
               </Typography>
               <Typography variant="h3" sx={{ mt: 1.2, color: '#fff', fontWeight: 900, lineHeight: 1.1 }}>
-                Inicio de sesión integrado en la landing
+                Ingresá desde la pantalla de login que ya tenías
               </Typography>
-              <Typography sx={{ mt: 2.2, color: 'rgba(255,255,255,0.74)', lineHeight: 1.9 }}>
-                Dejé listo un bloque para ingresar sin salir de la página. También agregué accesos demo para mostrar supervisor, operador y transportista.
+              <Typography sx={{ mt: 2.2, color: 'rgba(255,255,255,0.74)', lineHeight: 1.9, maxWidth: 680 }}>
+                Dejé la landing enfocada en presentar el servicio. El acceso quedó separado para que el botón de ingresar te lleve a la página de inicio de sesión del front, manteniendo una experiencia más clara.
               </Typography>
 
               <Stack spacing={1.5} sx={{ mt: 3.5 }}>
                 {[
-                  { label: 'Supervisor demo', dni: '12345678' },
-                  { label: 'Operador demo', dni: '87654321' },
-                  { label: 'Transportista demo', dni: '11223344' },
-                ].map((account) => (
-                  <Paper key={account.dni} sx={{ p: 2, borderRadius: '18px', bgcolor: 'rgba(255,255,255,0.08)', color: '#fff' }}>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }}>
-                      <Box>
-                        <Typography sx={{ fontWeight: 800 }}>{account.label}</Typography>
-                        <Typography sx={{ color: 'rgba(255,255,255,0.66)' }}>DNI: {account.dni} · contraseña: password123</Typography>
-                      </Box>
-                      <Button variant="outlined" onClick={() => fillDemo(account.dni)} sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.28)' }}>
-                        Usar cuenta
-                      </Button>
-                    </Stack>
-                  </Paper>
+                  'La landing queda limpia y orientada a mostrar la propuesta logística.',
+                  'Las cuentas demo ya no aparecen acá, solo en la pantalla de login.',
+                  'El registro también sigue disponible desde su página dedicada.',
+                ].map((item) => (
+                  <Stack key={item} direction="row" spacing={1.5} alignItems="center">
+                    <CheckCircleRoundedIcon sx={{ color: '#4FC3F7' }} />
+                    <Typography sx={{ color: 'rgba(255,255,255,0.84)', fontWeight: 600 }}>{item}</Typography>
+                  </Stack>
                 ))}
               </Stack>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={5}>
               <Card sx={{ borderRadius: '28px', p: { xs: 3, md: 4 }, boxShadow: '0 24px 55px rgba(0,0,0,0.28)' }}>
                 <Typography variant="h5" sx={{ fontWeight: 900, color: '#0B1F33' }}>
-                  Ingresar ahora
+                  Accedé o creá tu cuenta
                 </Typography>
-                <Typography sx={{ mt: 1, color: '#5B7488' }}>
-                  Accedé al panel correspondiente según el tipo de usuario.
+                <Typography sx={{ mt: 1, color: '#5B7488', lineHeight: 1.8 }}>
+                  Entrá desde la página de login del sistema o registrate para usar la plataforma.
                 </Typography>
 
-                {loginError && (
-                  <Alert severity="error" sx={{ mt: 3 }} onClose={() => setLoginError('')}>
-                    {loginError}
-                  </Alert>
-                )}
-
-                <Stack spacing={2.2} sx={{ mt: 3 }}>
-                  <TextField
-                    label="DNI"
-                    value={loginData.dni}
-                    onChange={(event) => setLoginData((current) => ({ ...current, dni: event.target.value }))}
-                    placeholder="12345678"
-                    inputProps={{ maxLength: 8 }}
-                  />
-                  <TextField
-                    label="Contraseña"
-                    type="password"
-                    value={loginData.password}
-                    onChange={(event) => setLoginData((current) => ({ ...current, password: event.target.value }))}
-                  />
-                  <Button variant="contained" size="large" onClick={handleLogin} disabled={loginLoading} sx={{ py: 1.35, borderRadius: '16px', fontWeight: 800 }}>
-                    {loginLoading ? 'Ingresando...' : 'Entrar a la plataforma'}
+                <Stack spacing={2} sx={{ mt: 3 }}>
+                  <Button variant="contained" size="large" onClick={() => navigate('/login')} sx={{ py: 1.35, borderRadius: '16px', fontWeight: 800 }}>
+                    Ir a iniciar sesión
                   </Button>
-                  <Button variant="text" onClick={() => navigate('/register')} sx={{ fontWeight: 700 }}>
+                  <Button variant="outlined" size="large" onClick={() => navigate('/register')} sx={{ py: 1.35, borderRadius: '16px', fontWeight: 800 }}>
                     Crear cuenta nueva
                   </Button>
                 </Stack>
