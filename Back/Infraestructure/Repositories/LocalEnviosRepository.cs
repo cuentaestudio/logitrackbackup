@@ -21,6 +21,11 @@ namespace Back.Infraestructure.Repositories
             return Task.CompletedTask;
         }
 
+        public Task<List<Ruta>> GetHistorialRutas(Guid id)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<Paquete?> GetPaquete(Guid id)
         {   
             var paquete = _paquetes.FirstOrDefault(p => p.Id == id);

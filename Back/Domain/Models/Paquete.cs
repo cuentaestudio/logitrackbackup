@@ -16,15 +16,27 @@ namespace Back.Domain.Models
         public double Altura { get; set; }
         public double Ancho { get; set; }
         public PaqueteStatus Status { get; private set; } = PaqueteStatus.EnSucursal;
-        public Direccion Origen { get; set; } = new();
-        public Direccion Destino { get; set; } = new();
-
+        public Cliente Remitente { get; set; }
+        public Cliente Destinatario { get; set; }
+        public string? Descripcion { get; set; } = string.Empty;
+        public string? RazonCancelacion { get; private set; }
 
         public bool EstaEnSucursal => Status == PaqueteStatus.EnSucursal;
 
-        public Paquete()
+        private Paquete()
         {
             
+        }
+
+        public Paquete(string codigoSeguimiento, double peso, double altura, double ancho, Cliente origen, Cliente destino, string? descripcion)
+        {
+            CodigoSeguimiento = codigoSeguimiento;
+            Peso = peso;
+            Altura = altura;
+            Ancho = ancho;
+            Remitente = origen;
+            Destinatario = destino;
+            Descripcion = descripcion;
         }
 
         public void EnTransito()
@@ -42,7 +54,7 @@ namespace Back.Domain.Models
             Status = PaqueteStatus.Entregado;
         }
 
-        public void Cancelar()
+        public void Cancelar(string razon)
         {
             if (Status == PaqueteStatus.Entregado)
                 throw new InvalidOperationException("No se puede cancelar un paquete entregado.");
@@ -50,7 +62,10 @@ namespace Back.Domain.Models
             Status = PaqueteStatus.Cancelado;
         }
 
-
-
+        public void CambiarEstado(PaqueteStatus status)
+        {
+            Status = status;
+        }
+    
     }
 }
