@@ -9,7 +9,7 @@ namespace Back.Domain.Repositories
         Task<Paquete?> GetPaquete(Guid id);
         Task<Paquete?> GetPaqueteByCodigoSeguimiento(string codigoSeguimiento);
         Task<Ruta?> GetRutaById(Guid id);
-
         Task<List<Paquete>>GetPaquetesEnSucursal ();
+        Task<List<Ruta>> GetHistorialRutas(Guid id);
     }
 }

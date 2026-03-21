@@ -1,3 +1,4 @@
+using Back.Application.Services;
 using Back.Domain.Models;
 using Back.Domain.Repositories;
 using Microsoft.AspNetCore.Mvc;
@@ -9,19 +10,19 @@ namespace Back.Controllers
     public class EnviosController : ControllerBase
     {
         private readonly IEnviosRepository _enviosRepository;
+        private readonly EnviosService _enviosService;
 
-
-        public EnviosController(IEnviosRepository enviosRepository)
+        public EnviosController(IEnviosRepository enviosRepository, EnviosService enviosService)
         {
+            _enviosService = enviosService;
             _enviosRepository = enviosRepository;
         }
 
         [HttpPost("registrar-paquete")]
         public async Task<IResult> RegistrarPaquete([FromBody] RegistrarPaqueteRequest request)
-        {
+        {  
+            await  _enviosService.RegistrarPaquete(request);
 
-
-           
             return Results.Ok();
         }
 
@@ -72,21 +73,33 @@ namespace Back.Controllers
 
             var paquetes = await _enviosRepository.GetPaquetesEnSucursal();
 
-
             return Results.Ok(paquetes);
+        }
 
+        [HttpGet("rutas/historial")]
+        public async Task<IResult> GetHistorialRutas()
+        {
+            var rutas = await _enviosRepository.GetHistorialRutas(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value is string userIdStr && Guid.TryParse(userIdStr, out var userId) ? userId : Guid.Empty);
+
+            return Results.Ok(rutas);
         }
     }
 
 
     public class RegistrarPaqueteRequest
     {
-        public string Destinatario { get; set; } = string.Empty;
-        public string Direccion { get; set; } = string.Empty;
+        public double Peso { get; set; }
+        public string? Comentarios { get; set; }
+        public RegistrarClienteRequest Remitente { get; set; }
+        public RegistrarClienteRequest Destinatario { get; set; }
+    }
+
+    public class RegistrarClienteRequest
+    {
+    public string Direccion { get; set; } = string.Empty;
         public string Localidad { get; set; } = string.Empty;
         public string CP { get; set; } = string.Empty;
-
-        public string? Comentarios { get; set; }
-
+        public string Nombre { get; set; } = string.Empty;
+        public string Apellido { get; set; } = string.Empty;
     }
 }
