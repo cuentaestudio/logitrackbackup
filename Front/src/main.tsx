@@ -7,9 +7,9 @@ import { CssBaseline } from '@mui/material'
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1565C0',
-      light: '#1976d2',
-      dark: '#0D47A1',
+      main: '#0288D1',      // sky-blue / celeste
+      light: '#29B6F6',
+      dark: '#0277BD',
       contrastText: '#fff',
     },
     secondary: {
@@ -34,12 +34,12 @@ const theme = createTheme({
       dark: '#E65100',
     },
     info: {
-      main: '#0277BD',
+      main: '#0288D1',
       light: '#29B6F6',
-      dark: '#01579B',
+      dark: '#0277BD',
     },
     background: {
-      default: '#F0F4F8',
+      default: '#E8F4FD',   // very light celeste tint for the page background
       paper: '#FFFFFF',
     },
     text: {
@@ -49,18 +49,10 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h4: {
-      fontWeight: 700,
-    },
-    h5: {
-      fontWeight: 700,
-    },
-    h6: {
-      fontWeight: 600,
-    },
-    subtitle1: {
-      fontWeight: 600,
-    },
+    h4: { fontWeight: 700 },
+    h5: { fontWeight: 700 },
+    h6: { fontWeight: 600 },
+    subtitle1: { fontWeight: 600 },
     button: {
       textTransform: 'none',
       fontWeight: 600,
@@ -103,6 +95,15 @@ const theme = createTheme({
         },
       },
     },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          // Override the global Paper borderRadius so AppBar has no rounded corners
+          borderRadius: 0,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+        },
+      },
+    },
     MuiChip: {
       styleOverrides: {
         root: {
@@ -116,18 +117,11 @@ const theme = createTheme({
         variant: 'outlined',
       },
     },
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-        },
-      },
-    },
     MuiTableCell: {
       styleOverrides: {
         head: {
           fontWeight: 700,
-          backgroundColor: '#F5F7FA',
+          backgroundColor: '#F0F8FF',
         },
       },
     },

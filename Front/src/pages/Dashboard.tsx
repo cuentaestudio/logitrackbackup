@@ -12,13 +12,19 @@ import {
   Card,
   CardContent,
   Stack,
+  Chip,
+  ToggleButtonGroup,
+  ToggleButton,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import FileDownloadIcon from '@mui/icons-material/FileDownload'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb'
+import BlockIcon from '@mui/icons-material/Block'
 import { shipmentService } from '../services/shipmentService'
 import { vehicleService } from '../services/vehicleService'
 import { branchService } from '../services/branchService'
-import type { Shipment, User, Vehicle, Branch } from '../types'
+import type { Shipment, User, Vehicle, Branch, BranchStatus } from '../types'
 import ShipmentCard from '../components/ShipmentCard'
 import ShipmentForm from '../components/ShipmentForm'
 import VehicleForm from '../components/VehicleForm'
@@ -41,6 +47,7 @@ function Dashboard() {
   const [openBranchForm, setOpenBranchForm] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   const [tab, setTab] = useState(0)
+  const [branchStatusFilter, setBranchStatusFilter] = useState<BranchStatus | 'all'>('all')
 
   // Retornar si no hay usuario (evitar errores)
   if (!user) {
@@ -223,65 +230,14 @@ function Dashboard() {
 
           {/* TAB SUCURSALES */}
           {tab === 1 && (
-            <Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6">Sucursales Registradas</Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setOpenBranchForm(true)}
-                >
-                  Registrar sucursal
-                </Button>
-              </Box>
-              {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
-                  <CircularProgress />
-                </Box>
-              ) : branches.length === 0 ? (
-                <Alert severity="info">No hay sucursales registradas</Alert>
-              ) : (
-                <Grid container spacing={3}>
-                  {branches.map((branch) => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={branch.id}>
-                      <Card>
-                        <CardContent>
-                          <Typography variant="h6" gutterBottom>
-                            {branch.name}
-                          </Typography>
-                          <Stack spacing={1}>
-                            <Box>
-                              <Typography variant="body2" color="textSecondary">
-                                Dirección
-                              </Typography>
-                              <Typography variant="body2">{branch.address}</Typography>
-                            </Box>
-                            <Box>
-                              <Typography variant="body2" color="textSecondary">
-                                Ciudad
-                              </Typography>
-                              <Typography variant="body2">{branch.city}</Typography>
-                            </Box>
-                            <Box>
-                              <Typography variant="body2" color="textSecondary">
-                                Código Postal
-                              </Typography>
-                              <Typography variant="body2">{branch.postalCode}</Typography>
-                            </Box>
-                            <Box>
-                              <Typography variant="body2" color="textSecondary">
-                                Teléfono
-                              </Typography>
-                              <Typography variant="body2">{branch.phone}</Typography>
-                            </Box>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            </Box>
+            <BranchesTab
+              branches={branches}
+              loading={loading}
+              statusFilter={branchStatusFilter}
+              onStatusFilterChange={setBranchStatusFilter}
+              canCreate
+              onCreateClick={() => setOpenBranchForm(true)}
+            />
           )}
 
           {/* TAB RUTAS */}
@@ -405,58 +361,13 @@ function Dashboard() {
 
           {/* TAB SUCURSALES */}
           {tab === 2 && (
-            <Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6">Sucursales Registradas</Typography>
-              </Box>
-              {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
-                  <CircularProgress />
-                </Box>
-              ) : branches.length === 0 ? (
-                <Alert severity="info">No hay sucursales registradas</Alert>
-              ) : (
-                <Grid container spacing={3}>
-                  {branches.map((branch) => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={branch.id}>
-                      <Card>
-                        <CardContent>
-                          <Typography variant="h6" gutterBottom>
-                            {branch.name}
-                          </Typography>
-                          <Stack spacing={1}>
-                            <Box>
-                              <Typography variant="body2" color="textSecondary">
-                                Dirección
-                              </Typography>
-                              <Typography variant="body2">{branch.address}</Typography>
-                            </Box>
-                            <Box>
-                              <Typography variant="body2" color="textSecondary">
-                                Ciudad
-                              </Typography>
-                              <Typography variant="body2">{branch.city}</Typography>
-                            </Box>
-                            <Box>
-                              <Typography variant="body2" color="textSecondary">
-                                Código Postal
-                              </Typography>
-                              <Typography variant="body2">{branch.postalCode}</Typography>
-                            </Box>
-                            <Box>
-                              <Typography variant="body2" color="textSecondary">
-                                Teléfono
-                              </Typography>
-                              <Typography variant="body2">{branch.phone}</Typography>
-                            </Box>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            </Box>
+            <BranchesTab
+              branches={branches}
+              loading={loading}
+              statusFilter={branchStatusFilter}
+              onStatusFilterChange={setBranchStatusFilter}
+              canCreate={false}
+            />
           )}
 
           {/* TAB TRANSPORTISTAS */}
@@ -495,6 +406,196 @@ function Dashboard() {
         onClose={() => setOpenBranchForm(false)}
         onBranchCreated={handleCreateBranch}
       />
+    </Box>
+  )
+}
+
+// ─── BranchStatusChip ─────────────────────────────────────────────────────────
+
+function BranchStatusChip({ status }: { status: BranchStatus }) {
+  const config: Record<BranchStatus, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
+    Activa: {
+      label: 'Activa',
+      color: '#1B5E20',
+      bg: '#E8F5E9',
+      icon: <CheckCircleIcon sx={{ fontSize: 14 }} />,
+    },
+    Cerrada: {
+      label: 'Cerrada',
+      color: '#B71C1C',
+      bg: '#FFEBEE',
+      icon: <DoNotDisturbIcon sx={{ fontSize: 14 }} />,
+    },
+    'No Habilitada': {
+      label: 'No Habilitada',
+      color: '#E65100',
+      bg: '#FFF3E0',
+      icon: <BlockIcon sx={{ fontSize: 14 }} />,
+    },
+  }
+  const { label, color, bg, icon } = config[status]
+  return (
+    <Chip
+      icon={icon as React.ReactElement}
+      label={label}
+      size="small"
+      sx={{
+        bgcolor: bg,
+        color,
+        fontWeight: 700,
+        fontSize: '0.7rem',
+        '& .MuiChip-icon': { color },
+      }}
+    />
+  )
+}
+
+// ─── BranchesTab sub-component ────────────────────────────────────────────────
+
+interface BranchesTabProps {
+  branches: Branch[]
+  loading: boolean
+  statusFilter: BranchStatus | 'all'
+  onStatusFilterChange: (value: BranchStatus | 'all') => void
+  canCreate?: boolean
+  onCreateClick?: () => void
+}
+
+function BranchesTab({
+  branches,
+  loading,
+  statusFilter,
+  onStatusFilterChange,
+  canCreate = false,
+  onCreateClick,
+}: BranchesTabProps) {
+  const filtered = statusFilter === 'all' ? branches : branches.filter((b) => b.status === statusFilter)
+
+  const counts = {
+    all: branches.length,
+    Activa: branches.filter((b) => b.status === 'Activa').length,
+    Cerrada: branches.filter((b) => b.status === 'Cerrada').length,
+    'No Habilitada': branches.filter((b) => b.status === 'No Habilitada').length,
+  }
+
+  return (
+    <Box>
+      {/* Header */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: 2,
+          mb: 2,
+        }}
+      >
+        <Typography variant="h6">Sucursales Registradas</Typography>
+        {canCreate && (
+          <Button variant="contained" startIcon={<AddIcon />} onClick={onCreateClick} size="small">
+            Registrar sucursal
+          </Button>
+        )}
+      </Box>
+
+      {/* Filter bar */}
+      <Box sx={{ mb: 3 }}>
+        <ToggleButtonGroup
+          value={statusFilter}
+          exclusive
+          onChange={(_, val) => { if (val !== null) onStatusFilterChange(val) }}
+          size="small"
+          sx={{ flexWrap: 'wrap', gap: 0.5 }}
+        >
+          <ToggleButton value="all" sx={{ borderRadius: '8px !important', fontWeight: 600, fontSize: '0.75rem' }}>
+            Todas ({counts.all})
+          </ToggleButton>
+          <ToggleButton
+            value="Activa"
+            sx={{
+              borderRadius: '8px !important',
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              '&.Mui-selected': { bgcolor: '#E8F5E9', color: '#1B5E20', borderColor: '#A5D6A7' },
+            }}
+          >
+            <CheckCircleIcon sx={{ fontSize: 14, mr: 0.5 }} />
+            Activa ({counts.Activa})
+          </ToggleButton>
+          <ToggleButton
+            value="Cerrada"
+            sx={{
+              borderRadius: '8px !important',
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              '&.Mui-selected': { bgcolor: '#FFEBEE', color: '#B71C1C', borderColor: '#EF9A9A' },
+            }}
+          >
+            <DoNotDisturbIcon sx={{ fontSize: 14, mr: 0.5 }} />
+            Cerrada ({counts.Cerrada})
+          </ToggleButton>
+          <ToggleButton
+            value="No Habilitada"
+            sx={{
+              borderRadius: '8px !important',
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              '&.Mui-selected': { bgcolor: '#FFF3E0', color: '#E65100', borderColor: '#FFCC80' },
+            }}
+          >
+            <BlockIcon sx={{ fontSize: 14, mr: 0.5 }} />
+            No Habilitada ({counts['No Habilitada']})
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
+
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
+          <CircularProgress />
+        </Box>
+      ) : branches.length === 0 ? (
+        <Alert severity="info">No hay sucursales registradas</Alert>
+      ) : filtered.length === 0 ? (
+        <Alert severity="info">No hay sucursales con estado "{statusFilter}"</Alert>
+      ) : (
+        <Grid container spacing={3}>
+          {filtered.map((branch) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={branch.id} sx={{ display: 'flex' }}>
+              <Card sx={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+                <CardContent sx={{ flex: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                    <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 700, lineHeight: 1.3, flex: 1, mr: 1 }}>
+                      {branch.name}
+                    </Typography>
+                    <BranchStatusChip status={branch.status} />
+                  </Box>
+                  <Stack spacing={1}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                        Dirección
+                      </Typography>
+                      <Typography variant="body2">{branch.address}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                        Ciudad
+                      </Typography>
+                      <Typography variant="body2">{branch.city} ({branch.postalCode})</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                        Teléfono
+                      </Typography>
+                      <Typography variant="body2">{branch.phone}</Typography>
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
     </Box>
   )
 }

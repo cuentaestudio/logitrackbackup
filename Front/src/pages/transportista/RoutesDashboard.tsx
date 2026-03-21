@@ -206,9 +206,9 @@ export default function RoutesDashboard({ user }: RoutesDashboardProps) {
             <RouteIcon fontSize="small" color="primary" />
             Rutas activas
           </Typography>
-          <Grid container spacing={{ xs: 2, sm: 2.5 }} sx={{ mb: 4 }}>
+          <Grid container spacing={{ xs: 2, sm: 2.5 }} sx={{ mb: 4 }} alignItems="stretch">
             {activeRoutes.map((route) => (
-              <Grid item xs={12} sm={6} md={4} key={route.id}>
+              <Grid item xs={12} sm={6} md={4} key={route.id} sx={{ display: 'flex' }}>
                 <RouteCard
                   route={route}
                   canFinish={allShipmentsCompleted(route)}
@@ -233,9 +233,9 @@ export default function RoutesDashboard({ user }: RoutesDashboardProps) {
             <HistoryIcon fontSize="small" />
             Historial
           </Typography>
-          <Grid container spacing={{ xs: 2, sm: 2.5 }}>
+          <Grid container spacing={{ xs: 2, sm: 2.5 }} alignItems="stretch">
             {historyRoutes.map((route) => (
-              <Grid item xs={12} sm={6} md={4} key={route.id}>
+              <Grid item xs={12} sm={6} md={4} key={route.id} sx={{ display: 'flex' }}>
                 <RouteCard
                   route={route}
                   canFinish={false}

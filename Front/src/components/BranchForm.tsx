@@ -10,7 +10,7 @@ import {
   CircularProgress,
   Stack,
 } from '@mui/material'
-import type { Branch } from '../types'
+import type { Branch, BranchStatus } from '../types'
 import { branchService } from '../services/branchService'
 
 interface BranchFormProps {
@@ -26,6 +26,7 @@ function BranchForm({ open, onClose, onBranchCreated }: BranchFormProps) {
     city: '',
     postalCode: '',
     phone: '',
+    status: 'Activa' as BranchStatus,
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -88,6 +89,7 @@ function BranchForm({ open, onClose, onBranchCreated }: BranchFormProps) {
         city: '',
         postalCode: '',
         phone: '',
+        status: 'Activa',
       })
       
       onClose()
@@ -106,6 +108,7 @@ function BranchForm({ open, onClose, onBranchCreated }: BranchFormProps) {
         city: '',
         postalCode: '',
         phone: '',
+        status: 'Activa',
       })
       setError('')
       onClose()

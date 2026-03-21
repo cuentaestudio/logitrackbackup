@@ -1,4 +1,4 @@
-import { Branch } from '../types'
+import type { Branch } from '../types'
 
 // Mock data de sucursales
 let mockBranches: Branch[] = [
@@ -9,7 +9,8 @@ let mockBranches: Branch[] = [
     city: 'Buenos Aires',
     postalCode: '1043',
     phone: '+54 11 1234-5678',
-    createdDate: new Date().toISOString().split('T')[0],
+    createdDate: '2024-01-15',
+    status: 'Activa',
   },
   {
     id: '2',
@@ -18,7 +19,8 @@ let mockBranches: Branch[] = [
     city: 'Buenos Aires',
     postalCode: '1123',
     phone: '+54 11 2345-6789',
-    createdDate: new Date().toISOString().split('T')[0],
+    createdDate: '2024-02-10',
+    status: 'Activa',
   },
   {
     id: '3',
@@ -27,7 +29,58 @@ let mockBranches: Branch[] = [
     city: 'La Plata',
     postalCode: '1900',
     phone: '+54 221 3456-7890',
-    createdDate: new Date().toISOString().split('T')[0],
+    createdDate: '2024-03-05',
+    status: 'Cerrada',
+  },
+  {
+    id: '4',
+    name: 'Sucursal Oeste',
+    address: 'Av. Rivadavia 5500',
+    city: 'Buenos Aires',
+    postalCode: '1406',
+    phone: '+54 11 4567-8901',
+    createdDate: '2024-04-20',
+    status: 'Activa',
+  },
+  {
+    id: '5',
+    name: 'Sucursal Rosario',
+    address: 'Bv. Oroño 1200',
+    city: 'Rosario',
+    postalCode: '2000',
+    phone: '+54 341 5678-9012',
+    createdDate: '2024-05-01',
+    status: 'No Habilitada',
+  },
+  {
+    id: '6',
+    name: 'Sucursal Córdoba',
+    address: 'Av. Colón 800',
+    city: 'Córdoba',
+    postalCode: '5000',
+    phone: '+54 351 6789-0123',
+    createdDate: '2024-06-12',
+    status: 'Activa',
+  },
+  {
+    id: '7',
+    name: 'Sucursal Mendoza',
+    address: 'Av. San Martín 400',
+    city: 'Mendoza',
+    postalCode: '5500',
+    phone: '+54 261 7890-1234',
+    createdDate: '2024-07-08',
+    status: 'No Habilitada',
+  },
+  {
+    id: '8',
+    name: 'Sucursal Mar del Plata',
+    address: 'Av. Independencia 2300',
+    city: 'Mar del Plata',
+    postalCode: '7600',
+    phone: '+54 223 8901-2345',
+    createdDate: '2024-08-22',
+    status: 'Cerrada',
   },
 ]
 
@@ -59,6 +112,7 @@ export const branchService = {
           ...branchData,
           id: (mockBranches.length + 1).toString(),
           createdDate: new Date().toISOString().split('T')[0],
+          status: branchData.status ?? 'Activa',
         }
         mockBranches.push(newBranch)
         resolve(newBranch)

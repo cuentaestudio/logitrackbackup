@@ -33,6 +33,8 @@ export interface Route {
   destination: string
 }
 
+export type BranchStatus = 'Activa' | 'Cerrada' | 'No Habilitada'
+
 export interface Branch {
   id: string
   name: string
@@ -41,6 +43,7 @@ export interface Branch {
   postalCode: string
   phone: string
   createdDate: string
+  status: BranchStatus
 }
 
 export interface Shipment {

@@ -60,7 +60,7 @@ export default function RouteDetail() {
   // Scan input
   const [scanInput, setScanInput] = useState('')
   const [scanError, setScanError] = useState('')
-  const [scanHighlight, setScanHighlight] = useState<string | null>(null)
+  const [scanHighlight, setScanHighlight] = useState<{ id: string; type: 'delivered' | 'rejected' } | null>(null)
   const scanRef = useRef<HTMLInputElement>(null)
 
   // Reject dialog
@@ -111,7 +111,7 @@ export default function RouteDetail() {
       if (updated) {
         updateShipment(updated)
         showSnackbar(`✓ ${shipment.trackingId} marcado como Entregado`, 'success')
-        highlightRow(shipment.id)
+        highlightRow(shipment.id, 'delivered')
       }
     } catch {
       showSnackbar('Error al actualizar el envío', 'error')
@@ -147,7 +147,7 @@ export default function RouteDetail() {
       if (updated) {
         updateShipment(updated)
         showSnackbar(`Envío rechazado: ${rejectReason}`, 'warning')
-        highlightRow(rejectDialog.shipmentId)
+        highlightRow(rejectDialog.shipmentId, 'rejected')
       }
     } catch {
       showSnackbar('Error al actualizar el envío', 'error')
@@ -180,13 +180,13 @@ export default function RouteDetail() {
       updateShipment(updated)
       showSnackbar(`📦 ${trackingId} escaneado y marcado como Entregado`, 'success')
       setScanInput('')
-      highlightRow(found.id)
+      highlightRow(found.id, 'delivered')
       scanRef.current?.focus()
     }
   }
 
-  const highlightRow = (shipmentId: string) => {
-    setScanHighlight(shipmentId)
+  const highlightRow = (shipmentId: string, type: 'delivered' | 'rejected') => {
+    setScanHighlight({ id: shipmentId, type })
     setTimeout(() => setScanHighlight(null), 2500)
   }
 
@@ -350,7 +350,7 @@ export default function RouteDetail() {
             <ShipmentCard
               key={shipment.id}
               shipment={shipment}
-              highlight={scanHighlight === shipment.id}
+              highlight={scanHighlight?.id === shipment.id ? scanHighlight.type : null}
               routeActive={route.status === 'En Curso'}
               onDeliver={() => handleDelivered(shipment)}
               onReject={() => openRejectDialog(shipment.id)}
@@ -383,13 +383,15 @@ export default function RouteDetail() {
                   shipment.status === 'Entregado' ||
                   shipment.status === 'Rechazado' ||
                   shipment.status === 'Cancelado'
+                const hlType = scanHighlight?.id === shipment.id ? scanHighlight.type : null
                 return (
                   <TableRow
                     key={shipment.id}
                     sx={{
-                      bgcolor:
-                        scanHighlight === shipment.id
-                          ? 'success.light'
+                      bgcolor: hlType === 'rejected'
+                        ? '#FFEBEE'
+                        : hlType === 'delivered'
+                          ? '#E8F5E9'
                           : isDone
                             ? 'grey.50'
                             : 'inherit',
@@ -536,7 +538,7 @@ function SummaryCard({
 
 interface ShipmentCardProps {
   shipment: Shipment
-  highlight: boolean
+  highlight: 'delivered' | 'rejected' | null
   routeActive: boolean
   onDeliver: () => void
   onReject: () => void
@@ -552,9 +554,21 @@ function ShipmentCard({ shipment, highlight, routeActive, onDeliver, onReject }:
     <Card
       variant="outlined"
       sx={{
-        bgcolor: highlight ? '#C8E6C9' : isDone ? 'grey.50' : 'background.paper',
+        bgcolor: highlight === 'rejected'
+          ? '#FFEBEE'
+          : highlight === 'delivered'
+            ? '#E8F5E9'
+            : isDone
+              ? 'grey.50'
+              : 'background.paper',
         transition: 'background-color 0.6s ease',
-        borderColor: highlight ? 'success.main' : isDone ? 'grey.200' : 'divider',
+        borderColor: highlight === 'rejected'
+          ? 'error.main'
+          : highlight === 'delivered'
+            ? 'success.main'
+            : isDone
+              ? 'grey.200'
+              : 'divider',
       }}
     >
       <CardContent sx={{ pb: '12px !important' }}>
