@@ -23,7 +23,7 @@ interface LoginPageProps {
 }
 
 function LoginPage({ onLogin }: LoginPageProps) {
-  const isDev = import.meta.env.VITE_DEV
+  const showDemoUsers = import.meta.env.VITE_SHOW_DEMO_USERS === 'true'
   const navigate = useNavigate()
   const [credentials, setCredentials] = useState<LoginCredentials>({
     dni: '',
@@ -59,7 +59,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
       const user = await authService.login(credentials)
       if (user) {
         onLogin(user)
-        navigate(user.role === 'transportista' ? '/transportista' : '/')
+        navigate(user.role === 'transportista' ? '/transportista' : '/app')
       } else {
         setError('DNI o contraseña incorrectos')
       }
@@ -191,7 +191,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
           </Box>
 
           {/* Demo credentials */}
-          {isDev && (
+          {showDemoUsers && (
             <Box>
               <Divider sx={{ my: 3 }}>
                 <Typography variant="caption" color="text.disabled" fontWeight={600}>

@@ -1,328 +1,963 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Grid,
-  Card,
-  TextField,
-  Rating,
-  Avatar,
-  Chip,
-  IconButton,
   Alert,
-  Snackbar,
+  Avatar,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Container,
+  Divider,
+  Grid,
+  IconButton,
+  LinearProgress,
   MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
   Paper,
+  Rating,
+  Snackbar,
+  Stack,
+  TextField,
+  Typography,
 } from '@mui/material'
-import LocalShippingIcon from '@mui/icons-material/LocalShipping'
-import InventoryIcon from '@mui/icons-material/Inventory'
-import RouteIcon from '@mui/icons-material/Route'
-import SecurityIcon from '@mui/icons-material/Security'
-import SpeedIcon from '@mui/icons-material/Speed'
-import SupportAgentIcon from '@mui/icons-material/SupportAgent'
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
-import MenuIcon from '@mui/icons-material/Menu'
-import CloseIcon from '@mui/icons-material/Close'
-import FormatQuoteIcon from '@mui/icons-material/FormatQuote'
-import EmailIcon from '@mui/icons-material/Email'
-import PhoneIcon from '@mui/icons-material/Phone'
-import LocationOnIcon from '@mui/icons-material/LocationOn'
-import type { SelectChangeEvent } from '@mui/material'
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
+import ElectricBoltRoundedIcon from '@mui/icons-material/ElectricBoltRounded'
+import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded'
+import Inventory2RoundedIcon from '@mui/icons-material/Inventory2Rounded'
+import KeyboardArrowUpRoundedIcon from '@mui/icons-material/KeyboardArrowUpRounded'
+import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded'
+import MenuRoundedIcon from '@mui/icons-material/MenuRounded'
+import RouteRoundedIcon from '@mui/icons-material/RouteRounded'
+import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded'
+import SendRoundedIcon from '@mui/icons-material/SendRounded'
+import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded'
+import StarRoundedIcon from '@mui/icons-material/StarRounded'
+import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded'
+import SupportAgentRoundedIcon from '@mui/icons-material/SupportAgentRounded'
+import WarehouseRoundedIcon from '@mui/icons-material/WarehouseRounded'
+import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded'
+import warehouseImage from '../../assets/warehouse.jpg'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+type ReviewCategory = 'entrega' | 'vehiculo' | 'general'
 
 interface Review {
   id: string
   name: string
   role: string
-  category: 'entrega' | 'vehiculo' | 'general'
+  company: string
+  category: ReviewCategory
   rating: number
   comment: string
   date: string
-  avatar: string
 }
 
-const MOCK_REVIEWS: Review[] = [
-  { id: '1', name: 'Martina González', role: 'Empresaria', category: 'entrega', rating: 5, comment: 'Excelente tiempo de entrega. Mi pedido llegó antes de lo esperado y en perfectas condiciones. El sistema de seguimiento en tiempo real es increíble.', date: '15/03/2026', avatar: 'MG' },
-  { id: '2', name: 'Roberto Sánchez', role: 'Comerciante', category: 'vehiculo', rating: 4, comment: 'La flota de vehículos está muy bien mantenida. Los transportistas son profesionales y cuidan mucho los paquetes.', date: '10/03/2026', avatar: 'RS' },
-  { id: '3', name: 'Ana Rodríguez', role: 'Diseñadora', category: 'general', rating: 5, comment: 'La plataforma es muy fácil de usar. Pude rastrear mi envío en todo momento y el soporte al cliente fue excelente.', date: '08/03/2026', avatar: 'AR' },
-  { id: '4', name: 'Diego Martínez', role: 'Importador', category: 'entrega', rating: 4, comment: 'Muy buen servicio. Los tiempos de entrega son precisos y el sistema de rutas optimizado me ha ahorrado mucho dinero.', date: '05/03/2026', avatar: 'DM' },
-  { id: '5', name: 'Sofía Herrera', role: 'Emprendedora', category: 'vehiculo', rating: 5, comment: 'Los vehículos llegan siempre impecables y los conductores son muy amables. Se nota que hay un control de calidad riguroso.', date: '01/03/2026', avatar: 'SH' },
-  { id: '6', name: 'Luciano Pérez', role: 'Mayorista', category: 'general', rating: 5, comment: 'Llevo 2 años usando LogiTrack y no volvería a otra empresa. La transparencia, el seguimiento y la atención son incomparables.', date: '25/02/2026', avatar: 'LP' },
-  { id: '7', name: 'Valentina Torres', role: 'Arquitecta', category: 'entrega', rating: 4, comment: 'Muy satisfecha con el servicio. Las estimaciones de entrega son muy precisas y el personal es cordial.', date: '20/02/2026', avatar: 'VT' },
-  { id: '8', name: 'Matías Romero', role: 'Fabricante', category: 'vehiculo', rating: 5, comment: 'La calidad de los vehículos refrigerados es excepcional. Perfectos para mis envíos de productos perecederos.', date: '15/02/2026', avatar: 'MR' },
+const baseReviews: Review[] = [
+  {
+    id: '1',
+    name: 'Martina González',
+    role: 'Dueña de e-commerce',
+    company: 'Marea Shop',
+    category: 'entrega',
+    rating: 5,
+    comment: 'La promesa de entrega se cumple y el seguimiento se entiende perfecto. Mis clientes reciben más información y se nota.',
+    date: '18/03/2026',
+  },
+  {
+    id: '2',
+    name: 'Roberto Sánchez',
+    role: 'Jefe de operaciones',
+    company: 'Distribuciones RS',
+    category: 'vehiculo',
+    rating: 4,
+    comment: 'La visibilidad de la flota y el estado de los vehículos ayuda muchísimo para ordenar la operación diaria.',
+    date: '15/03/2026',
+  },
+  {
+    id: '3',
+    name: 'Ana Rodríguez',
+    role: 'Compradora frecuente',
+    company: 'Cliente final',
+    category: 'general',
+    rating: 5,
+    comment: 'Es una web clara, rápida y muy linda. Entendí todo sin ayuda y pude ver el estado del envío enseguida.',
+    date: '12/03/2026',
+  },
+  {
+    id: '4',
+    name: 'Luciano Pérez',
+    role: 'Encargado de depósito',
+    company: 'Norte Cargo',
+    category: 'entrega',
+    rating: 5,
+    comment: 'Nos organizamos mejor con las rutas y bajamos reclamos. La experiencia es moderna y transmite confianza.',
+    date: '09/03/2026',
+  },
+  {
+    id: '5',
+    name: 'Sofía Herrera',
+    role: 'Coordinadora logística',
+    company: 'Fresh Go',
+    category: 'vehiculo',
+    rating: 5,
+    comment: 'Me gusta que se destaquen los vehículos y los tiempos. Sirve para explicar el servicio a clientes nuevos.',
+    date: '06/03/2026',
+  },
+  {
+    id: '6',
+    name: 'Diego Martínez',
+    role: 'Mayorista',
+    company: 'Punto Mayor',
+    category: 'general',
+    rating: 4,
+    comment: 'Tiene movimiento justo, sin quedar cargada. Se siente como una plataforma real lista para presentar.',
+    date: '02/03/2026',
+  },
 ]
 
-const AVATAR_COLORS = ['#0288D1', '#00897B', '#7B1FA2', '#C62828', '#F57C00', '#2E7D32', '#1565C0', '#AD1457']
-function avatarColor(s: string) {
-  let h = 0; for (const c of s) h += c.charCodeAt(0)
-  return AVATAR_COLORS[h % AVATAR_COLORS.length]
+const categoryLabel: Record<ReviewCategory, string> = {
+  entrega: 'Tiempo de entrega',
+  vehiculo: 'Vehículos',
+  general: 'Experiencia general',
 }
 
-const categoryLabel: Record<Review['category'], string> = { entrega: 'Tiempo de entrega', vehiculo: 'Vehículo', general: 'General' }
-const categoryColor: Record<Review['category'], string> = { entrega: '#0288D1', vehiculo: '#00897B', general: '#7B1FA2' }
+const categoryColor: Record<ReviewCategory, string> = {
+  entrega: '#0288D1',
+  vehiculo: '#00897B',
+  general: '#7B61FF',
+}
 
-// ─── Animated Counter ─────────────────────────────────────────────────────────
-function AnimatedCounter({ target, suffix = '' }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef<HTMLSpanElement>(null)
-  const started = useRef(false)
+const quickStats = [
+  { value: '98%', label: 'entregas a tiempo', helper: 'coordinación de punta a punta' },
+  { value: '24/7', label: 'seguimiento visible', helper: 'clientes y operación conectados' },
+  { value: '+2.4k', label: 'reseñas positivas', helper: 'experiencias reales sobre el servicio' },
+  { value: '12 min', label: 'promedio de asignación', helper: 'vehículo y ruta sugeridos rápido' },
+]
+
+const features = [
+  {
+    icon: <RouteRoundedIcon />,
+    title: 'Rutas inteligentes',
+    description: 'Planificá recorridos, priorizá entregas urgentes y reducÍ kilómetros improductivos.',
+  },
+  {
+    icon: <Inventory2RoundedIcon />,
+    title: 'Seguimiento de envíos',
+    description: 'Mostrá al cliente el avance de cada pedido con una línea de tiempo simple y visual.',
+  },
+  {
+    icon: <DirectionsCarFilledRoundedIcon />,
+    title: 'Visibilidad de vehículos',
+    description: 'Destacá disponibilidad, tipo de unidad y rendimiento para tomar decisiones más rápido.',
+  },
+  {
+    icon: <ShieldRoundedIcon />,
+    title: 'Operación confiable',
+    description: 'Centralizá la información crítica para que la logística sea más previsible y segura.',
+  },
+]
+
+const steps = [
+  {
+    title: 'Recibí el pedido',
+    text: 'Registrá origen, destino y prioridad en una interfaz fácil de usar para cualquier persona.',
+    icon: <StorefrontRoundedIcon />,
+  },
+  {
+    title: 'Asigná la mejor unidad',
+    text: 'Elegí el vehículo adecuado según carga, distancia y disponibilidad operativa.',
+    icon: <WarehouseRoundedIcon />,
+  },
+  {
+    title: 'SeguÍ la entrega',
+    text: 'Monitoreá tiempos estimados, estados y desempeño con feedback de clientes reales.',
+    icon: <ScheduleRoundedIcon />,
+  },
+]
+
+function AnimatedNumber({ value }: { value: string }) {
+  const ref = useRef<HTMLDivElement | null>(null)
+  const [visible, setVisible] = useState(false)
+
   useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !started.current) {
-        started.current = true
-        let cur = 0
-        const inc = target / 60
-        const t = setInterval(() => {
-          cur += inc
-          if (cur >= target) { setCount(target); clearInterval(t) }
-          else setCount(Math.floor(cur))
-        }, 2000 / 60)
-      }
-    }, { threshold: 0.5 })
-    if (ref.current) obs.observe(ref.current)
-    return () => obs.disconnect()
-  }, [target])
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+    const node = ref.current
+    if (!node) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setVisible(true)
+      },
+      { threshold: 0.35 },
+    )
+
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <Box ref={ref}>
+      <Typography
+        variant="h3"
+        sx={{
+          fontWeight: 900,
+          letterSpacing: '-1px',
+          color: '#0B1F33',
+          transform: visible ? 'translateY(0)' : 'translateY(12px)',
+          opacity: visible ? 1 : 0,
+          transition: 'all 0.65s ease',
+        }}
+      >
+        {value}
+      </Typography>
+    </Box>
+  )
 }
 
-// ─── Scroll Reveal ────────────────────────────────────────────────────────────
-function useReveal(delay = 0) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [v, setV] = useState(false)
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setTimeout(() => setV(true), delay) }, { threshold: 0.08 })
-    if (ref.current) obs.observe(ref.current)
-    return () => obs.disconnect()
-  }, [delay])
-  return { ref, visible: v }
-}
-
-// ─── Landing Page ─────────────────────────────────────────────────────────────
 export default function LandingPage() {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [showTop, setShowTop] = useState(false)
-  const [reviews, setReviews] = useState<Review[]>(MOCK_REVIEWS)
-  const [page, setPage] = useState(0)
-  const [loginData, setLoginData] = useState({ email: '', password: '' })
-  const [loginError, setLoginError] = useState('')
-  const [nr, setNr] = useState({ name: '', role: '', category: 'general' as Review['category'], rating: 5, comment: '' })
-  const [submitted, setSubmitted] = useState(false)
-  const [nrError, setNrError] = useState('')
+  const [reviews, setReviews] = useState<Review[]>(baseReviews)
+  const [reviewForm, setReviewForm] = useState({
+    name: '',
+    role: '',
+    company: '',
+    category: 'general' as ReviewCategory,
+    rating: 5,
+    comment: '',
+  })
+  const [reviewError, setReviewError] = useState('')
+  const [reviewSent, setReviewSent] = useState(false)
 
-  const heroRef = useRef<HTMLElement>(null)
-  const aboutRef = useRef<HTMLElement>(null)
-  const howRef = useRef<HTMLElement>(null)
-  const reviewsRef = useRef<HTMLElement>(null)
-  const loginRef = useRef<HTMLElement>(null)
+  const heroRef = useRef<HTMLElement | null>(null)
+  const aboutRef = useRef<HTMLElement | null>(null)
+  const reviewsRef = useRef<HTMLElement | null>(null)
+  const loginRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
-    const fn = () => { setScrolled(window.scrollY > 60); setShowTop(window.scrollY > 400) }
-    window.addEventListener('scroll', fn)
-    return () => window.removeEventListener('scroll', fn)
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 40)
+      setShowTop(window.scrollY > 550)
+    }
+
+    handleScroll()
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const totalPages = Math.ceil(reviews.length / 3)
-  useEffect(() => {
-    const t = setInterval(() => setPage((p) => (p + 1) % totalPages), 5000)
-    return () => clearInterval(t)
-  }, [totalPages])
+  const average = useMemo(() => {
+    if (!reviews.length) return 0
+    return reviews.reduce((acc, current) => acc + current.rating, 0) / reviews.length
+  }, [reviews])
+
+  const grouped = useMemo(
+    () => ({
+      entrega: reviews.filter((review) => review.category === 'entrega').length,
+      vehiculo: reviews.filter((review) => review.category === 'vehiculo').length,
+      general: reviews.filter((review) => review.category === 'general').length,
+    }),
+    [reviews],
+  )
+
+  const topReviews = reviews.slice(0, 3)
 
   const scrollTo = (ref: React.RefObject<HTMLElement | null>) => {
-    ref.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false)
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setMenuOpen(false)
   }
 
-  const handleLogin = () => {
-    if (!loginData.email || !loginData.password) { setLoginError('Completá todos los campos'); return }
-    const accounts: Record<string, { password: string; role: 'supervisor' | 'operador' | 'transportista' }> = {
-      'supervisor@logitrack.com': { password: '123456', role: 'supervisor' },
-      'operador@logitrack.com': { password: '123456', role: 'operador' },
-      'transportista@logitrack.com': { password: '123456', role: 'transportista' },
+  const handleReviewSubmit = () => {
+    if (!reviewForm.name.trim() || !reviewForm.comment.trim()) {
+      setReviewError('Completá tu nombre y comentario para dejar la reseña.')
+      return
     }
-    const acc = accounts[loginData.email.toLowerCase()]
-    if (!acc || acc.password !== loginData.password) { setLoginError('Email o contraseña incorrectos'); return }
-    const user = { id: '1', name: 'Usuario Demo', lastname: '', email: loginData.email, dni: '00000000', role: acc.role }
-    localStorage.setItem('user', JSON.stringify(user))
-    navigate(acc.role === 'transportista' ? '/transportista' : '/')
+
+    setReviews((current) => [
+      {
+        id: Date.now().toString(),
+        name: reviewForm.name.trim(),
+        role: reviewForm.role.trim() || 'Usuario',
+        company: reviewForm.company.trim() || 'Experiencia compartida',
+        category: reviewForm.category,
+        rating: reviewForm.rating,
+        comment: reviewForm.comment.trim(),
+        date: new Date().toLocaleDateString('es-AR'),
+      },
+      ...current,
+    ])
+
+    setReviewForm({
+      name: '',
+      role: '',
+      company: '',
+      category: 'general',
+      rating: 5,
+      comment: '',
+    })
+    setReviewError('')
+    setReviewSent(true)
   }
 
-  const handleSubmitReview = () => {
-    if (!nr.name.trim()) { setNrError('Ingresá tu nombre'); return }
-    if (!nr.comment.trim()) { setNrError('Ingresá un comentario'); return }
-    const initials = nr.name.trim().split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
-    setReviews((prev) => [{ id: Date.now().toString(), name: nr.name.trim(), role: nr.role.trim() || 'Usuario', category: nr.category, rating: nr.rating, comment: nr.comment.trim(), date: new Date().toLocaleDateString('es-AR'), avatar: initials }, ...prev])
-    setNr({ name: '', role: '', category: 'general', rating: 5, comment: '' })
-    setSubmitted(true); setNrError(''); setPage(0)
-  }
-
-  const avg = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : 0
-  const visible = reviews.slice(page * 3, page * 3 + 3)
-
-  const statsR = useReveal()
-  const aboutR = useReveal(80)
-  const howR = useReveal()
-  const featR = useReveal(80)
-  const revR = useReveal()
-  const loginR = useReveal()
-
-  const navItems = [
+  const navItems: Array<{ label: string; ref: React.RefObject<HTMLElement | null> }> = [
     { label: 'Inicio', ref: heroRef },
-    { label: 'Nosotros', ref: aboutRef },
-    { label: 'Cómo funciona', ref: howRef },
+    { label: 'Solución', ref: aboutRef },
     { label: 'Reseñas', ref: reviewsRef },
+    { label: 'Acceso', ref: loginRef },
   ]
 
   return (
-    <Box sx={{ overflowX: 'hidden', bgcolor: '#F0F8FF' }}>
-
-      {/* ── NAVBAR ── */}
-      <Box component="nav" sx={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1300,
-        transition: 'all 0.3s ease',
-        bgcolor: scrolled ? 'rgba(255,255,255,0.96)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(12px)' : 'none',
-        boxShadow: scrolled ? '0 2px 20px rgba(2,136,209,0.12)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(2,136,209,0.08)' : 'none',
-      }}>
+    <Box sx={{ bgcolor: '#F4F9FE', overflowX: 'hidden' }}>
+      <Box
+        component="nav"
+        sx={{
+          position: 'fixed',
+          inset: '0 0 auto 0',
+          zIndex: 20,
+          bgcolor: scrolled ? 'rgba(255,255,255,0.9)' : 'transparent',
+          backdropFilter: scrolled ? 'blur(14px)' : 'none',
+          borderBottom: scrolled ? '1px solid rgba(2,136,209,0.12)' : '1px solid transparent',
+          transition: 'all 0.3s ease',
+        }}
+      >
         <Container maxWidth="lg">
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 1.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, cursor: 'pointer' }} onClick={() => scrollTo(heroRef)}>
-              <Box sx={{ width: 40, height: 40, borderRadius: '11px', background: 'linear-gradient(135deg,#0288D1,#29B6F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 10px rgba(2,136,209,0.4)' }}>
-                <LocalShippingIcon sx={{ color: '#fff', fontSize: 21 }} />
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ py: 1.5 }}>
+            <Stack direction="row" spacing={1.25} alignItems="center" sx={{ cursor: 'pointer' }} onClick={() => scrollTo(heroRef)}>
+              <Box
+                sx={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: '14px',
+                  display: 'grid',
+                  placeItems: 'center',
+                  background: 'linear-gradient(135deg,#0288D1,#29B6F6)',
+                  boxShadow: '0 12px 24px rgba(2,136,209,0.22)',
+                }}
+              >
+                <LocalShippingRoundedIcon sx={{ color: '#fff' }} />
               </Box>
-              <Typography variant="h6" sx={{ fontWeight: 900, letterSpacing: '-0.5px', background: scrolled ? 'linear-gradient(135deg,#0277BD,#0288D1)' : 'linear-gradient(135deg,#fff,#B3E5FC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <Typography sx={{ fontWeight: 900, fontSize: '1.15rem', color: scrolled ? '#0B1F33' : '#fff' }}>
                 LogiTrack
               </Typography>
-            </Box>
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 0.5 }}>
+            </Stack>
+
+            <Stack direction="row" spacing={0.5} alignItems="center" sx={{ display: { xs: 'none', md: 'flex' } }}>
               {navItems.map((item) => (
-                <Button key={item.label} onClick={() => scrollTo(item.ref)} sx={{ color: scrolled ? '#37474F' : 'rgba(255,255,255,0.88)', fontWeight: 600, fontSize: '0.875rem', px: 1.5, '&:hover': { color: scrolled ? '#0288D1' : '#fff', bgcolor: 'transparent' }, transition: 'color 0.2s' }}>
+                <Button
+                  key={item.label}
+                  onClick={() => scrollTo(item.ref)}
+                  sx={{
+                    color: scrolled ? '#29465B' : 'rgba(255,255,255,0.9)',
+                    fontWeight: 700,
+                    '&:hover': { bgcolor: 'transparent', color: scrolled ? '#0288D1' : '#fff' },
+                  }}
+                >
                   {item.label}
                 </Button>
               ))}
-              <Button variant="contained" onClick={() => scrollTo(loginRef)} sx={{ ml: 1.5, background: 'linear-gradient(135deg,#0288D1,#0277BD)', borderRadius: '22px', px: 2.5, fontWeight: 700, fontSize: '0.875rem', boxShadow: '0 3px 12px rgba(2,136,209,0.4)', '&:hover': { background: 'linear-gradient(135deg,#0277BD,#01579B)', transform: 'translateY(-1px)', boxShadow: '0 5px 18px rgba(2,136,209,0.5)' }, transition: 'all 0.25s ease' }}>
-                Iniciar sesión
+              <Button
+                variant="contained"
+                onClick={() => navigate('/login')}
+                sx={{
+                  ml: 1,
+                  borderRadius: '999px',
+                  px: 2.5,
+                  background: 'linear-gradient(135deg,#0288D1,#0277BD)',
+                  boxShadow: '0 10px 22px rgba(2,136,209,0.28)',
+                }}
+              >
+                Ingresar
               </Button>
-            </Box>
-            <IconButton sx={{ display: { xs: 'flex', md: 'none' }, color: scrolled ? '#37474F' : '#fff' }} onClick={() => setMenuOpen((v) => !v)}>
-              {menuOpen ? <CloseIcon /> : <MenuIcon />}
+            </Stack>
+
+            <IconButton sx={{ display: { xs: 'inline-flex', md: 'none' }, color: scrolled ? '#0B1F33' : '#fff' }} onClick={() => setMenuOpen((current) => !current)}>
+              {menuOpen ? <CloseRoundedIcon /> : <MenuRoundedIcon />}
             </IconButton>
-          </Box>
+          </Stack>
         </Container>
+
         {menuOpen && (
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', bgcolor: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(2,136,209,0.1)', px: 2, pb: 2 }}>
-            {[...navItems, { label: 'Iniciar sesión', ref: loginRef }].map((item) => (
-              <Button key={item.label} fullWidth onClick={() => scrollTo(item.ref)} sx={{ justifyContent: 'flex-start', py: 1, color: '#37474F', fontWeight: 600 }}>{item.label}</Button>
-            ))}
-          </Box>
+          <Paper square sx={{ display: { xs: 'block', md: 'none' }, px: 2, pb: 2 }}>
+            <Stack spacing={1}>
+              {navItems.map((item) => (
+                <Button key={item.label} onClick={() => scrollTo(item.ref)} sx={{ justifyContent: 'flex-start' }}>
+                  {item.label}
+                </Button>
+              ))}
+            </Stack>
+          </Paper>
         )}
       </Box>
 
-      {/* ── HERO ── */}
-      <Box component="section" ref={heroRef} sx={{ minHeight: '100vh', position: 'relative', display: 'flex', alignItems: 'center', overflow: 'hidden', background: 'linear-gradient(135deg,#012849 0%,#01579B 40%,#0288D1 70%,#29B6F6 100%)' }}>
-        <Box sx={{ position: 'absolute', inset: 0, zIndex: 0, backgroundImage: "url('/warehouse.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.15 }} />
-        {[{ s: 500, t: '-15%', l: '-10%', d: 18, dl: 0 }, { s: 350, t: '55%', r: '-8%', d: 14, dl: 3 }, { s: 250, t: '20%', r: '18%', d: 10, dl: 6 }].map((b, i) => (
-          <Box key={i} sx={{ position: 'absolute', borderRadius: '50%', width: b.s, height: b.s, top: b.t, left: (b as { l?: string }).l, right: (b as { r?: string }).r, background: 'rgba(255,255,255,0.04)', animation: `blob ${b.d}s ease-in-out ${b.dl}s infinite`, '@keyframes blob': { '0%,100%': { transform: 'scale(1) translate(0,0)' }, '33%': { transform: 'scale(1.08) translate(15px,-20px)' }, '66%': { transform: 'scale(0.95) translate(-10px,15px)' } }, zIndex: 0 }} />
+      <Box
+        component="section"
+        ref={heroRef}
+        sx={{
+          position: 'relative',
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          overflow: 'hidden',
+          background: 'linear-gradient(135deg,#04213E 0%,#0C5EA7 42%,#19A5F2 100%)',
+        }}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: `linear-gradient(rgba(4,33,62,0.65), rgba(4,33,62,0.3)), url(${warehouseImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0.42,
+          }}
+        />
+
+        {[
+          { size: 420, top: '-12%', left: '-8%', duration: '20s' },
+          { size: 280, top: '65%', left: '82%', duration: '16s' },
+          { size: 220, top: '18%', left: '78%', duration: '13s' },
+        ].map((orb, index) => (
+          <Box
+            key={index}
+            sx={{
+              position: 'absolute',
+              width: orb.size,
+              height: orb.size,
+              top: orb.top,
+              left: orb.left,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.07)',
+              filter: 'blur(8px)',
+              animation: `float ${orb.duration} ease-in-out infinite`,
+              '@keyframes float': {
+                '0%, 100%': { transform: 'translateY(0px) translateX(0px)' },
+                '50%': { transform: 'translateY(18px) translateX(-12px)' },
+              },
+            }}
+          />
         ))}
-        <Box sx={{ position: 'absolute', bottom: '10%', zIndex: 1, animation: 'truck 16s linear infinite', '@keyframes truck': { '0%': { left: '-80px', opacity: 0 }, '5%': { opacity: 0.07 }, '95%': { opacity: 0.07 }, '100%': { left: '105%', opacity: 0 } } }}>
-          <LocalShippingIcon sx={{ fontSize: 110, color: '#fff' }} />
+
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: { xs: '8%', md: '12%' },
+            left: '-120px',
+            animation: 'truckRun 18s linear infinite',
+            '@keyframes truckRun': {
+              '0%': { transform: 'translateX(0)', opacity: 0 },
+              '5%': { opacity: 0.18 },
+              '95%': { opacity: 0.18 },
+              '100%': { transform: 'translateX(calc(100vw + 240px))', opacity: 0 },
+            },
+          }}
+        >
+          <LocalShippingRoundedIcon sx={{ color: 'rgba(255,255,255,0.9)', fontSize: 110 }} />
         </Box>
-        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2, pt: { xs: 12, md: 10 }, pb: 8 }}>
+
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2, pt: { xs: 14, md: 12 }, pb: 10 }}>
           <Grid container spacing={5} alignItems="center">
-            <Grid item xs={12} md={6}>
-              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, bgcolor: 'rgba(255,255,255,0.13)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: '24px', px: 2, py: 0.75, mb: 3, animation: 'hf 0.7s ease forwards', opacity: 0, '@keyframes hf': { from: { opacity: 0, transform: 'translateY(16px)' }, to: { opacity: 1, transform: 'translateY(0)' } } }}>
-                <CheckCircleIcon sx={{ fontSize: 13, color: '#80DEEA' }} />
-                <Typography sx={{ color: 'rgba(255,255,255,0.88)', fontWeight: 700, fontSize: '0.75rem' }}>Sistema de logística líder en Argentina</Typography>
-              </Box>
-              <Typography variant="h1" sx={{ color: '#fff', fontWeight: 900, fontSize: { xs: '2.5rem', sm: '3.2rem', md: '4rem' }, lineHeight: 1.08, mb: 2.5, textShadow: '0 2px 24px rgba(0,0,0,0.28)', animation: 'hf 0.7s ease 0.15s forwards', opacity: 0 }}>
-                Logística{' '}
-                <Box component="span" sx={{ background: 'linear-gradient(90deg,#4FC3F7,#80DEEA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>inteligente</Box>
-                {' '}para tu empresa
+            <Grid item xs={12} md={7}>
+              <Chip
+                icon={<ElectricBoltRoundedIcon />}
+                label="Experiencia logística moderna e interactiva"
+                sx={{
+                  mb: 3,
+                  px: 1,
+                  bgcolor: 'rgba(255,255,255,0.14)',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.18)',
+                }}
+              />
+
+              <Typography
+                variant="h1"
+                sx={{
+                  fontSize: { xs: '2.7rem', md: '4.3rem' },
+                  lineHeight: 1.02,
+                  letterSpacing: '-1.6px',
+                  fontWeight: 900,
+                  color: '#fff',
+                  maxWidth: 740,
+                }}
+              >
+                Una página de logística
+                <Box component="span" sx={{ color: '#9DE7FF', display: 'inline' }}>
+                  {' '}clara, linda y lista para usar
+                </Box>
               </Typography>
-              <Typography sx={{ color: 'rgba(255,255,255,0.78)', fontSize: { xs: '1rem', md: '1.1rem' }, lineHeight: 1.75, mb: 4, maxWidth: 500, animation: 'hf 0.7s ease 0.3s forwards', opacity: 0 }}>
-                Gestioná envíos, rutas y flotas en tiempo real. Transparencia total, entregas a tiempo y control absoluto desde una sola plataforma.
+
+              <Typography sx={{ mt: 3, maxWidth: 640, color: 'rgba(255,255,255,0.82)', fontSize: { xs: '1rem', md: '1.15rem' }, lineHeight: 1.8 }}>
+                Inspirada en plataformas modernas de delivery y operación, esta propuesta presenta envíos, rutas, vehículos,
+                reseñas reales y acceso rápido desde una sola landing pensada para cualquier persona.
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', animation: 'hf 0.7s ease 0.45s forwards', opacity: 0 }}>
-                <Button variant="contained" size="large" endIcon={<ArrowForwardIcon />} onClick={() => scrollTo(loginRef)} sx={{ bgcolor: '#fff', color: '#0277BD', fontWeight: 800, fontSize: '1rem', px: 3.5, py: 1.5, borderRadius: '14px', boxShadow: '0 4px 20px rgba(255,255,255,0.25)', '&:hover': { bgcolor: '#E1F5FE', transform: 'translateY(-2px)', boxShadow: '0 8px 28px rgba(255,255,255,0.35)' }, transition: 'all 0.25s ease' }}>
-                  Comenzar ahora
+
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 4 }}>
+                <Button
+                  size="large"
+                  variant="contained"
+                  endIcon={<ArrowForwardRoundedIcon />}
+                  onClick={() => navigate('/login')}
+                  sx={{
+                    px: 3.5,
+                    py: 1.4,
+                    borderRadius: '16px',
+                    background: '#fff',
+                    color: '#0C5EA7',
+                    fontWeight: 800,
+                    '&:hover': { background: '#E1F5FE', transform: 'translateY(-2px)' },
+                  }}
+                >
+                  Ir a iniciar sesión
                 </Button>
-                <Button variant="outlined" size="large" onClick={() => scrollTo(howRef)} sx={{ borderColor: 'rgba(255,255,255,0.45)', color: '#fff', fontWeight: 700, fontSize: '1rem', px: 3.5, py: 1.5, borderRadius: '14px', '&:hover': { borderColor: '#fff', bgcolor: 'rgba(255,255,255,0.1)', transform: 'translateY(-2px)' }, transition: 'all 0.25s ease' }}>
-                  Ver cómo funciona
+                <Button
+                  size="large"
+                  variant="outlined"
+                  onClick={() => scrollTo(reviewsRef)}
+                  sx={{
+                    px: 3.5,
+                    py: 1.4,
+                    borderRadius: '16px',
+                    borderColor: 'rgba(255,255,255,0.4)',
+                    color: '#fff',
+                    '&:hover': { borderColor: '#fff', background: 'rgba(255,255,255,0.08)' },
+                  }}
+                >
+                  Ver comentarios y calificaciones
                 </Button>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 4, animation: 'hf 0.7s ease 0.6s forwards', opacity: 0 }}>
-                <Box sx={{ display: 'flex' }}>
-                  {['MG', 'RS', 'AR', 'DM'].map((init, i) => (
-                    <Avatar key={init} sx={{ width: 32, height: 32, fontSize: '0.65rem', fontWeight: 700, bgcolor: avatarColor(init), ml: i > 0 ? '-8px' : 0, border: '2px solid rgba(255,255,255,0.3)' }}>{init}</Avatar>
+              </Stack>
+
+              <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 4, flexWrap: 'wrap' }}>
+                <Stack direction="row" spacing={-1}>
+                  {['MG', 'RS', 'AR', 'LP'].map((initials, index) => (
+                    <Avatar key={initials} sx={{ bgcolor: ['#29B6F6', '#7C4DFF', '#26A69A', '#FF7043'][index], border: '2px solid rgba(255,255,255,0.5)' }}>
+                      {initials}
+                    </Avatar>
                   ))}
-                </Box>
+                </Stack>
                 <Box>
-                  <Box sx={{ display: 'flex' }}>{[1,2,3,4,5].map((s) => <Box key={s} component="span" sx={{ color: '#FFD54F', fontSize: '0.9rem' }}>★</Box>)}</Box>
-                  <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', fontWeight: 600 }}>+2,400 clientes satisfechos</Typography>
+                  <Stack direction="row" spacing={0.25}>
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <StarRoundedIcon key={index} sx={{ color: '#FFD54F', fontSize: 18 }} />
+                    ))}
+                  </Stack>
+                  <Typography sx={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.9rem', fontWeight: 600 }}>
+                    Opiniones sobre tiempos de entrega, experiencia y vehículos.
+                  </Typography>
                 </Box>
-              </Box>
+              </Stack>
             </Grid>
-            <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }}>
-              <Box sx={{ position: 'relative', height: 440 }}>
-                <Card sx={{ position: 'absolute', top: 0, left: 30, right: 0, bgcolor: 'rgba(255,255,255,0.11)', backdropFilter: 'blur(18px)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '22px', p: 2.5, boxShadow: '0 12px 40px rgba(0,0,0,0.22)', animation: 'fcard 7s ease-in-out infinite', '@keyframes fcard': { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-14px)' } } }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2.5 }}>
-                    <Box sx={{ width: 44, height: 44, borderRadius: '12px', bgcolor: 'rgba(79,195,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <LocalShippingIcon sx={{ color: '#4FC3F7', fontSize: 24 }} />
+
+            <Grid item xs={12} md={5}>
+              <Box sx={{ position: 'relative', minHeight: 420 }}>
+                <Card
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    left: { xs: 0, md: 30 },
+                    p: 2.5,
+                    borderRadius: '24px',
+                    color: '#fff',
+                    backdropFilter: 'blur(16px)',
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    boxShadow: '0 20px 50px rgba(2,13,27,0.24)',
+                    animation: 'panelFloat 7s ease-in-out infinite',
+                    '@keyframes panelFloat': {
+                      '0%, 100%': { transform: 'translateY(0)' },
+                      '50%': { transform: 'translateY(-14px)' },
+                    },
+                  }}
+                >
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                    <Box>
+                      <Typography sx={{ fontWeight: 800 }}>Seguimiento de envío</Typography>
+                      <Typography sx={{ opacity: 0.72, fontSize: '0.82rem' }}>TRK-2026-000918</Typography>
                     </Box>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>Envío en tránsito</Typography>
-                      <Typography sx={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.72rem' }}>TRK-2026-001847</Typography>
-                    </Box>
-                    <Chip label="En ruta" size="small" sx={{ bgcolor: 'rgba(79,195,247,0.18)', color: '#4FC3F7', fontWeight: 700, fontSize: '0.68rem' }} />
-                  </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 1 }}>
-                    {['Recibido', 'Procesado', 'En ruta', 'Entregado'].map((step, i) => (
-                      <Box key={step} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, flex: 1 }}>
-                        <Box sx={{ width: 26, height: 26, borderRadius: '50%', bgcolor: i < 3 ? '#4FC3F7' : 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {i < 3 && <CheckCircleIcon sx={{ fontSize: 16, color: '#012849' }} />}
-                        </Box>
-                        <Typography sx={{ color: i < 3 ? '#4FC3F7' : 'rgba(255,255,255,0.35)', fontSize: '0.6rem', fontWeight: 600, textAlign: 'center' }}>{step}</Typography>
+                    <Chip label="En ruta" sx={{ bgcolor: 'rgba(157,231,255,0.18)', color: '#9DE7FF', fontWeight: 700 }} />
+                  </Stack>
+                  <Stack spacing={1.5}>
+                    {[
+                      ['Recepción en depósito', 100],
+                      ['Asignación de vehículo', 100],
+                      ['Salida a reparto', 82],
+                      ['Entrega final', 38],
+                    ].map(([label, progress]) => (
+                      <Box key={label}>
+                        <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
+                          <Typography sx={{ fontSize: '0.85rem', opacity: 0.92 }}>{label}</Typography>
+                          <Typography sx={{ fontSize: '0.85rem', opacity: 0.72 }}>{progress}%</Typography>
+                        </Stack>
+                        <LinearProgress
+                          variant="determinate"
+                          value={Number(progress)}
+                          sx={{
+                            height: 9,
+                            borderRadius: '999px',
+                            bgcolor: 'rgba(255,255,255,0.12)',
+                            '& .MuiLinearProgress-bar': { borderRadius: '999px', bgcolor: '#9DE7FF' },
+                          }}
+                        />
                       </Box>
                     ))}
-                  </Box>
+                  </Stack>
                 </Card>
-                <Card sx={{ position: 'absolute', bottom: 80, left: 0, width: 155, p: 2, borderRadius: '16px', bgcolor: 'rgba(255,255,255,0.95)', boxShadow: '0 8px 24px rgba(0,0,0,0.2)', animation: 'fcard 8s ease-in-out 1s infinite' }}>
-                  <Typography sx={{ fontSize: '0.7rem', color: '#546E7A', fontWeight: 600, mb: 0.5 }}>Entregas hoy</Typography>
-                  <Typography sx={{ fontSize: '1.8rem', fontWeight: 900, color: '#0288D1', lineHeight: 1 }}>98<Box component="span" sx={{ fontSize: '1rem' }}>%</Box></Typography>
-                  <Typography sx={{ fontSize: '0.65rem', color: '#4CAF50', fontWeight: 600 }}>↑ +3% vs ayer</Typography>
+
+                <Card sx={{ position: 'absolute', left: 0, bottom: 56, p: 2.2, borderRadius: '18px', width: 180, boxShadow: '0 18px 38px rgba(8,34,58,0.22)' }}>
+                  <Typography sx={{ color: '#507086', fontSize: '0.78rem', fontWeight: 700 }}>Vehículo asignado</Typography>
+                  <Typography sx={{ mt: 0.6, fontWeight: 900, fontSize: '1.6rem', color: '#0B1F33' }}>Sprinter</Typography>
+                  <Typography sx={{ color: '#0288D1', fontWeight: 700 }}>Disponible y monitoreada</Typography>
                 </Card>
-                <Card sx={{ position: 'absolute', bottom: 80, right: 10, width: 155, p: 2, borderRadius: '16px', bgcolor: 'rgba(255,255,255,0.95)', boxShadow: '0 8px 24px rgba(0,0,0,0.2)', animation: 'fcard 6s ease-in-out 2s infinite' }}>
-                  <Typography sx={{ fontSize: '0.7rem', color: '#546E7A', fontWeight: 600, mb: 0.5 }}>Rutas activas</Typography>
-                  <Typography sx={{ fontSize: '1.8rem', fontWeight: 900, color: '#0288D1', lineHeight: 1 }}>24</Typography>
-                  <Typography sx={{ fontSize: '0.65rem', color: '#546E7A', fontWeight: 600 }}>en tiempo real</Typography>
+
+                <Card sx={{ position: 'absolute', right: 10, bottom: 0, p: 2.2, borderRadius: '18px', width: 190, boxShadow: '0 18px 38px rgba(8,34,58,0.22)' }}>
+                  <Typography sx={{ color: '#507086', fontSize: '0.78rem', fontWeight: 700 }}>Satisfacción</Typography>
+                  <Typography sx={{ mt: 0.6, fontWeight: 900, fontSize: '1.8rem', color: '#0B1F33' }}>4.9/5</Typography>
+                  <Typography sx={{ color: '#26A69A', fontWeight: 700 }}>Reseñas activas en la web</Typography>
                 </Card>
               </Box>
             </Grid>
           </Grid>
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 6, md: 4 }, animation: 'hf 0.7s ease 0.8s forwards', opacity: 0 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, cursor: 'pointer' }} onClick={() => scrollTo(aboutRef)}>
-              <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.72rem', letterSpacing: '1px', textTransform: 'uppercase' }}>Scroll</Typography>
-              <Box sx={{ width: 1.5, height: 40, bgcolor: 'rgba(255,255,255,0.25)', borderRadius: '2px', position: 'relative', overflow: 'hidden' }}>
-                <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%', bgcolor: 'rgba(255,255,255,0.7)', borderRadius: '2px', animation: 'scrollDot 2s ease-in-out infinite', '@keyframes scrollDot': { '0%': { top: 0 }, '100%': { top: '60%' } } }} />
-              </Box>
-            </Box>
-          </Box>
         </Container>
       </Box>
 
-      {/* ── STATS ── */}
-      <Box ref={statsR.ref} sx={{ py: 6, background: 'linear-gradient(135deg,#0277BD 0%,#0288D1 50%,#029BE5 100%)', opacity: statsR.visible ? 1 : 0, transform: statsR.visible ? 'translateY(0)' : 'translateY(30px)', transition: 'all 0.7s ease' }}>
+      <Box component="section" ref={aboutRef} sx={{ mt: -5, position: 'relative', zIndex: 3 }}>
         <Container maxWidth="lg">
-          <Grid container spacing={3} justifyContent="center">
-            {[
-              {
+          <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: '28px', boxShadow: '0 20px 50px rgba(4,33,62,0.08)' }}>
+            <Grid container spacing={3}>
+              {quickStats.map((stat) => (
+                <Grid item xs={12} sm={6} md={3} key={stat.label}>
+                  <Box sx={{ p: 2 }}>
+                    <AnimatedNumber value={stat.value} />
+                    <Typography sx={{ mt: 1, fontWeight: 800, color: '#12324A' }}>{stat.label}</Typography>
+                    <Typography sx={{ mt: 0.5, color: '#5B7488', lineHeight: 1.7 }}>{stat.helper}</Typography>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+        </Container>
+      </Box>
+
+      <Container maxWidth="lg" sx={{ py: { xs: 8, md: 10 } }}>
+        <Grid container spacing={4} alignItems="stretch">
+          <Grid item xs={12} md={5}>
+            <Typography sx={{ color: '#0288D1', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: '0.8rem' }}>
+              Sobre la logística
+            </Typography>
+            <Typography variant="h3" sx={{ mt: 1.2, fontWeight: 900, color: '#0B1F33', lineHeight: 1.1 }}>
+              Una experiencia digital pensada para explicar y vender mejor el servicio
+            </Typography>
+            <Typography sx={{ mt: 2.5, color: '#5B7488', lineHeight: 1.9 }}>
+              La logística ya no es solo mover paquetes: también es comunicar estado, transmitir confianza y facilitar decisiones.
+              Por eso esta landing combina storytelling, métricas, movimiento visual, reseñas y accesos claros para quienes operan y para quienes consultan.
+            </Typography>
+            <Stack spacing={1.5} sx={{ mt: 3.5 }}>
+              {[
+                'Visual moderno con secciones claras y llamadas a la acción.',
+                'Comentarios y calificaciones para generar confianza social.',
+                'Ingreso rápido con cuentas demo para mostrar la plataforma.',
+                'Formulario para reseñas sobre tiempo de entrega y vehículos.',
+              ].map((item) => (
+                <Stack key={item} direction="row" spacing={1.5} alignItems="center">
+                  <CheckCircleRoundedIcon sx={{ color: '#0288D1' }} />
+                  <Typography sx={{ color: '#234158', fontWeight: 600 }}>{item}</Typography>
+                </Stack>
+              ))}
+            </Stack>
+          </Grid>
+
+          <Grid item xs={12} md={7}>
+            <Grid container spacing={2.5}>
+              {features.map((feature, index) => (
+                <Grid item xs={12} sm={6} key={feature.title}>
+                  <Card
+                    sx={{
+                      height: '100%',
+                      borderRadius: '24px',
+                      p: 0.5,
+                      background: index % 2 === 0 ? 'linear-gradient(180deg,#FFFFFF 0%,#F4FAFF 100%)' : '#fff',
+                      border: '1px solid rgba(2,136,209,0.1)',
+                      transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                      '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 18px 40px rgba(2,136,209,0.12)' },
+                    }}
+                  >
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ width: 52, height: 52, borderRadius: '16px', display: 'grid', placeItems: 'center', bgcolor: '#E1F5FE', color: '#0288D1', mb: 2 }}>
+                        {feature.icon}
+                      </Box>
+                      <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#0B1F33' }}>{feature.title}</Typography>
+                      <Typography sx={{ mt: 1.2, color: '#5B7488', lineHeight: 1.8 }}>{feature.description}</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Grid>
+        </Grid>
+      </Container>
+
+      <Box sx={{ py: { xs: 8, md: 10 }, bgcolor: '#EAF5FF' }}>
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: 'center', mb: 5 }}>
+            <Typography sx={{ color: '#0288D1', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: '0.8rem' }}>
+              Cómo funciona
+            </Typography>
+            <Typography variant="h3" sx={{ mt: 1.2, fontWeight: 900, color: '#0B1F33' }}>
+              Simple para mostrar, simple para entender
+            </Typography>
+          </Box>
+
+          <Grid container spacing={3}>
+            {steps.map((step, index) => (
+              <Grid item xs={12} md={4} key={step.title}>
+                <Card sx={{ height: '100%', borderRadius: '24px', p: 3, position: 'relative', overflow: 'hidden' }}>
+                  <Chip label={`0${index + 1}`} sx={{ mb: 2, bgcolor: '#E1F5FE', color: '#0288D1', fontWeight: 800 }} />
+                  <Box sx={{ width: 60, height: 60, borderRadius: '18px', display: 'grid', placeItems: 'center', bgcolor: '#0B1F33', color: '#fff', mb: 2.2 }}>
+                    {step.icon}
+                  </Box>
+                  <Typography sx={{ fontWeight: 800, color: '#0B1F33', fontSize: '1.15rem' }}>{step.title}</Typography>
+                  <Typography sx={{ mt: 1.2, color: '#5B7488', lineHeight: 1.8 }}>{step.text}</Typography>
+                  <Box sx={{ position: 'absolute', right: -35, bottom: -35, width: 120, height: 120, borderRadius: '50%', bgcolor: 'rgba(2,136,209,0.06)' }} />
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+
+      <Box component="section" ref={reviewsRef} sx={{ py: { xs: 8, md: 10 } }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={5}>
+              <Typography sx={{ color: '#0288D1', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: '0.8rem' }}>
+                Reseñas y calificaciones
+              </Typography>
+              <Typography variant="h3" sx={{ mt: 1.2, fontWeight: 900, color: '#0B1F33', lineHeight: 1.1 }}>
+                Opiniones visibles sobre entregas, vehículos y experiencia general
+              </Typography>
+
+              <Paper sx={{ mt: 3, p: 3, borderRadius: '24px' }}>
+                <Typography sx={{ fontSize: '3.2rem', fontWeight: 900, color: '#0288D1', lineHeight: 1 }}>{average.toFixed(1)}</Typography>
+                <Rating value={average} precision={0.1} readOnly sx={{ mt: 1, '& .MuiRating-iconFilled': { color: '#FFB300' } }} />
+                <Typography sx={{ mt: 1.5, color: '#5B7488' }}>Basado en {reviews.length} reseñas activas.</Typography>
+                <Divider sx={{ my: 2.5 }} />
+                <Stack spacing={1.3}>
+                  {(['entrega', 'vehiculo', 'general'] as ReviewCategory[]).map((category) => (
+                    <Box key={category}>
+                      <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
+                        <Typography sx={{ color: '#234158', fontWeight: 700 }}>{categoryLabel[category]}</Typography>
+                        <Typography sx={{ color: categoryColor[category], fontWeight: 800 }}>{grouped[category]}</Typography>
+                      </Stack>
+                      <LinearProgress
+                        variant="determinate"
+                        value={(grouped[category] / Math.max(reviews.length, 1)) * 100}
+                        sx={{
+                          height: 10,
+                          borderRadius: '999px',
+                          bgcolor: '#E4EEF7',
+                          '& .MuiLinearProgress-bar': { bgcolor: categoryColor[category], borderRadius: '999px' },
+                        }}
+                      />
+                    </Box>
+                  ))}
+                </Stack>
+              </Paper>
+            </Grid>
+
+            <Grid item xs={12} md={7}>
+              <Grid container spacing={2.5}>
+                {topReviews.map((review) => (
+                  <Grid item xs={12} key={review.id}>
+                    <Card sx={{ borderRadius: '24px', border: '1px solid rgba(2,136,209,0.08)', boxShadow: '0 12px 28px rgba(3,38,61,0.05)' }}>
+                      <CardContent sx={{ p: 3.25 }}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            <Avatar sx={{ bgcolor: categoryColor[review.category], width: 52, height: 52, fontWeight: 800 }}>
+                              {review.name.split(' ').map((part) => part[0]).slice(0, 2).join('')}
+                            </Avatar>
+                            <Box>
+                              <Typography sx={{ fontWeight: 800, color: '#0B1F33' }}>{review.name}</Typography>
+                              <Typography sx={{ color: '#5B7488', fontSize: '0.92rem' }}>
+                                {review.role} · {review.company}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                          <Chip label={categoryLabel[review.category]} sx={{ bgcolor: `${categoryColor[review.category]}18`, color: categoryColor[review.category], fontWeight: 800 }} />
+                        </Stack>
+                        <Rating value={review.rating} readOnly sx={{ mt: 2, '& .MuiRating-iconFilled': { color: '#FFB300' } }} />
+                        <Typography sx={{ mt: 1.8, color: '#2A4459', lineHeight: 1.9 }}>{review.comment}</Typography>
+                        <Typography sx={{ mt: 1.8, color: '#8AA1B3', fontSize: '0.82rem' }}>{review.date}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid>
+          </Grid>
+
+          <Card sx={{ mt: 5, borderRadius: '28px', p: { xs: 3, md: 4 }, boxShadow: '0 20px 50px rgba(4,33,62,0.06)' }}>
+            <Typography variant="h5" sx={{ fontWeight: 900, color: '#0B1F33' }}>
+              Dejá tu reseña sobre entregas y vehículos
+            </Typography>
+            <Typography sx={{ mt: 1, color: '#5B7488', lineHeight: 1.8 }}>
+              Sumá una opinión sobre tiempos de entrega, calidad del vehículo o la experiencia general de la página.
+            </Typography>
+
+            {reviewError && (
+              <Alert severity="error" sx={{ mt: 3 }} onClose={() => setReviewError('')}>
+                {reviewError}
+              </Alert>
+            )}
+
+            <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
+              <Grid item xs={12} md={4}>
+                <TextField label="Nombre" fullWidth value={reviewForm.name} onChange={(event) => setReviewForm((current) => ({ ...current, name: event.target.value }))} />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField label="Rol" fullWidth value={reviewForm.role} onChange={(event) => setReviewForm((current) => ({ ...current, role: event.target.value }))} />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField label="Empresa o referencia" fullWidth value={reviewForm.company} onChange={(event) => setReviewForm((current) => ({ ...current, company: event.target.value }))} />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField select label="Categoría" fullWidth value={reviewForm.category} onChange={(event) => setReviewForm((current) => ({ ...current, category: event.target.value as ReviewCategory }))}>
+                  <MenuItem value="entrega">Tiempo de entrega</MenuItem>
+                  <MenuItem value="vehiculo">Vehículos</MenuItem>
+                  <MenuItem value="general">General</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Stack spacing={0.75}>
+                  <Typography sx={{ color: '#234158', fontWeight: 700 }}>Calificación</Typography>
+                  <Rating value={reviewForm.rating} onChange={(_, value) => setReviewForm((current) => ({ ...current, rating: value ?? 5 }))} sx={{ '& .MuiRating-iconFilled': { color: '#FFB300' } }} />
+                </Stack>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Comentario"
+                  fullWidth
+                  multiline
+                  minRows={4}
+                  value={reviewForm.comment}
+                  onChange={(event) => setReviewForm((current) => ({ ...current, comment: event.target.value }))}
+                  placeholder="Contanos cómo fue la entrega, qué te pareció la presentación del servicio o cómo viste los vehículos."
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Button variant="contained" endIcon={<SendRoundedIcon />} onClick={handleReviewSubmit} sx={{ borderRadius: '14px', px: 3, py: 1.2 }}>
+                  Publicar reseña
+                </Button>
+              </Grid>
+            </Grid>
+          </Card>
+        </Container>
+      </Box>
+
+      <Box component="section" ref={loginRef} sx={{ py: { xs: 8, md: 10 }, bgcolor: '#071D31' }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={4} alignItems="center">
+            <Grid item xs={12} md={7}>
+              <Typography sx={{ color: '#4FC3F7', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: '0.8rem' }}>
+                Acceso a la plataforma
+              </Typography>
+              <Typography variant="h3" sx={{ mt: 1.2, color: '#fff', fontWeight: 900, lineHeight: 1.1 }}>
+                Ingresá desde la pantalla de login que ya tenías
+              </Typography>
+              <Typography sx={{ mt: 2.2, color: 'rgba(255,255,255,0.74)', lineHeight: 1.9, maxWidth: 680 }}>
+                Dejé la landing enfocada en presentar el servicio. El acceso quedó separado para que el botón de ingresar te lleve a la página de inicio de sesión del front, manteniendo una experiencia más clara.
+              </Typography>
+
+              <Stack spacing={1.5} sx={{ mt: 3.5 }}>
+                {[
+                  'La landing queda limpia y orientada a mostrar la propuesta logística.',
+                  'Las cuentas demo ya no aparecen acá, solo en la pantalla de login.',
+                  'El registro también sigue disponible desde su página dedicada.',
+                ].map((item) => (
+                  <Stack key={item} direction="row" spacing={1.5} alignItems="center">
+                    <CheckCircleRoundedIcon sx={{ color: '#4FC3F7' }} />
+                    <Typography sx={{ color: 'rgba(255,255,255,0.84)', fontWeight: 600 }}>{item}</Typography>
+                  </Stack>
+                ))}
+              </Stack>
+            </Grid>
+
+            <Grid item xs={12} md={5}>
+              <Card sx={{ borderRadius: '28px', p: { xs: 3, md: 4 }, boxShadow: '0 24px 55px rgba(0,0,0,0.28)' }}>
+                <Typography variant="h5" sx={{ fontWeight: 900, color: '#0B1F33' }}>
+                  Accedé o creá tu cuenta
+                </Typography>
+                <Typography sx={{ mt: 1, color: '#5B7488', lineHeight: 1.8 }}>
+                  Entrá desde la página de login del sistema o registrate para usar la plataforma.
+                </Typography>
+
+                <Stack spacing={2} sx={{ mt: 3 }}>
+                  <Button variant="contained" size="large" onClick={() => navigate('/login')} sx={{ py: 1.35, borderRadius: '16px', fontWeight: 800 }}>
+                    Ir a iniciar sesión
+                  </Button>
+                  <Button variant="outlined" size="large" onClick={() => navigate('/register')} sx={{ py: 1.35, borderRadius: '16px', fontWeight: 800 }}>
+                    Crear cuenta nueva
+                  </Button>
+                </Stack>
+              </Card>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
+      <Box sx={{ py: 4, bgcolor: '#04111D' }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <Typography sx={{ color: '#fff', fontWeight: 800 }}>LogiTrack</Typography>
+              <Typography sx={{ mt: 0.8, color: 'rgba(255,255,255,0.62)' }}>
+                Landing de logística con foco en seguimiento, vehículos, reseñas e inicio de sesión integrado.
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent={{ md: 'flex-end' }}>
+                {[
+                  { icon: <InsightsRoundedIcon />, text: 'Indicadores visibles' },
+                  { icon: <SupportAgentRoundedIcon />, text: 'Experiencia clara' },
+                  { icon: <ScheduleRoundedIcon />, text: 'Entregas y tiempos' },
+                ].map((item) => (
+                  <Chip
+                    key={item.text}
+                    icon={item.icon}
+                    label={item.text}
+                    sx={{ bgcolor: 'rgba(255,255,255,0.08)', color: '#D3E9F8' }}
+                  />
+                ))}
+              </Stack>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
+      <Snackbar open={reviewSent} autoHideDuration={2500} onClose={() => setReviewSent(false)}>
+        <Alert severity="success" variant="filled" onClose={() => setReviewSent(false)}>
+          ¡Gracias! Tu reseña ya quedó visible en la página.
+        </Alert>
+      </Snackbar>
+
+      {showTop && (
+        <IconButton
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          sx={{
+            position: 'fixed',
+            right: 24,
+            bottom: 24,
+            zIndex: 30,
+            bgcolor: '#0288D1',
+            color: '#fff',
+            boxShadow: '0 14px 28px rgba(2,136,209,0.3)',
+            '&:hover': { bgcolor: '#0277BD' },
+          }}
+        >
+          <KeyboardArrowUpRoundedIcon />
+        </IconButton>
+      )}
+    </Box>
+  )
+}

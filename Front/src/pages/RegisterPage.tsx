@@ -88,7 +88,7 @@ function RegisterPage({ onLogin }: RegisterPageProps) {
       const user = await authService.register(formData)
       if (user) {
         onLogin(user)
-        navigate('/')
+        navigate(user.role === 'transportista' ? '/transportista' : '/app')
       } else {
         setGeneralError('El DNI o email ya están registrados, o las contraseñas no coinciden')
       }
