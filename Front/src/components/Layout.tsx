@@ -40,7 +40,7 @@ function Layout({ user, onLogout }: LayoutProps) {
   const handleLogout = () => {
     handleMenuClose()
     onLogout()
-    navigate('/login')
+    navigate('/')
   }
 
   const initials = `${user.name.charAt(0)}${user.lastname.charAt(0)}`.toUpperCase()
@@ -74,7 +74,7 @@ function Layout({ user, onLogout }: LayoutProps) {
               alignItems: 'center',
               gap: 0.5,
             }}
-            onClick={() => navigate(user.role === 'transportista' ? '/transportista' : '/')}
+            onClick={() => navigate(user.role === 'transportista' ? '/transportista' : '/app')}
           >
             📦 LogiTrack
           </Typography>
