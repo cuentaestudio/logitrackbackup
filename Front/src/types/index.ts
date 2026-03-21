@@ -1,9 +1,46 @@
+export type UserRole = 'supervisor' | 'operador' | 'transportista'
+
 export interface User {
   id: string
   name: string
   lastname: string
   email: string
   dni: string
+  role: UserRole
+}
+
+export interface Vehicle {
+  id: string
+  patente: string
+  marca: string
+  capacidadCarga: number // en kg
+  estado: 'Disponible' | 'En uso' | 'Mantenimiento'
+  createdDate: string
+  operator?: string // ID del operador que registró el vehículo
+}
+
+export interface Route {
+  id: string
+  routeId: string // Número identificador de la ruta
+  shipmentIds: string[] // IDs de los envíos asignados
+  vehicleId: string
+  transportistId: string // ID del transportista asignado
+  status: 'Creada' | 'En Curso' | 'Finalizada' | 'Cancelada'
+  createdDate: string
+  startDate?: string
+  endDate?: string
+  origin: string
+  destination: string
+}
+
+export interface Branch {
+  id: string
+  name: string
+  address: string
+  city: string
+  postalCode: string
+  phone: string
+  createdDate: string
 }
 
 export interface Shipment {
@@ -21,7 +58,7 @@ export interface Shipment {
     city: string
     postalCode: string
   }
-  status: 'En tránsito' | 'Entregado' | 'Cancelado'
+  status: 'En tránsito' | 'Entregado' | 'Cancelado' | 'Pendiente'
   origin: string
   destination: string
   createdDate: string
@@ -29,6 +66,8 @@ export interface Shipment {
   estimatedDelivery: string
   weight: number
   description: string
+  routeId?: string // ID de la ruta a la que pertenece
+  cancellationReason?: string // Motivo de cancelación
 }
 
 export interface LoginCredentials {
@@ -43,4 +82,5 @@ export interface RegisterData {
   dni: string
   password: string
   confirmPassword: string
+  role: UserRole
 }

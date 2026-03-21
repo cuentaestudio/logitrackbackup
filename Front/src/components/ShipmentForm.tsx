@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -10,8 +10,13 @@ import {
   Grid,
   CircularProgress,
   Typography,
+  Alert,
+  Select,
+  MenuItem,
 } from '@mui/material'
-import { Shipment } from '../types'
+import { Shipment, Branch } from '../types'
+import { shipmentService } from '../services/shipmentService'
+import { branchService } from '../services/branchService'
 
 interface ShipmentFormProps {
   open: boolean
@@ -21,7 +26,9 @@ interface ShipmentFormProps {
 
 function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
   const [loading, setLoading] = useState(false)
+  const [generatingId, setGeneratingId] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [branches, setBranches] = useState<Branch[]>([])
   const [formData, setFormData] = useState({
     trackingId: '',
     senderName: '',
@@ -39,6 +46,44 @@ function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
     estimatedDelivery: '',
   })
 
+  // Cargar sucursales y generar tracking ID cuando se abre el modal
+  useEffect(() => {
+    if (open) {
+      loadBranches()
+      generateNewTrackingId()
+    }
+  }, [open])
+
+  const loadBranches = async () => {
+    try {
+      const data = await branchService.getAllBranches()
+      setBranches(data)
+    } catch (error) {
+      console.error('Error cargando sucursales:', error)
+    }
+  }
+
+  const generateNewTrackingId = async () => {
+    setGeneratingId(true)
+    try {
+      const newId = await shipmentService.generateTrackingId()
+      setFormData((prev) => ({
+        ...prev,
+        trackingId: newId,
+      }))
+      // Limpiar error de tracking ID
+      setErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors.trackingId
+        return newErrors
+      })
+    } catch (error) {
+      console.error('Error generando tracking ID:', error)
+    } finally {
+      setGeneratingId(false)
+    }
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({
@@ -53,7 +98,7 @@ function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
     }
   }
 
-  const validateForm = () => {
+  const validateForm = async (): Promise<boolean> => {
     const newErrors: Record<string, string> = {}
 
     if (!formData.trackingId) newErrors.trackingId = 'Requerido'
@@ -65,12 +110,20 @@ function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
     if (!formData.description) newErrors.description = 'Requerido'
     if (!formData.estimatedDelivery) newErrors.estimatedDelivery = 'Requerido'
 
+    // Validar que el tracking ID no exista
+    if (formData.trackingId && !newErrors.trackingId) {
+      const exists = await shipmentService.trackingIdExists(formData.trackingId)
+      if (exists) {
+        newErrors.trackingId = 'Este ID de tracking ya existe'
+      }
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async () => {
-    if (!validateForm()) return
+    if (!(await validateForm())) return
 
     setLoading(true)
     try {
@@ -126,16 +179,32 @@ function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Registrar nuevo envío</DialogTitle>
       <DialogContent sx={{ pt: 3 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            label="ID de Tracking"
-            name="trackingId"
-            value={formData.trackingId}
-            onChange={handleChange}
-            error={!!errors.trackingId}
-            helperText={errors.trackingId}
-            fullWidth
-          />
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mt: 1 }}>
+              <TextField
+                label="ID de Tracking"
+                name="trackingId"
+                value={formData.trackingId}
+                onChange={handleChange}
+                error={!!errors.trackingId}
+                helperText={errors.trackingId || 'Puedes editarlo, pero debe ser único'}
+                fullWidth
+                disabled={generatingId}
+                size="small"
+              />
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={generateNewTrackingId}
+                disabled={generatingId || loading}
+                sx={{ whiteSpace: 'nowrap', mt: 0.5 }}
+                title="Generar nuevo ID"
+              >
+                {generatingId ? <CircularProgress size={16} /> : '🔄'}
+              </Button>
+            </Box>
+          </Box>
 
           <Box>
             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
@@ -239,26 +308,62 @@ function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
 
           <Grid container spacing={1}>
             <Grid item xs={6}>
-              <TextField
+              <Select
                 label="Origen"
                 name="origin"
                 value={formData.origin}
-                onChange={handleChange}
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    origin: e.target.value,
+                  }))
+                  if (errors.origin) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      origin: '',
+                    }))
+                  }
+                }}
                 error={!!errors.origin}
-                helperText={errors.origin}
                 fullWidth
-              />
+                displayEmpty
+              >
+                <MenuItem value="">Seleccionar origen</MenuItem>
+                {branches.map((branch) => (
+                  <MenuItem key={branch.id} value={branch.name}>
+                    {branch.name}
+                  </MenuItem>
+                ))}
+              </Select>
             </Grid>
             <Grid item xs={6}>
-              <TextField
+              <Select
                 label="Destino"
                 name="destination"
                 value={formData.destination}
-                onChange={handleChange}
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    destination: e.target.value,
+                  }))
+                  if (errors.destination) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      destination: '',
+                    }))
+                  }
+                }}
                 error={!!errors.destination}
-                helperText={errors.destination}
                 fullWidth
-              />
+                displayEmpty
+              >
+                <MenuItem value="">Seleccionar destino</MenuItem>
+                {branches.map((branch) => (
+                  <MenuItem key={branch.id} value={branch.name}>
+                    {branch.name}
+                  </MenuItem>
+                ))}
+              </Select>
             </Grid>
           </Grid>
 
@@ -300,8 +405,14 @@ function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={loading}>
+        <Button onClick={onClose} disabled={loading || generatingId}>
+          Cancelar
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          disabled={loading || generatingId || !formData.trackingId}
+        >
           {loading ? <CircularProgress size={24} /> : 'Registrar'}
         </Button>
       </DialogActions>

@@ -97,10 +97,39 @@ const mockShipments: Shipment[] = [
     estimatedDelivery: '2026-03-17',
     weight: 2.1,
     description: 'Paquete cancelado por solicitud del cliente',
+    cancellationReason: 'Solicitud del cliente - cambio de dirección',
   },
 ]
 
+// Generar tracking ID único
+const generateTrackingId = (): string => {
+  const date = new Date().toISOString().split('T')[0].replace(/-/g, '')
+  const random = Math.floor(Math.random() * 100000)
+    .toString()
+    .padStart(6, '0')
+  return `LT-${date}-${random}`
+}
+
 export const shipmentService = {
+  // Generar nuevo tracking ID
+  generateTrackingId: async (): Promise<string> => {
+    return new Promise((resolve) => {
+      let trackingId = generateTrackingId()
+      // Asegurar que sea único
+      while (mockShipments.some((s) => s.trackingId === trackingId)) {
+        trackingId = generateTrackingId()
+      }
+      setTimeout(() => resolve(trackingId), 100)
+    })
+  },
+
+  // Validar si un tracking ID ya existe
+  trackingIdExists: async (trackingId: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(mockShipments.some((s) => s.trackingId === trackingId)), 200)
+    })
+  },
+
   // Obtener todos los envíos
   getAllShipments: async (): Promise<Shipment[]> => {
     return new Promise((resolve) => {
@@ -147,12 +176,21 @@ export const shipmentService = {
   updateShipmentStatus: async (
     id: string,
     status: Shipment['status'],
+    cancellationReason?: string,
   ): Promise<Shipment | undefined> => {
     return new Promise((resolve) => {
       const shipment = mockShipments.find((s) => s.id === id)
       if (shipment) {
         shipment.status = status
         shipment.lastUpdate = new Date().toISOString().split('T')[0]
+        
+        // Si es cancelado, agregar motivo
+        if (status === 'Cancelado' && cancellationReason) {
+          shipment.cancellationReason = cancellationReason
+        } else if (status !== 'Cancelado') {
+          // Limpiar motivo si no es cancelado
+          shipment.cancellationReason = undefined
+        }
       }
       setTimeout(() => resolve(shipment), 400)
     })

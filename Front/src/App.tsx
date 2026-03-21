@@ -6,13 +6,7 @@ import RegisterPage from './pages/RegisterPage'
 import Dashboard from './pages/Dashboard'
 import ShipmentDetail from './pages/ShipmentDetail'
 import Layout from './components/Layout'
-
-interface User {
-  id: string
-  name: string
-  email: string
-  dni: string
-}
+import { User } from './types'
 
 function App() {
   const [user, setUser] = useState<User | null>(null)

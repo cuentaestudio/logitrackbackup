@@ -9,15 +9,13 @@ import {
   Menu,
   MenuItem,
   Avatar,
+  Chip,
 } from '@mui/material'
 import { useState } from 'react'
+import { User } from '../types'
 
 interface LayoutProps {
-  user: {
-    id: string
-    name: string
-    email: string
-  }
+  user: User
   onLogout: () => void
 }
 
@@ -41,6 +39,15 @@ function Layout({ user, onLogout }: LayoutProps) {
 
   const initials = `${user.name.charAt(0)}${user.email.split('@')[0].charAt(0)}`.toUpperCase()
 
+  const getRoleBadge = (role: string) => {
+    const colors: Record<string, any> = {
+      supervisor: 'error',
+      operador: 'primary',
+      transportista: 'success',
+    }
+    return colors[role] || 'default'
+  }
+
   return (
     <Box>
       <AppBar position="sticky">
@@ -54,7 +61,18 @@ function Layout({ user, onLogout }: LayoutProps) {
             📦 LogiTrack
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body2">{user.name}</Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', mr: 1 }}>
+              <Typography variant="body2">{user.name}</Typography>
+              {user.role && (
+                <Chip
+                  label={user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                  size="small"
+                  color={getRoleBadge(user.role)}
+                  variant="outlined"
+                  sx={{ height: 20 }}
+                />
+              )}
+            </Box>
             <Avatar
               onClick={handleMenuOpen}
               sx={{ cursor: 'pointer', bgcolor: 'secondary.main' }}
@@ -74,7 +92,7 @@ function Layout({ user, onLogout }: LayoutProps) {
       </AppBar>
 
       <Container maxWidth="lg" sx={{ py: 3 }}>
-        <Outlet />
+        <Outlet context={user} />
       </Container>
     </Box>
   )

@@ -11,9 +11,13 @@ import {
   Alert,
   CircularProgress,
   Grid,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material'
 import { authService } from '../services/authService'
-import { User, RegisterData } from '../types'
+import { User, RegisterData, UserRole } from '../types'
 
 interface RegisterPageProps {
   onLogin: (user: User) => void
@@ -28,6 +32,7 @@ function RegisterPage({ onLogin }: RegisterPageProps) {
     dni: '',
     password: '',
     confirmPassword: '',
+    role: 'operador',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [generalError, setGeneralError] = useState('')
@@ -46,6 +51,13 @@ function RegisterPage({ onLogin }: RegisterPageProps) {
       }))
     }
     setGeneralError('')
+  }
+
+  const handleRoleChange = (e: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      role: e.target.value as UserRole,
+    }))
   }
 
   const validateForm = (): boolean => {
@@ -167,6 +179,19 @@ function RegisterPage({ onLogin }: RegisterPageProps) {
                 disabled={loading}
                 fullWidth
               />
+
+              <FormControl fullWidth disabled={loading}>
+                <InputLabel>Rol</InputLabel>
+                <Select
+                  value={formData.role}
+                  onChange={handleRoleChange}
+                  label="Rol"
+                >
+                  <MenuItem value="supervisor">Supervisor</MenuItem>
+                  <MenuItem value="operador">Operador</MenuItem>
+                  <MenuItem value="transportista">Transportista</MenuItem>
+                </Select>
+              </FormControl>
 
               <TextField
                 label="Contraseña"

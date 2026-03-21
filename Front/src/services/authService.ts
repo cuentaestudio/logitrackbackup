@@ -9,6 +9,25 @@ const mockUsers: Array<User & { password: string }> = [
     email: 'juan@example.com',
     dni: '12345678',
     password: 'password123',
+    role: 'supervisor',
+  },
+  {
+    id: '2',
+    name: 'María',
+    lastname: 'Rodríguez',
+    email: 'maria@example.com',
+    dni: '87654321',
+    password: 'password123',
+    role: 'operador',
+  },
+  {
+    id: '3',
+    name: 'Carlos',
+    lastname: 'López',
+    email: 'carlos@example.com',
+    dni: '11223344',
+    password: 'password123',
+    role: 'transportista',
   },
 ]
 
@@ -54,6 +73,7 @@ export const authService = {
           email: data.email,
           dni: data.dni,
           password: data.password,
+          role: data.role,
         }
 
         mockUsers.push(newUser)

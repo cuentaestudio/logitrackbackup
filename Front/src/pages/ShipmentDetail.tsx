@@ -31,7 +31,10 @@ function ShipmentDetail() {
   const [error, setError] = useState('')
   const [openStatusDialog, setOpenStatusDialog] = useState(false)
   const [newStatus, setNewStatus] = useState<Shipment['status']>('En tránsito')
+  const [cancellationReason, setCancellationReason] = useState('')
   const [updatingStatus, setUpdatingStatus] = useState(false)
+  const [showStatusMessage, setShowStatusMessage] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('')
 
   useEffect(() => {
     loadShipment()
@@ -57,18 +60,94 @@ function ShipmentDetail() {
     }
   }
 
+  // Validar si se puede cambiar a un nuevo estado
+  const canChangeStatus = (currentStatus: Shipment['status'], targetStatus: Shipment['status']): boolean => {
+    // Si está entregado, no se puede cambiar a cancelado o en sucursal
+    if (currentStatus === 'Entregado') {
+      return false
+    }
+    // Si está cancelado, no se puede cambiar
+    if (currentStatus === 'Cancelado') {
+      return false
+    }
+    return true
+  }
+
+  // Obtener mensaje de error para cambio de estado no permitido
+  const getStatusChangeErrorMessage = (): string => {
+    if (shipment?.status === 'Entregado') {
+      return 'No se puede cambiar el estado de un envío que ya ha sido entregado'
+    }
+    if (shipment?.status === 'Cancelado') {
+      return 'No se puede cambiar el estado de un envío cancelado'
+    }
+    return ''
+  }
+
   const handleUpdateStatus = async () => {
     if (!id || !shipment) return
 
+    // Validar transición de estado
+    if (!canChangeStatus(shipment.status, newStatus)) {
+      setError(getStatusChangeErrorMessage())
+      return
+    }
+
+    // Validar motivo de cancelación
+    if (newStatus === 'Cancelado' && !cancellationReason.trim()) {
+      setError('El motivo de cancelación es requerido')
+      return
+    }
+
     setUpdatingStatus(true)
     try {
-      const updated = await shipmentService.updateShipmentStatus(id, newStatus)
+      const updated = await shipmentService.updateShipmentStatus(id, newStatus, cancellationReason)
       if (updated) {
         setShipment(updated)
-        setOpenStatusDialog(false)
+        
+        // Si cambia a Entregado, mostrar mensaje y cerrar después de 3 segundos
+        if (newStatus === 'Entregado') {
+          setStatusMessage('✓ Envío marcado como Entregado. No se puede modificar su estado.')
+          setShowStatusMessage(true)
+          
+          setTimeout(() => {
+            setOpenStatusDialog(false)
+            setShowStatusMessage(false)
+            setCancellationReason('')
+          }, 3000)
+        } else {
+          setOpenStatusDialog(false)
+          setCancellationReason('')
+        }
       }
     } catch (err) {
       setError('Error al actualizar el estado')
+    } finally {
+      setUpdatingStatus(false)
+    }
+  }
+
+  // Reenviar envío cancelado (cambiar a En sucursal automáticamente)
+  const handleResendShipment = async () => {
+    if (!id || !shipment) return
+
+    setUpdatingStatus(true)
+    setError('')
+    try {
+      // Cambiar estado a "En sucursal" y limpiar motivo de cancelación
+      const updated = await shipmentService.updateShipmentStatus(id, 'En sucursal', '')
+      if (updated) {
+        setShipment(updated)
+        setStatusMessage('✓ Envío reenviado correctamente. Estado: En sucursal')
+        setShowStatusMessage(true)
+        
+        // Limpiar mensaje después de 2 segundos
+        setTimeout(() => {
+          setShowStatusMessage(false)
+        }, 2000)
+      }
+    } catch (err) {
+      setError('Error al reenviar el envío')
     } finally {
       setUpdatingStatus(false)
     }
@@ -120,6 +199,51 @@ function ShipmentDetail() {
         Volver
       </Button>
 
+      {/* Visualización especial para envíos cancelados */}
+      {shipment.status === 'Cancelado' && (
+        <Card sx={{ mb: 3, bgcolor: '#ffebee', borderLeft: '4px solid #d32f2f' }}>
+          <CardContent>
+            <Stack spacing={2}>
+              <Box>
+                <Typography variant="h6" sx={{ color: '#d32f2f' }}>
+                  ❌ Envío Cancelado
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="body2" color="textSecondary" gutterBottom>
+                  Motivo de cancelación:
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                  {shipment.cancellationReason || 'Sin especificar'}
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleResendShipment}
+                disabled={updatingStatus}
+              >
+                {updatingStatus ? <CircularProgress size={20} /> : 'Reenviar Envío'}
+              </Button>
+            </Stack>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Mensaje de éxito */}
+      {showStatusMessage && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          {statusMessage}
+        </Alert>
+      )}
+
+      {/* Mensaje de error */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <Card>
@@ -150,6 +274,7 @@ function ShipmentDetail() {
                   variant="outlined"
                   onClick={() => setOpenStatusDialog(true)}
                   fullWidth
+                  disabled={!canChangeStatus(shipment.status, shipment.status)}
                 >
                   Cambiar estado
                 </Button>
@@ -300,28 +425,78 @@ function ShipmentDetail() {
       </Grid>
 
       {/* Dialog para cambiar estado */}
-      <Dialog open={openStatusDialog} onClose={() => setOpenStatusDialog(false)}>
+      <Dialog open={openStatusDialog} onClose={() => {
+        if (!updatingStatus) {
+          setOpenStatusDialog(false)
+          setShowStatusMessage(false)
+          setCancellationReason('')
+        }
+      }}>
         <DialogTitle>Cambiar estado del envío</DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
-          <Select
-            value={newStatus}
-            onChange={(e) => setNewStatus(e.target.value as Shipment['status'])}
-            fullWidth
-          >
-            <MenuItem value="En tránsito">En tránsito</MenuItem>
-            <MenuItem value="Entregado">Entregado</MenuItem>
-            <MenuItem value="Cancelado">Cancelado</MenuItem>
-          </Select>
+          {showStatusMessage ? (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              {statusMessage}
+            </Alert>
+          ) : (
+            <>
+              <Select
+                value={newStatus}
+                onChange={(e) => {
+                  setNewStatus(e.target.value as Shipment['status'])
+                  if (e.target.value !== 'Cancelado') {
+                    setCancellationReason('')
+                  }
+                }}
+                fullWidth
+                disabled={!canChangeStatus(shipment.status, shipment.status) || updatingStatus}
+              >
+                <MenuItem value="En sucursal">En sucursal</MenuItem>
+                <MenuItem value="En tránsito">En tránsito</MenuItem>
+                <MenuItem value="Entregado">Entregado</MenuItem>
+                <MenuItem value="Cancelado">Cancelado</MenuItem>
+              </Select>
+
+              {newStatus === 'Cancelado' && (
+                <TextField
+                  label="Motivo de cancelación"
+                  value={cancellationReason}
+                  onChange={(e) => setCancellationReason(e.target.value)}
+                  fullWidth
+                  multiline
+                  rows={3}
+                  placeholder="Por favor, especifica el motivo de la cancelación"
+                  sx={{ mt: 2 }}
+                  disabled={updatingStatus}
+                />
+              )}
+
+              {newStatus === 'Entregado' && (
+                <Alert severity="info" sx={{ mt: 2 }}>
+                  ⚠️ <strong>Importante:</strong> Una vez que marques este envío como Entregado, 
+                  no podrás cambiar su estado nuevamente.
+                </Alert>
+              )}
+            </>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenStatusDialog(false)}>Cancelar</Button>
-          <Button
-            onClick={handleUpdateStatus}
-            variant="contained"
-            disabled={updatingStatus}
-          >
-            {updatingStatus ? <CircularProgress size={24} /> : 'Actualizar'}
+          <Button onClick={() => {
+            setOpenStatusDialog(false)
+            setShowStatusMessage(false)
+            setCancellationReason('')
+          }} disabled={updatingStatus}>
+            Cerrar
           </Button>
+          {!showStatusMessage && (
+            <Button
+              onClick={handleUpdateStatus}
+              variant="contained"
+              disabled={updatingStatus}
+            >
+              {updatingStatus ? <CircularProgress size={24} /> : 'Actualizar'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>
