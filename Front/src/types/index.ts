@@ -14,9 +14,10 @@ export interface Vehicle {
   patente: string
   marca: string
   capacidadCarga: number // en kg
-  estado: 'Disponible' | 'En uso' | 'Mantenimiento'
+  estado: 'Disponible' | 'En uso' | 'Mantenimiento' | 'Suspendido'
   createdDate: string
   operator?: string // ID del operador que registró el vehículo
+  assignedRouteIds?: string[] // IDs de rutas asignadas actualmente activas
 }
 
 export interface Route {

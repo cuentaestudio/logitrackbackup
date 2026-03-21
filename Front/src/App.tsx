@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import Dashboard from './pages/Dashboard'
 import ShipmentDetail from './pages/ShipmentDetail'
+import VehicleDetail from './pages/VehicleDetail'
 import Layout from './components/Layout'
 import RoutesDashboard from './pages/transportista/RoutesDashboard'
 import RouteDetail from './pages/transportista/RouteDetail'
@@ -80,6 +81,7 @@ function App() {
         >
           <Route path="/" element={<Dashboard />} />
           <Route path="/shipment/:id" element={<ShipmentDetail />} />
+          <Route path="/vehiculo/:id" element={<VehicleDetail />} />
         </Route>
 
         {/* Catch-all */}

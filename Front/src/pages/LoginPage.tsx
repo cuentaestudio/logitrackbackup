@@ -23,6 +23,7 @@ interface LoginPageProps {
 }
 
 function LoginPage({ onLogin }: LoginPageProps) {
+  const isDev = import.meta.env.VITE_DEV
   const navigate = useNavigate()
   const [credentials, setCredentials] = useState<LoginCredentials>({
     dni: '',
@@ -190,46 +191,52 @@ function LoginPage({ onLogin }: LoginPageProps) {
           </Box>
 
           {/* Demo credentials */}
-          <Divider sx={{ my: 3 }}>
-            <Typography variant="caption" color="text.disabled" fontWeight={600}>
-              DEMO
-            </Typography>
-          </Divider>
+          {isDev && (
+            <Box>
+              <Divider sx={{ my: 3 }}>
+                <Typography variant="caption" color="text.disabled" fontWeight={600}>
+                  DEMO
+                </Typography>
+              </Divider>
 
-          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5, textAlign: 'center' }}>
-            Clic en un rol para autocompletar · contraseña: <strong>password123</strong>
-          </Typography>
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5, textAlign: 'center' }}>
+                Clic en un rol para autocompletar · contraseña: <strong>password123</strong>
+              </Typography>
 
-          <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" useFlexGap>
-            <Chip
-              label="Supervisor"
-              color="error"
-              variant="outlined"
-              size="small"
-              onClick={() => fillDemo('12345678')}
-              sx={{ cursor: 'pointer', fontWeight: 600 }}
-            />
-            <Chip
-              label="Operador"
-              color="primary"
-              variant="outlined"
-              size="small"
-              onClick={() => fillDemo('87654321')}
-              sx={{ cursor: 'pointer', fontWeight: 600 }}
-            />
-            <Chip
-              label="Transportista"
-              color="success"
-              variant="outlined"
-              size="small"
-              onClick={() => fillDemo('11223344')}
-              sx={{ cursor: 'pointer', fontWeight: 600 }}
-            />
-          </Stack>
+              <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" useFlexGap>
+                <Chip
+                  label="Supervisor"
+                  color="error"
+                  variant="outlined"
+                  size="small"
+                  onClick={() => fillDemo('12345678')}
+                  sx={{ cursor: 'pointer', fontWeight: 600 }}
+                />
+                <Chip
+                  label="Operador"
+                  color="primary"
+                  variant="outlined"
+                  size="small"
+                  onClick={() => fillDemo('87654321')}
+                  sx={{ cursor: 'pointer', fontWeight: 600 }}
+                />
+                <Chip
+                  label="Transportista"
+                  color="success"
+                  variant="outlined"
+                  size="small"
+                  onClick={() => fillDemo('11223344')}
+                  sx={{ cursor: 'pointer', fontWeight: 600 }}
+                />
+              </Stack>
+            </Box>
+          )}
         </Card>
       </Box>
     </Box>
-  )
+   ) 
+  
+
 }
 
 export default LoginPage

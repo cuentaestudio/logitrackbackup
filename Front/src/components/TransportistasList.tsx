@@ -89,7 +89,7 @@ function TransportistasList({ }: TransportistsListProps) {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Stack spacing={2}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6">
             Transportistas - Total: {transportistas.length}
@@ -141,7 +141,7 @@ function TransportistasList({ }: TransportistsListProps) {
             ))}
           </Grid>
         )}
-      </Stack>
+      </Box>
     </Box>
   )
 }

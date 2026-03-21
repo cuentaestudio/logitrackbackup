@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useOutletContext, useNavigate } from 'react-router-dom'
 import {
   Box,
   Button,
@@ -11,6 +11,7 @@ import {
   Tab,
   Card,
   CardContent,
+  CardActions,
   Stack,
   Chip,
   ToggleButtonGroup,
@@ -21,6 +22,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb'
 import BlockIcon from '@mui/icons-material/Block'
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
 import { shipmentService } from '../services/shipmentService'
 import { vehicleService } from '../services/vehicleService'
 import { branchService } from '../services/branchService'
@@ -33,8 +35,33 @@ import RoutesList from '../components/RoutesList'
 import TransportistasList from '../components/TransportistasList'
 import SearchBar from '../components/SearchBar'
 
+// ─── Vehicle status chip (inline) ────────────────────────────────────────────
+
+type VehicleEstado = Vehicle['estado']
+
+const vehicleEstadoConfig: Record<VehicleEstado, { label: string; color: string; bg: string }> = {
+  Disponible: { label: 'Disponible', color: '#1B5E20', bg: '#E8F5E9' },
+  'En uso': { label: 'En uso', color: '#0D47A1', bg: '#E3F2FD' },
+  Mantenimiento: { label: 'Mantenimiento', color: '#E65100', bg: '#FFF3E0' },
+  Suspendido: { label: 'Suspendido', color: '#B71C1C', bg: '#FFEBEE' },
+}
+
+function VehicleEstadoChip({ estado }: { estado: VehicleEstado }) {
+  const cfg = vehicleEstadoConfig[estado] ?? { label: estado, color: '#555', bg: '#eee' }
+  return (
+    <Chip
+      label={cfg.label}
+      size="small"
+      sx={{ bgcolor: cfg.bg, color: cfg.color, fontWeight: 700, fontSize: '0.7rem' }}
+    />
+  )
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+
 function Dashboard() {
   const user = useOutletContext<User>()
+  const navigate = useNavigate()
   const [shipments, setShipments] = useState<Shipment[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
@@ -322,36 +349,52 @@ function Dashboard() {
               ) : (
                 <Grid container spacing={3}>
                   {vehicles.map((vehicle) => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={vehicle.id}>
-                      <Box
-                        sx={{
-                          p: 2,
-                          border: '1px solid #ddd',
-                          borderRadius: 1,
-                          bgcolor: 'background.paper',
-                        }}
-                      >
-                        <Typography variant="h6">{vehicle.patente}</Typography>
-                        <Typography variant="body2" color="textSecondary">
-                          {vehicle.marca}
-                        </Typography>
-                        <Typography variant="body2">
-                          Capacidad: {vehicle.capacidadCarga} kg
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            mt: 1,
-                            p: 0.5,
-                            borderRadius: 0.5,
-                            bgcolor: vehicle.estado === 'Disponible' ? '#4caf50' : '#ffc107',
-                            color: 'white',
-                            textAlign: 'center',
-                          }}
-                        >
-                          {vehicle.estado}
-                        </Typography>
-                      </Box>
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={vehicle.id} sx={{ display: 'flex' }}>
+                      <Card sx={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <CardContent sx={{ flex: 1 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                              <DirectionsCarIcon color="primary" fontSize="small" />
+                              <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 700 }}>
+                                {vehicle.patente}
+                              </Typography>
+                            </Box>
+                            <VehicleEstadoChip estado={vehicle.estado} />
+                          </Box>
+                          <Stack spacing={1}>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                                Marca
+                              </Typography>
+                              <Typography variant="body2">{vehicle.marca}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                                Capacidad de carga
+                              </Typography>
+                              <Typography variant="body2">{vehicle.capacidadCarga} kg</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                                Rutas asignadas
+                              </Typography>
+                              <Typography variant="body2" fontWeight={700}>
+                                {vehicle.assignedRouteIds?.length ?? 0}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                        </CardContent>
+                        <CardActions sx={{ pt: 0, px: 2, pb: 1.5 }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            fullWidth
+                            onClick={() => navigate(`/vehiculo/${vehicle.id}`)}
+                          >
+                            Ver detalle
+                          </Button>
+                        </CardActions>
+                      </Card>
                     </Grid>
                   ))}
                 </Grid>
