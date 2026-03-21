@@ -10,7 +10,7 @@ namespace Back.Domain.Models
 
     public class Ruta
     {
-        public Guid Id { get; private set; } 
+        public Guid Id { get; private set; }
         public RutaStatus Estado { get; private set; } = RutaStatus.Pendiente;
         public DateTimeOffset? IniciadoEn { get; private set; }
         public DateTimeOffset? FinalizadoEn { get; private set; }
@@ -28,6 +28,11 @@ namespace Back.Domain.Models
             Transportista = transportista;
             Paquetes = paquetes;
         }
+
+        public int TotalPaquetes => Paquetes.Count;
+        public int PaquetesEntregados => Paquetes.Count(p => p.Status == PaqueteStatus.Entregado);
+        public int PaquetesCancelados => Paquetes.Count(p => p.Status == PaqueteStatus.Cancelado);
+        public int PaquetesPendientes => Paquetes.Count(p => p.Status == PaqueteStatus.EnTransito);
 
 
         public void Iniciar()
@@ -75,13 +80,12 @@ namespace Back.Domain.Models
         public void EntregarPaquete(Guid id)
         {
             var paquete = Paquetes.FirstOrDefault(p => p.Id == id) ?? throw new InvalidOperationException("Paquete no encontrado en esta ruta.");
-            
-                paquete.Entregar();
+
+            paquete.Entregar();
 
             if (Paquetes.All(p => p.Status == PaqueteStatus.Entregado))
             {
                 Finalizar();
-                
             }
         }
     }
