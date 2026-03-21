@@ -1,7 +1,7 @@
 using Back.Application.Util;
 using Back.Controllers;
 using Back.Domain.Models;
-using Domain.Repositories;
+using Back.Domain.Repositories;
 
 namespace Back.Application.Services
 {
@@ -34,6 +34,12 @@ namespace Back.Application.Services
 
         public async Task Registrarse(RegisterRequest request)
         {
+
+            if (!EmailService.IsEmailValid(request.Email))
+            {
+                throw new InvalidOperationException("Correo electrónico no válido");
+            }
+
             var existingUser = await _userRepository.GetUsuarioByEmail(request.Email);
 
             if (existingUser != null)
@@ -42,24 +48,14 @@ namespace Back.Application.Services
             }
 
             var hashedPassword = PasswordHasher.HashPassword(request.Password);
-
-            Usuario newUser;
-
-            switch (request.Role)
+            
+            Usuario newUser = request.Role switch
             {
-                case UserRole.Supervisor:
-                    newUser = new Supervisor(request.Nombre, request.Apellido, request.Email, hashedPassword, request.DNI);
-                    break;
-                case UserRole.Operador:
-                    newUser = new Operador(request.Nombre, request.Apellido, request.Email, hashedPassword, request.DNI);
-                    break;
-                case UserRole.Transportista:
-                    newUser = new Transportista(request.Nombre, request.Apellido, request.Email, hashedPassword, request.DNI);
-                    break;
-                default:
-                    throw new InvalidOperationException("Rol no válido");
-            }
-
+                UserRole.Supervisor => new Supervisor(request.Nombre, request.Apellido, request.Email, hashedPassword, request.DNI),
+                UserRole.Operador => new Operador(request.Nombre, request.Apellido, request.Email, hashedPassword, request.DNI),
+                UserRole.Transportista => new Transportista(request.Nombre, request.Apellido, request.Email, hashedPassword, request.DNI),
+                _ => throw new InvalidOperationException("Rol no válido"),
+            };
             await _userRepository.Add(newUser);
         }
     }
