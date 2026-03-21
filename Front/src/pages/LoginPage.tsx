@@ -191,7 +191,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
           </Box>
 
           {/* Demo credentials */}
-          {isDev && (
+          {showDemoUsers && (
             <Box>
               <Divider sx={{ my: 3 }}>
                 <Typography variant="caption" color="text.disabled" fontWeight={600}>
