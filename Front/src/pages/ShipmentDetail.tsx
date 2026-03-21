@@ -190,7 +190,7 @@ function ShipmentDetail() {
         <Alert severity="error">{error || 'Envío no encontrado'}</Alert>
         <Button
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/app')}
           sx={{ mt: 2 }}
         >
           Volver al dashboard
@@ -203,7 +203,7 @@ function ShipmentDetail() {
     <Box>
       <Button
         startIcon={<ArrowBackIcon />}
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/app')}
         sx={{ mb: 2 }}
       >
         Volver
