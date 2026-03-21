@@ -1,7 +1,7 @@
 
 using Back.Domain.Models;
 
-namespace Domain.Repositories;
+namespace Back.Domain.Repositories;
 
 public interface IUserRepository
 {

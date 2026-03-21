@@ -1,5 +1,5 @@
 using Back.Domain.Models;
-using Domain.Repositories;
+using Back.Domain.Repositories;
 
 namespace Back.Infraestructure.Repositories
 {

@@ -1,12 +1,12 @@
 using Back.Application.Services;
+using Back.Domain.Repositories;
 using Back.Infraestructure.Repositories;
-using Domain.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddScoped<AuthService>().AddSingleton<IUserRepository, LocalUsuariosRepository>();
+builder.Services.AddScoped<AuthService>().AddSingleton<IUserRepository, LocalUsuariosRepository>().AddSingleton<IEnviosRepository, LocalEnviosRepository>();
 
 
 builder.Services.AddEndpointsApiExplorer();
