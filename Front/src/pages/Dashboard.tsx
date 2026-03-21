@@ -12,19 +12,19 @@ import {
   Card,
   CardContent,
   Stack,
-  TextField,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import FileDownloadIcon from '@mui/icons-material/FileDownload'
 import { shipmentService } from '../services/shipmentService'
 import { vehicleService } from '../services/vehicleService'
 import { branchService } from '../services/branchService'
-import { routeService } from '../services/routeService'
 import { Shipment, User, Vehicle, Branch } from '../types'
 import ShipmentCard from '../components/ShipmentCard'
 import ShipmentForm from '../components/ShipmentForm'
 import VehicleForm from '../components/VehicleForm'
 import BranchForm from '../components/BranchForm'
 import RoutesList from '../components/RoutesList'
+import TransportistasList from '../components/TransportistasList'
 import SearchBar from '../components/SearchBar'
 
 function Dashboard() {
@@ -117,6 +117,45 @@ function Dashboard() {
     setOpenBranchForm(false)
   }
 
+  // Descargar envíos como CSV
+  const handleDownloadShipments = () => {
+    if (shipments.length === 0) {
+      alert('No hay envíos para descargar')
+      return
+    }
+
+    // Preparar datos para CSV
+    const headers = ['ID', 'Tracking ID', 'Estado', 'Origen', 'Destino', 'Remitente', 'Destinatario', 'Peso (kg)', 'Descripción', 'Fecha Creación', 'Fecha Entrega Estimada']
+    const rows = shipments.map(s => [
+      s.id,
+      s.trackingId,
+      s.status,
+      s.origin,
+      s.destination,
+      s.sender.name,
+      s.receiver.name,
+      s.weight,
+      s.description,
+      s.createdDate,
+      s.estimatedDelivery,
+    ])
+
+    // Crear contenido CSV
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
+    ].join('\n')
+
+    // Descargar archivo
+    const element = document.createElement('a')
+    element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent))
+    element.setAttribute('download', `envios_${new Date().toISOString().split('T')[0]}.csv`)
+    element.style.display = 'none'
+    document.body.appendChild(element)
+    element.click()
+    document.body.removeChild(element)
+  }
+
   return (
     <Box>
       <Box sx={{ mb: 3 }}>
@@ -152,6 +191,14 @@ function Dashboard() {
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h6">Envíos</Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<FileDownloadIcon />}
+                  onClick={handleDownloadShipments}
+                  size="small"
+                >
+                  Descargar CSV
+                </Button>
               </Box>
               <SearchBar onSearch={handleSearch} loading={searchLoading} />
           {loading ? (
@@ -248,6 +295,8 @@ function Dashboard() {
           <Tabs value={tab} onChange={(_, newValue) => setTab(newValue)} sx={{ mb: 3 }}>
             <Tab label={`Envíos ${filteredShipments.length > 0 ? `(${filteredShipments.length})` : ''}`} />
             <Tab label={`Vehículos ${vehicles.length > 0 ? `(${vehicles.length})` : ''}`} />
+            <Tab label={`Sucursales ${branches.length > 0 ? `(${branches.length})` : ''}`} />
+            <Tab label="Transportistas" />
             <Tab label="Rutas" />
           </Tabs>
 
@@ -256,13 +305,23 @@ function Dashboard() {
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h6">Nuevos Envíos</Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setOpenShipmentForm(true)}
-                >
-                  Registrar envío
-                </Button>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<FileDownloadIcon />}
+                    onClick={handleDownloadShipments}
+                    size="small"
+                  >
+                    Descargar CSV
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => setOpenShipmentForm(true)}
+                  >
+                    Registrar envío
+                  </Button>
+                </Box>
               </Box>
               <SearchBar onSearch={handleSearch} loading={searchLoading} />
               {loading ? (
@@ -344,8 +403,67 @@ function Dashboard() {
             </Box>
           )}
 
+          {/* TAB SUCURSALES */}
+          {tab === 2 && (
+            <Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h6">Sucursales Registradas</Typography>
+              </Box>
+              {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
+                  <CircularProgress />
+                </Box>
+              ) : branches.length === 0 ? (
+                <Alert severity="info">No hay sucursales registradas</Alert>
+              ) : (
+                <Grid container spacing={3}>
+                  {branches.map((branch) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={branch.id}>
+                      <Card>
+                        <CardContent>
+                          <Typography variant="h6" gutterBottom>
+                            {branch.name}
+                          </Typography>
+                          <Stack spacing={1}>
+                            <Box>
+                              <Typography variant="body2" color="textSecondary">
+                                Dirección
+                              </Typography>
+                              <Typography variant="body2">{branch.address}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="body2" color="textSecondary">
+                                Ciudad
+                              </Typography>
+                              <Typography variant="body2">{branch.city}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="body2" color="textSecondary">
+                                Código Postal
+                              </Typography>
+                              <Typography variant="body2">{branch.postalCode}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="body2" color="textSecondary">
+                                Teléfono
+                              </Typography>
+                              <Typography variant="body2">{branch.phone}</Typography>
+                            </Box>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+            </Box>
+          )}
+
+          {/* TAB TRANSPORTISTAS */}
+          {tab === 3 && <TransportistasList userRole="operador" />}
+
           {/* TAB RUTAS */}
-          {tab === 2 && <RoutesList userRole="operador" />}
+          {tab === 4 && <RoutesList userRole="operador" />}
         </Box>
       )}
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom'
 import {
   Box,
   Button,
@@ -26,6 +26,7 @@ import { Shipment } from '../types'
 function ShipmentDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const user = useOutletContext<any>()
   const [shipment, setShipment] = useState<Shipment | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -35,6 +36,9 @@ function ShipmentDetail() {
   const [updatingStatus, setUpdatingStatus] = useState(false)
   const [showStatusMessage, setShowStatusMessage] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
+
+  // Solo supervisor y transportista pueden cambiar estados
+  const canUserChangeStatus = user?.role === 'supervisor' || user?.role === 'transportista'
 
   useEffect(() => {
     loadShipment()
@@ -86,6 +90,12 @@ function ShipmentDetail() {
 
   const handleUpdateStatus = async () => {
     if (!id || !shipment) return
+
+    // Validar que el usuario tenga permisos
+    if (!canUserChangeStatus) {
+      setError('No tienes permiso para cambiar el estado de este envío')
+      return
+    }
 
     // Validar transición de estado
     if (!canChangeStatus(shipment.status, newStatus)) {
@@ -221,7 +231,8 @@ function ShipmentDetail() {
                 variant="contained"
                 color="primary"
                 onClick={handleResendShipment}
-                disabled={updatingStatus}
+                disabled={updatingStatus || !canUserChangeStatus}
+                title={!canUserChangeStatus ? 'Solo supervisores y transportistas pueden reenviar' : ''}
               >
                 {updatingStatus ? <CircularProgress size={20} /> : 'Reenviar Envío'}
               </Button>
@@ -274,9 +285,10 @@ function ShipmentDetail() {
                   variant="outlined"
                   onClick={() => setOpenStatusDialog(true)}
                   fullWidth
-                  disabled={!canChangeStatus(shipment.status, shipment.status)}
+                  disabled={!canUserChangeStatus}
+                  title={!canUserChangeStatus ? 'Solo supervisores y transportistas pueden cambiar el estado' : ''}
                 >
-                  Cambiar estado
+                  {!canUserChangeStatus ? '🔒 Sin permiso para cambiar estado' : 'Cambiar estado'}
                 </Button>
                 <TextField
                   label="Peso (kg)"

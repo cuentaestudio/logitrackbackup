@@ -128,7 +128,6 @@ function RoutesList({ userRole = 'supervisor' }: RoutesListProps) {
                   </TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Estado</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Fecha Creación</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Acciones</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -156,11 +155,7 @@ function RoutesList({ userRole = 'supervisor' }: RoutesListProps) {
                       />
                     </TableCell>
                     <TableCell sx={{ fontSize: '0.875rem' }}>{route.createdDate}</TableCell>
-                    <TableCell>
-                      <Button size="small" variant="outlined">
-                        Ver
-                      </Button>
-                    </TableCell>
+
                   </TableRow>
                 ))}
               </TableBody>
