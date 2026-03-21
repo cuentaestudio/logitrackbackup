@@ -6,12 +6,11 @@ import {
   DialogActions,
   TextField,
   Button,
-  Box,
   Alert,
   CircularProgress,
   Stack,
 } from '@mui/material'
-import { Branch } from '../types'
+import type { Branch } from '../types'
 import { branchService } from '../services/branchService'
 
 interface BranchFormProps {

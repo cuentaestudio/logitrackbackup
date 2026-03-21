@@ -9,7 +9,6 @@ import {
   TableRow,
   Paper,
   Chip,
-  Button,
   CircularProgress,
   Alert,
   Stack,
@@ -17,17 +16,16 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Grid,
   Typography,
 } from '@mui/material'
-import { Route } from '../types'
+import type { Route } from '../types'
 import { routeService } from '../services/routeService'
 
 interface RoutesListProps {
   userRole?: string
 }
 
-function RoutesList({ userRole = 'supervisor' }: RoutesListProps) {
+function RoutesList({ }: RoutesListProps) {
   const [routes, setRoutes] = useState<Route[]>([])
   const [filteredRoutes, setFilteredRoutes] = useState<Route[]>([])
   const [loading, setLoading] = useState(true)

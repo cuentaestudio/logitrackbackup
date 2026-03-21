@@ -17,7 +17,7 @@ import {
   InputLabel,
 } from '@mui/material'
 import { authService } from '../services/authService'
-import { User, RegisterData, UserRole } from '../types'
+import type { User, RegisterData, UserRole } from '../types'
 
 interface RegisterPageProps {
   onLogin: (user: User) => void

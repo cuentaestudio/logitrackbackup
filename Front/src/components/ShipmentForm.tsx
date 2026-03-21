@@ -10,11 +10,10 @@ import {
   Grid,
   CircularProgress,
   Typography,
-  Alert,
   Select,
   MenuItem,
 } from '@mui/material'
-import { Shipment, Branch } from '../types'
+import type { Shipment, Branch } from '../types'
 import { shipmentService } from '../services/shipmentService'
 import { branchService } from '../services/branchService'
 

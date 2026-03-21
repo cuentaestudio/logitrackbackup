@@ -58,7 +58,7 @@ export interface Shipment {
     city: string
     postalCode: string
   }
-  status: 'En tránsito' | 'Entregado' | 'Cancelado' | 'Pendiente'
+  status: 'En tránsito' | 'Entregado' | 'Cancelado' | 'Pendiente' | 'Rechazado'
   origin: string
   destination: string
   createdDate: string

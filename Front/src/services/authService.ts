@@ -1,4 +1,4 @@
-import { User, LoginCredentials, RegisterData } from '../types'
+import type { User, LoginCredentials, RegisterData } from '../types'
 
 // Mock data de usuarios registrados
 const mockUsers: Array<User & { password: string }> = [

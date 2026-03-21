@@ -21,7 +21,7 @@ import {
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { shipmentService } from '../services/shipmentService'
-import { Shipment } from '../types'
+import type { Shipment } from '../types'
 
 function ShipmentDetail() {
   const { id } = useParams<{ id: string }>()
@@ -65,7 +65,7 @@ function ShipmentDetail() {
   }
 
   // Validar si se puede cambiar a un nuevo estado
-  const canChangeStatus = (currentStatus: Shipment['status'], targetStatus: Shipment['status']): boolean => {
+  const canChangeStatus = (currentStatus: Shipment['status']): boolean => {
     // Si está entregado, no se puede cambiar a cancelado o en sucursal
     if (currentStatus === 'Entregado') {
       return false
@@ -98,7 +98,7 @@ function ShipmentDetail() {
     }
 
     // Validar transición de estado
-    if (!canChangeStatus(shipment.status, newStatus)) {
+    if (!canChangeStatus(shipment.status)) {
       setError(getStatusChangeErrorMessage())
       return
     }
@@ -145,7 +145,7 @@ function ShipmentDetail() {
     setError('')
     try {
       // Cambiar estado a "En sucursal" y limpiar motivo de cancelación
-      const updated = await shipmentService.updateShipmentStatus(id, 'En sucursal', '')
+      const updated = await shipmentService.updateShipmentStatus(id, 'En tránsito', '')
       if (updated) {
         setShipment(updated)
         setStatusMessage('✓ Envío reenviado correctamente. Estado: En sucursal')
@@ -461,7 +461,7 @@ function ShipmentDetail() {
                   }
                 }}
                 fullWidth
-                disabled={!canChangeStatus(shipment.status, shipment.status) || updatingStatus}
+        disabled={!canChangeStatus(shipment.status) || updatingStatus}
               >
                 <MenuItem value="En sucursal">En sucursal</MenuItem>
                 <MenuItem value="En tránsito">En tránsito</MenuItem>

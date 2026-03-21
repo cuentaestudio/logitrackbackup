@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Container,
   Box,
   TextField,
   Button,
@@ -10,9 +9,14 @@ import {
   Card,
   Alert,
   CircularProgress,
+  Divider,
+  Stack,
+  Chip,
 } from '@mui/material'
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
+import LocalShippingIcon from '@mui/icons-material/LocalShipping'
 import { authService } from '../services/authService'
-import { User, LoginCredentials } from '../types'
+import type { User, LoginCredentials } from '../types'
 
 interface LoginPageProps {
   onLogin: (user: User) => void
@@ -29,10 +33,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setCredentials((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+    setCredentials((prev) => ({ ...prev, [name]: value }))
     setError('')
   }
 
@@ -41,9 +42,8 @@ function LoginPage({ onLogin }: LoginPageProps) {
     setLoading(true)
     setError('')
 
-    // Validación básica
     if (!credentials.dni || !credentials.password) {
-      setError('Por favor completa todos los campos')
+      setError('Por favor completá todos los campos')
       setLoading(false)
       return
     }
@@ -58,46 +58,83 @@ function LoginPage({ onLogin }: LoginPageProps) {
       const user = await authService.login(credentials)
       if (user) {
         onLogin(user)
-        navigate('/')
+        navigate(user.role === 'transportista' ? '/transportista' : '/')
       } else {
         setError('DNI o contraseña incorrectos')
       }
-    } catch (err) {
+    } catch {
       setError('Error al iniciar sesión')
     } finally {
       setLoading(false)
     }
   }
 
+  const fillDemo = (dni: string) => {
+    setCredentials({ dni, password: 'password123' })
+    setError('')
+  }
+
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-        }}
-      >
-        <Card sx={{ width: '100%', p: 4 }}>
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <Typography variant="h4" component="h1" gutterBottom>
-              📦 LogiTrack
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(160deg, #0D47A1 0%, #1565C0 40%, #1976d2 70%, #0277BD 100%)',
+        px: 2,
+        py: 4,
+      }}
+    >
+      <Box sx={{ width: '100%', maxWidth: 420 }}>
+        {/* Brand header above card */}
+        <Box sx={{ textAlign: 'center', mb: 3, color: 'white' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
+            <LocalShippingIcon sx={{ fontSize: 36 }} />
+            <Typography variant="h4" fontWeight={800} sx={{ letterSpacing: '-0.5px' }}>
+              LogiTrack
             </Typography>
-            <Typography variant="body2" color="textSecondary">
-              Sistema de Gestión de Envíos
+          </Box>
+          <Typography variant="body2" sx={{ opacity: 0.8 }}>
+            Sistema de Gestión de Envíos
+          </Typography>
+        </Box>
+
+        <Card
+          sx={{
+            p: { xs: 3, sm: 4 },
+            borderRadius: 3,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          }}
+        >
+          {/* Card title */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: 2,
+                bgcolor: 'primary.main',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <LockOutlinedIcon sx={{ color: 'white', fontSize: 18 }} />
+            </Box>
+            <Typography variant="h6" fontWeight={700}>
+              Iniciar sesión
             </Typography>
           </Box>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 2.5 }} onClose={() => setError('')}>
               {error}
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <form onSubmit={handleSubmit} noValidate>
+            <Stack spacing={2.5}>
               <TextField
                 label="DNI"
                 name="dni"
@@ -107,6 +144,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
                 disabled={loading}
                 fullWidth
                 autoFocus
+                inputProps={{ maxLength: 10 }}
               />
               <TextField
                 label="Contraseña"
@@ -122,41 +160,75 @@ function LoginPage({ onLogin }: LoginPageProps) {
                 variant="contained"
                 size="large"
                 disabled={loading}
-                sx={{ mt: 1 }}
+                fullWidth
+                sx={{ mt: 0.5, minHeight: 48 }}
               >
-                {loading ? <CircularProgress size={24} /> : 'Iniciar sesión'}
+                {loading ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CircularProgress size={20} color="inherit" />
+                    Ingresando...
+                  </Box>
+                ) : (
+                  'Ingresar'
+                )}
               </Button>
-            </Box>
+            </Stack>
           </form>
 
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
-            <Typography variant="body2">
-              ¿No tienes cuenta?{' '}
+          <Box sx={{ mt: 2.5, textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              ¿No tenés cuenta?{' '}
               <Link
                 component="button"
                 variant="body2"
                 onClick={() => navigate('/register')}
-                sx={{ cursor: 'pointer' }}
+                sx={{ fontWeight: 600 }}
               >
-                Regístrate aquí
+                Registrate aquí
               </Link>
             </Typography>
           </Box>
 
-          <Box sx={{ mt: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-            <Typography variant="caption" display="block" sx={{ mb: 1, fontWeight: 600 }}>
-              Demo - Credenciales de prueba:
+          {/* Demo credentials */}
+          <Divider sx={{ my: 3 }}>
+            <Typography variant="caption" color="text.disabled" fontWeight={600}>
+              DEMO
             </Typography>
-            <Typography variant="caption" display="block">
-              DNI: 12345678
-            </Typography>
-            <Typography variant="caption" display="block">
-              Contraseña: password123
-            </Typography>
-          </Box>
+          </Divider>
+
+          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5, textAlign: 'center' }}>
+            Clic en un rol para autocompletar · contraseña: <strong>password123</strong>
+          </Typography>
+
+          <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" useFlexGap>
+            <Chip
+              label="Supervisor"
+              color="error"
+              variant="outlined"
+              size="small"
+              onClick={() => fillDemo('12345678')}
+              sx={{ cursor: 'pointer', fontWeight: 600 }}
+            />
+            <Chip
+              label="Operador"
+              color="primary"
+              variant="outlined"
+              size="small"
+              onClick={() => fillDemo('87654321')}
+              sx={{ cursor: 'pointer', fontWeight: 600 }}
+            />
+            <Chip
+              label="Transportista"
+              color="success"
+              variant="outlined"
+              size="small"
+              onClick={() => fillDemo('11223344')}
+              sx={{ cursor: 'pointer', fontWeight: 600 }}
+            />
+          </Stack>
         </Card>
       </Box>
-    </Container>
+    </Box>
   )
 }
 

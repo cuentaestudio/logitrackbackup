@@ -10,7 +10,7 @@ import {
   Stack,
   Grid,
 } from '@mui/material'
-import { User } from '../types'
+import type { User } from '../types'
 
 interface TransportistsListProps {
   userRole?: string

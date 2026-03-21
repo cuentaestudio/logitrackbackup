@@ -10,7 +10,7 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material'
-import { Vehicle } from '../types'
+import type { Vehicle } from '../types'
 import { vehicleService } from '../services/vehicleService'
 
 interface VehicleFormProps {

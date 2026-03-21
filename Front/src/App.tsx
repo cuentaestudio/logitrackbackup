@@ -6,13 +6,14 @@ import RegisterPage from './pages/RegisterPage'
 import Dashboard from './pages/Dashboard'
 import ShipmentDetail from './pages/ShipmentDetail'
 import Layout from './components/Layout'
-import { User } from './types'
+import RoutesDashboard from './pages/transportista/RoutesDashboard'
+import RouteDetail from './pages/transportista/RouteDetail'
+import type { User } from './types'
 
 function App() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Verificar autenticación al cargar
   useEffect(() => {
     const storedUser = localStorage.getItem('user')
     if (storedUser) {
@@ -42,13 +43,47 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public routes */}
         <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage onLogin={handleLogin} />} />
         <Route path="/register" element={user ? <Navigate to="/" /> : <RegisterPage onLogin={handleLogin} />} />
-        
-        <Route element={user ? <Layout user={user} onLogout={handleLogout} /> : <Navigate to="/login" />}>
+
+        {/* Transportista routes */}
+        <Route
+          path="/transportista"
+          element={
+            user?.role === 'transportista' ? (
+              <Layout user={user} onLogout={handleLogout} />
+            ) : user ? (
+              <Navigate to="/" />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        >
+          <Route index element={<RoutesDashboard user={user as User} />} />
+          <Route path="ruta/:id" element={<RouteDetail />} />
+        </Route>
+
+        {/* Admin / Operator routes */}
+        <Route
+          element={
+            user ? (
+              user.role === 'transportista' ? (
+                <Navigate to="/transportista" />
+              ) : (
+                <Layout user={user} onLogout={handleLogout} />
+              )
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        >
           <Route path="/" element={<Dashboard />} />
           <Route path="/shipment/:id" element={<ShipmentDetail />} />
         </Route>
+
+        {/* Catch-all */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   )

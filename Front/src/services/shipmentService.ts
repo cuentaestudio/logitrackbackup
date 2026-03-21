@@ -1,4 +1,4 @@
-import { Shipment } from '../types'
+import type { Shipment } from '../types'
 
 // Mock data de envíos
 const mockShipments: Shipment[] = [
@@ -25,6 +25,7 @@ const mockShipments: Shipment[] = [
     estimatedDelivery: '2026-03-22',
     weight: 2.5,
     description: 'Paquete electrónico',
+    routeId: '1',
   },
   {
     id: '2',
@@ -41,14 +42,15 @@ const mockShipments: Shipment[] = [
       city: 'Rosario',
       postalCode: '2000',
     },
-    status: 'Entregado',
+    status: 'Pendiente',
     origin: 'Córdoba',
     destination: 'Rosario',
     createdDate: '2026-03-10',
-    lastUpdate: '2026-03-18',
-    estimatedDelivery: '2026-03-18',
+    lastUpdate: '2026-03-21',
+    estimatedDelivery: '2026-03-25',
     weight: 1.8,
     description: 'Documentos importantes',
+    routeId: '2',
   },
   {
     id: '3',
@@ -73,6 +75,7 @@ const mockShipments: Shipment[] = [
     estimatedDelivery: '2026-03-24',
     weight: 3.2,
     description: 'Paquete frágil - Manejo cuidadoso',
+    routeId: '1',
   },
   {
     id: '4',
@@ -89,15 +92,118 @@ const mockShipments: Shipment[] = [
       city: 'Mar del Plata',
       postalCode: '7600',
     },
-    status: 'Cancelado',
+    status: 'Entregado',
     origin: 'Bahía Blanca',
     destination: 'Mar del Plata',
     createdDate: '2026-03-05',
-    lastUpdate: '2026-03-12',
+    lastUpdate: '2026-03-20',
     estimatedDelivery: '2026-03-17',
     weight: 2.1,
-    description: 'Paquete cancelado por solicitud del cliente',
-    cancellationReason: 'Solicitud del cliente - cambio de dirección',
+    description: 'Electrodoméstico pequeño',
+    routeId: '3',
+  },
+  {
+    id: '5',
+    trackingId: 'LT-2024-005',
+    sender: {
+      name: 'Elena Campos',
+      address: 'Av. San Martín 400',
+      city: 'Mendoza',
+      postalCode: '5500',
+    },
+    receiver: {
+      name: 'Diego Romero',
+      address: 'Belgrano 1200',
+      city: 'San Juan',
+      postalCode: '5400',
+    },
+    status: 'Entregado',
+    origin: 'Mendoza',
+    destination: 'San Juan',
+    createdDate: '2026-03-18',
+    lastUpdate: '2026-03-20',
+    estimatedDelivery: '2026-03-20',
+    weight: 0.8,
+    description: 'Sobre documentos',
+    routeId: '3',
+  },
+  {
+    id: '6',
+    trackingId: 'LT-2024-006',
+    sender: {
+      name: 'Marcelo Vega',
+      address: 'Corrientes 2200',
+      city: 'Buenos Aires',
+      postalCode: '1045',
+    },
+    receiver: {
+      name: 'Natalia Sosa',
+      address: 'Rivadavia 800',
+      city: 'San Juan',
+      postalCode: '5400',
+    },
+    status: 'Rechazado',
+    origin: 'Mendoza',
+    destination: 'San Juan',
+    createdDate: '2026-03-19',
+    lastUpdate: '2026-03-20',
+    estimatedDelivery: '2026-03-20',
+    weight: 5.0,
+    description: 'Paquete grande - rechazado en destino',
+    routeId: '3',
+    cancellationReason: 'Destinatario no disponible',
+  },
+  {
+    id: '7',
+    trackingId: 'LT-2024-007',
+    sender: {
+      name: 'Lucía Pereyra',
+      address: 'San Lorenzo 350',
+      city: 'Bahía Blanca',
+      postalCode: '8000',
+    },
+    receiver: {
+      name: 'Fernando Acosta',
+      address: 'Mitre 600',
+      city: 'Mar del Plata',
+      postalCode: '7600',
+    },
+    status: 'Cancelado',
+    origin: 'Bahía Blanca',
+    destination: 'Mar del Plata',
+    createdDate: '2026-03-20',
+    lastUpdate: '2026-03-20',
+    estimatedDelivery: '2026-03-23',
+    weight: 1.5,
+    description: 'Ropa y accesorios',
+    routeId: '4',
+    cancellationReason: 'Ruta cancelada por el transportista',
+  },
+  {
+    id: '8',
+    trackingId: 'LT-2024-008',
+    sender: {
+      name: 'Tomás Herrera',
+      address: 'Independencia 900',
+      city: 'Bahía Blanca',
+      postalCode: '8000',
+    },
+    receiver: {
+      name: 'Cecilia Molina',
+      address: 'Italia 1500',
+      city: 'Mar del Plata',
+      postalCode: '7600',
+    },
+    status: 'Cancelado',
+    origin: 'Bahía Blanca',
+    destination: 'Mar del Plata',
+    createdDate: '2026-03-20',
+    lastUpdate: '2026-03-20',
+    estimatedDelivery: '2026-03-23',
+    weight: 3.7,
+    description: 'Libros y materiales de estudio',
+    routeId: '4',
+    cancellationReason: 'Ruta cancelada por el transportista',
   },
 ]
 
@@ -133,7 +239,7 @@ export const shipmentService = {
   // Obtener todos los envíos
   getAllShipments: async (): Promise<Shipment[]> => {
     return new Promise((resolve) => {
-      setTimeout(() => resolve(mockShipments), 500)
+      setTimeout(() => resolve([...mockShipments]), 500)
     })
   },
 
@@ -141,6 +247,20 @@ export const shipmentService = {
   getShipmentById: async (id: string): Promise<Shipment | undefined> => {
     return new Promise((resolve) => {
       setTimeout(() => resolve(mockShipments.find((s) => s.id === id)), 300)
+    })
+  },
+
+  // Obtener envíos por IDs de lista
+  getShipmentsByIds: async (ids: string[]): Promise<Shipment[]> => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(mockShipments.filter((s) => ids.includes(s.id))), 300)
+    })
+  },
+
+  // Obtener envíos por ruta
+  getShipmentsByRouteId: async (routeId: string): Promise<Shipment[]> => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(mockShipments.filter((s) => s.routeId === routeId)), 300)
     })
   },
 
@@ -155,6 +275,16 @@ export const shipmentService = {
             ),
           ),
         400,
+      )
+    })
+  },
+
+  // Buscar envío exacto por tracking ID (para escaneo)
+  findByTrackingId: async (trackingId: string): Promise<Shipment | undefined> => {
+    return new Promise((resolve) => {
+      setTimeout(
+        () => resolve(mockShipments.find((s) => s.trackingId === trackingId)),
+        300,
       )
     })
   },
@@ -183,12 +313,10 @@ export const shipmentService = {
       if (shipment) {
         shipment.status = status
         shipment.lastUpdate = new Date().toISOString().split('T')[0]
-        
-        // Si es cancelado, agregar motivo
-        if (status === 'Cancelado' && cancellationReason) {
+
+        if ((status === 'Cancelado' || status === 'Rechazado') && cancellationReason) {
           shipment.cancellationReason = cancellationReason
-        } else if (status !== 'Cancelado') {
-          // Limpiar motivo si no es cancelado
+        } else if (status !== 'Cancelado' && status !== 'Rechazado') {
           shipment.cancellationReason = undefined
         }
       }

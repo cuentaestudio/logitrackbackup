@@ -1,6 +1,6 @@
 import { Card, CardContent, CardActions, Typography, Chip, Button, Box, Stack } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-import { Shipment } from '../types'
+import type { Shipment } from '../types'
 
 interface ShipmentCardProps {
   shipment: Shipment

@@ -1,4 +1,4 @@
-import { Route } from '../types'
+import type { Route } from '../types'
 
 // Mock data de rutas
 const mockRoutes: Route[] = [
@@ -138,17 +138,6 @@ export const routeService = {
       setTimeout(
         () =>
           resolve(mockRoutes.filter((r) => r.transportistId === transportistId)),
-        300,
-      )
-    })
-  },
-
-  // Obtener rutas pendientes
-  getPendingRoutes: async (): Promise<Route[]> => {
-    return new Promise((resolve) => {
-      setTimeout(
-        () =>
-          resolve(mockRoutes.filter((r) => r.status === 'Pendiente')),
         300,
       )
     })

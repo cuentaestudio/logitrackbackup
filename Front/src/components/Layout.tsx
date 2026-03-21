@@ -3,16 +3,20 @@ import {
   AppBar,
   Toolbar,
   Typography,
-  Button,
   Box,
   Container,
   Menu,
   MenuItem,
   Avatar,
   Chip,
+  useMediaQuery,
+  useTheme,
+  IconButton,
+  Tooltip,
 } from '@mui/material'
+import LogoutIcon from '@mui/icons-material/Logout'
 import { useState } from 'react'
-import { User } from '../types'
+import type { User } from '../types'
 
 interface LayoutProps {
   user: User
@@ -21,6 +25,8 @@ interface LayoutProps {
 
 function Layout({ user, onLogout }: LayoutProps) {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -37,61 +43,120 @@ function Layout({ user, onLogout }: LayoutProps) {
     navigate('/login')
   }
 
-  const initials = `${user.name.charAt(0)}${user.email.split('@')[0].charAt(0)}`.toUpperCase()
+  const initials = `${user.name.charAt(0)}${user.lastname.charAt(0)}`.toUpperCase()
 
-  const getRoleBadge = (role: string) => {
-    const colors: Record<string, any> = {
-      supervisor: 'error',
-      operador: 'primary',
-      transportista: 'success',
-    }
-    return colors[role] || 'default'
+  const roleColor: Record<string, 'error' | 'primary' | 'success' | 'default'> = {
+    supervisor: 'error',
+    operador: 'primary',
+    transportista: 'success',
+  }
+
+  const roleLabel: Record<string, string> = {
+    supervisor: 'Supervisor',
+    operador: 'Operador',
+    transportista: 'Transportista',
   }
 
   return (
-    <Box>
-      <AppBar position="sticky">
-        <Toolbar>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <AppBar position="sticky" elevation={0} sx={{ borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
+        <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }}>
+          {/* Logo */}
           <Typography
             variant="h6"
             component="div"
-            sx={{ flexGrow: 1, cursor: 'pointer' }}
-            onClick={() => navigate('/')}
+            sx={{
+              flexGrow: 1,
+              cursor: 'pointer',
+              fontWeight: 700,
+              letterSpacing: '-0.3px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+            }}
+            onClick={() => navigate(user.role === 'transportista' ? '/transportista' : '/')}
           >
             📦 LogiTrack
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', mr: 1 }}>
-              <Typography variant="body2">{user.name}</Typography>
-              {user.role && (
+
+          {/* Right side */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
+            {/* Role chip + name — hidden on xs */}
+            {!isMobile && (
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', lineHeight: 1.3 }}>
+                  {user.name} {user.lastname}
+                </Typography>
                 <Chip
-                  label={user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                  label={roleLabel[user.role] ?? user.role}
                   size="small"
-                  color={getRoleBadge(user.role)}
+                  color={roleColor[user.role] ?? 'default'}
                   variant="outlined"
-                  sx={{ height: 20 }}
+                  sx={{ height: 20, color: 'rgba(255,255,255,0.85)', borderColor: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}
                 />
-              )}
-            </Box>
+              </Box>
+            )}
+
+            {/* Avatar with dropdown */}
             <Avatar
               onClick={handleMenuOpen}
-              sx={{ cursor: 'pointer', bgcolor: 'secondary.main' }}
+              sx={{
+                cursor: 'pointer',
+                bgcolor: 'secondary.main',
+                width: { xs: 34, sm: 38 },
+                height: { xs: 34, sm: 38 },
+                fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                fontWeight: 700,
+                transition: 'opacity 0.2s',
+                '&:hover': { opacity: 0.85 },
+              }}
             >
               {initials}
             </Avatar>
+
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              slotProps={{ paper: { sx: { mt: 0.5, minWidth: 200 } } }}
             >
-              <MenuItem disabled>{user.email}</MenuItem>
-              <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
+              <MenuItem disabled sx={{ opacity: '1 !important' }}>
+                <Box>
+                  <Typography variant="body2" fontWeight={600}>
+                    {user.name} {user.lastname}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {user.email}
+                  </Typography>
+                </Box>
+              </MenuItem>
+              <MenuItem onClick={handleLogout} sx={{ color: 'error.main', gap: 1 }}>
+                <LogoutIcon fontSize="small" />
+                Cerrar sesión
+              </MenuItem>
             </Menu>
+
+            {/* Quick logout on mobile */}
+            {isMobile && (
+              <Tooltip title="Cerrar sesión">
+                <IconButton onClick={handleLogout} size="small" sx={{ color: 'white' }}>
+                  <LogoutIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="lg" sx={{ py: 3 }}>
+      <Container
+        maxWidth="lg"
+        sx={{
+          py: { xs: 2, sm: 3 },
+          px: { xs: 2, sm: 3 },
+        }}
+      >
         <Outlet context={user} />
       </Container>
     </Box>
