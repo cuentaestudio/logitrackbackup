@@ -16,17 +16,18 @@ namespace Back.Domain.Models
         public DateTimeOffset? FinalizadoEn { get; private set; }
         public string? RazonCancelacion { get; private set; }
         public Transportista Transportista { get; private set; }
-
+        public Vehiculo Vehiculo { get; private set; }
         public ICollection<Paquete> Paquetes { get; } = [];
 
         private Ruta()
         {
         }
 
-        public Ruta(Transportista transportista)
+        public Ruta(Transportista transportista, Vehiculo vehiculo)
         {
             Id = Guid.NewGuid();
             Transportista = transportista;
+            Vehiculo = vehiculo;
         }
 
 

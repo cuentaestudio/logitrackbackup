@@ -12,16 +12,19 @@ namespace Back.Controllers
         private readonly IEnviosRepository _enviosRepository;
         private readonly EnviosService _enviosService;
 
+        private readonly RutasService _rutasService;
+
         private readonly IRutasRepository _rutasRepository;
 
-        public RutasController(IEnviosRepository enviosRepository, EnviosService enviosService, IRutasRepository rutasRepository)
+        public RutasController(IEnviosRepository enviosRepository, EnviosService enviosService, RutasService rutasService,IRutasRepository rutasRepository)
         {
+            _rutasService = rutasService;
             _rutasRepository = rutasRepository;
             _enviosRepository = enviosRepository;
             _enviosService = enviosService;
         }
 
-    [HttpGet()]
+        [HttpGet()]
         public async Task<IResult> Index()
         {
             var rutas = await _rutasRepository.GetRutas();
@@ -87,10 +90,13 @@ namespace Back.Controllers
             return Results.Ok();
         }
 
-        [HttpPost]
+        [HttpPost("crear-ruta")]
         public async Task<IResult> CrearRuta([FromBody] CrearRutaRequest request)
         {
 
+            await _rutasService.CrearRuta(request);
+
+            
             return Results.Ok();
         }
     }

@@ -37,14 +37,17 @@ namespace Back.Application.Services
                 throw new InvalidOperationException("El vehículo ya está asignado a una ruta activa.");
             }
 
+
+
             var paquetes = await _enviosRepository.GetPaquetes(request.PaqueteIds);
+
 
             Usuario? user = await _userRepository.GetUsuarioById(request.TransportistaId);
 
             if (user is null || user is not Transportista transportista)
                 throw new InvalidOperationException("Transportista no encontrado.");
 
-            var ruta = new Ruta(transportista);
+            var ruta = new Ruta(transportista, vehiculo);
 
             ruta.AgregarPaquetes(paquetes);
 

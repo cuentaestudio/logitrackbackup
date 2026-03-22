@@ -23,22 +23,26 @@ namespace Back.Repositories
 
         public Task<List<Ruta>> GetMisRutasSupervisadas(Guid supervisor)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(_rutas.ToList());
         }
 
         public Task<Ruta?> GetRutaById(Guid id)
         {
-            throw new NotImplementedException();
+            var ruta = _rutas.FirstOrDefault(r => r.Id == id);
+            return Task.FromResult(ruta);
         }
 
         public Task<List<Ruta>> GetRutas()
-        {
-            throw new NotImplementedException();
+        {   
+            return Task.FromResult(_rutas);
+            
         }
 
         public Task<bool> IsVehiculoEnRuta(Guid vehiculoId)
-        {
-            throw new NotImplementedException();
+        {   
+            var isEnRuta = _rutas.Any(r =>r.Vehiculo.Id == vehiculoId && r.Estado != RutaStatus.Finalizada);
+            return Task.FromResult(isEnRuta);
+            
         }
     }
 }

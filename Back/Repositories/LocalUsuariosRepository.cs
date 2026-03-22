@@ -10,6 +10,8 @@ namespace Back.Repositories
         public Task Add(Usuario usuario)
         {
             _usuarios.Add(usuario);
+            Console.WriteLine($"Usuario agregado: {usuario.Email} (ID: {usuario.Id}) "+ "TYpe "+ usuario.GetType());
+            
             return Task.CompletedTask;
         }
 
