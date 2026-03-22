@@ -79,6 +79,11 @@ namespace Back.Repositories
             return Task.FromResult(_sucursales);
         }
 
+        public Task<Transportista?> GetTransportistaById(Guid id)
+        {   
+            return Task.FromResult(_rutas.Select(r => r.Transportista).FirstOrDefault(t => t.Id == id));
+        }
+
         public Task<List<Vehiculo>> GetVehiculosActivos()
         {
             var vehiculos = _vehiculos.Where(v => v.Activo).ToList();

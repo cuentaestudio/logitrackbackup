@@ -56,6 +56,17 @@ namespace Back.Controllers
         }
 
 
+        [HttpPost("reasignar-ruta/ruta/{rutaId:guid}/transportista/{transportistaId:guid}")]
+        public async Task<IResult> ReasignarRuta(Guid rutaId, Guid transportistaId)
+        {
+            
+            await _enviosService.ReasignarRuta(rutaId, transportistaId);
+
+            return Results.Ok();
+            
+        }
+    
+
         [HttpGet("seguimiento/{codigoSeguimiento}")]
         public async Task<IResult> Seguimiento(string codigoSeguimiento)
         {
@@ -67,6 +78,8 @@ namespace Back.Controllers
 
             return Results.Ok(paquete);
         }
+
+
 
 
         [HttpGet("paquetes-en-sucursal")]

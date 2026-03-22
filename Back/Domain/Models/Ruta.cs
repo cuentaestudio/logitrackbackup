@@ -77,6 +77,14 @@ namespace Back.Domain.Models
             Paquetes.Add(paquete);
         }
 
+        public void ReasignarTransportista(Transportista nuevoTransportista)
+        {
+            if (Estado is RutaStatus.Finalizada or RutaStatus.Cancelada)
+                throw new InvalidOperationException("No se puede reasignar transportista en una ruta finalizada o cancelada.");
+
+            Transportista = nuevoTransportista;
+        }
+
         public void EntregarPaquete(Guid id)
         {
             var paquete = Paquetes.FirstOrDefault(p => p.Id == id) ?? throw new InvalidOperationException("Paquete no encontrado en esta ruta.");

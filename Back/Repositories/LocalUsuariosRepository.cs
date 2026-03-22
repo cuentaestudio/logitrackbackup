@@ -18,5 +18,11 @@ namespace Back.Repositories
             var usuario = _usuarios.FirstOrDefault(u => u.Email == email);
             return Task.FromResult(usuario);
         }
+
+        public Task<Usuario?> GetUsuarioById(Guid id)
+        {
+            var usuario = _usuarios.FirstOrDefault(u => u.Id == id);
+            return Task.FromResult(usuario);
+        }
     }
 }

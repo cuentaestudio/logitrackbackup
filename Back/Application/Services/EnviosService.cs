@@ -8,10 +8,12 @@ namespace Back.Application.Services
     public class EnviosService
     {
         private readonly IEnviosRepository _enviosRepository;
+        private readonly IUserRepository _userRepository;
 
-        public EnviosService(IEnviosRepository enviosRepository)
+        public EnviosService(IEnviosRepository enviosRepository, IUserRepository userRepository)
         {
             _enviosRepository = enviosRepository;
+            _userRepository = userRepository;
         }
 
 
@@ -29,6 +31,23 @@ namespace Back.Application.Services
             );
 
             await _enviosRepository.Add(paquete);
+        }
+
+
+        public async Task ReasignarRuta(Guid rutaId, Guid transportistaId)
+        {
+            var ruta = await _enviosRepository.GetRutaById(rutaId);
+            if (ruta is null)
+                throw new InvalidOperationException("Ruta no encontrada");
+
+            Usuario? usuario = await _userRepository.GetUsuarioById(transportistaId);
+
+            if (usuario is null || usuario is not Transportista transportista)
+                throw new InvalidOperationException("Transportista no encontrado");
+
+            ruta.ReasignarTransportista(transportista);
+
+            await _enviosRepository.Add(ruta);
         }
     }
 }
