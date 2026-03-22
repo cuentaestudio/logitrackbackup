@@ -10,6 +10,9 @@ namespace Back.Repositories
 
         private readonly List<Ruta> _rutas = new List<Ruta>();
         private readonly List<Vehiculo> _vehiculos = new List<Vehiculo>();
+        private readonly List<Sucursal> _sucursales = new List<Sucursal>();
+
+
 
         public Task Add(Paquete envio)
         {
@@ -26,42 +29,54 @@ namespace Back.Repositories
         }
 
         public Task Add(Vehiculo vehiculo)
-        {   
+        {
             _vehiculos.Add(vehiculo);
             return Task.CompletedTask;
         }
 
+        public Task Add(Sucursal sucursal)
+        {
+            _sucursales.Add(sucursal);
+            return Task.CompletedTask;
+
+        }
+
         public Task<List<Ruta>> GetHistorialRutas(Guid id)
-        {   
+        {
             var rutas = _rutas.Where(r => r.Transportista.Id == id).ToList();
             return Task.FromResult(rutas);
-            
+
         }
 
         public Task<Paquete?> GetPaquete(Guid id)
-        {   
+        {
             var paquete = _paquetes.FirstOrDefault(p => p.Id == id);
             return Task.FromResult(paquete);
-            
+
         }
 
         public Task<Paquete?> GetPaqueteByCodigoSeguimiento(string codigoSeguimiento)
-        {        
+        {
             var paquete = _paquetes.FirstOrDefault(p => p.CodigoSeguimiento == codigoSeguimiento);
             return Task.FromResult(paquete);
         }
 
         public Task<List<Paquete>> GetPaquetesEnSucursal()
-        {     
+        {
             var paquetes = _paquetes.Where(p => p.EstaEnSucursal).ToList();
             return Task.FromResult(paquetes);
-            
+
         }
 
         public Task<Ruta?> GetRutaById(Guid id)
-        {  
+        {
             var ruta = _rutas.FirstOrDefault(r => r.Id == id);
             return Task.FromResult(ruta);
+        }
+
+        public Task<List<Sucursal>> GetSucursales()
+        {
+            return Task.FromResult(_sucursales);
         }
 
         public Task<List<Vehiculo>> GetVehiculosActivos()

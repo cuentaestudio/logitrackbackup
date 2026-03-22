@@ -10,11 +10,13 @@ namespace Back.Controllers
     public class EnviosController : ControllerBase
     {
         private readonly IEnviosRepository _enviosRepository;
+        private readonly IVehiculoRepository _vehiculoRepository;
         private readonly EnviosService _enviosService;
 
-        public EnviosController(IEnviosRepository enviosRepository, EnviosService enviosService)
+        public EnviosController(IEnviosRepository enviosRepository, IVehiculoRepository vehiculoRepository, EnviosService enviosService)
         {
             _enviosService = enviosService;
+            _vehiculoRepository = vehiculoRepository;
             _enviosRepository = enviosRepository;
         }
 
@@ -93,15 +95,15 @@ namespace Back.Controllers
                 request.Capacidad
             );
 
-            await _enviosRepository.Add(vehiculo);
+            await _vehiculoRepository.Add(vehiculo);
 
             return Results.Ok();
         }
 
-        [HttpGet("vehiculos")]
+        [HttpGet("vehiculos/activos")]
         public async Task<IResult> GetVehiculos()
         {
-            var vehiculos = await _enviosRepository.GetVehiculosActivos();
+            var vehiculos = await _vehiculoRepository.GetVehiculosActivos();
 
             return Results.Ok(vehiculos);
         }

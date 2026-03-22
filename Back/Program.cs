@@ -9,7 +9,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<AuthService>().AddScoped<EnviosService>();
 
 
-builder.Services.AddSingleton<IUserRepository, LocalUsuariosRepository>().AddSingleton<IEnviosRepository, LocalEnviosRepository>();
+builder.Services.AddSingleton<IUserRepository, LocalUsuariosRepository>().AddSingleton<IEnviosRepository, LocalEnviosRepository>().AddSingleton<IVehiculoRepository, LocalVehiculoRepository>();
 
 
 builder.Services.AddEndpointsApiExplorer();
