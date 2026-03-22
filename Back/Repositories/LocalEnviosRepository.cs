@@ -41,11 +41,17 @@ namespace Back.Repositories
 
         }
 
-        public Task<List<Ruta>> GetHistorialRutas(Guid id)
+        public Task<List<Ruta>> GetHistorialRutas(Guid transportista)
         {
-            var rutas = _rutas.Where(r => r.Transportista.Id == id).ToList();
+            var rutas = _rutas.Where(r => r.Transportista.Id == transportista).ToList();
             return Task.FromResult(rutas);
 
+        }
+
+        public Task<List<Ruta>> GetMisRutasSupervisadas(Guid supervisor)
+        {
+            var rutas = _rutas.Where(r => r.Id == supervisor).ToList();
+            return Task.FromResult(rutas);
         }
 
         public Task<Paquete?> GetPaquete(Guid id)
@@ -72,6 +78,11 @@ namespace Back.Repositories
         {
             var ruta = _rutas.FirstOrDefault(r => r.Id == id);
             return Task.FromResult(ruta);
+        }
+
+        public Task<List<Ruta>> GetRutas()
+        {   
+            return Task.FromResult(_rutas);
         }
 
         public Task<List<Sucursal>> GetSucursales()

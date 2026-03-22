@@ -22,50 +22,12 @@ namespace Back.Controllers
 
         [HttpPost("registrar-paquete")]
         public async Task<IResult> RegistrarPaquete([FromBody] RegistrarPaqueteRequest request)
-        {  
-            await  _enviosService.RegistrarPaquete(request);
-
-            return Results.Ok();
-        }
-
-        [HttpPost("comenzar-ruta/{rutaId:guid}")]
-        public async Task<IResult> AddRuta(Guid rutaId)
         {
-
-            var ruta = await _enviosRepository.GetRutaById(rutaId);
-
-            if (ruta is null)
-                return Results.NotFound();
-
-            ruta.Iniciar();
+            await _enviosService.RegistrarPaquete(request);
 
             return Results.Ok();
         }
 
-        [HttpPost("cancelar-ruta/{rutaId:guid}")]
-        public async Task<IResult> CancelarRuta(Guid rutaId, [FromBody] string razon)
-        {
-            var ruta = await _enviosRepository.GetRutaById(rutaId);
-
-            if (ruta is null)
-                return Results.NotFound();
-
-            ruta.Cancelar(razon);
-
-            return Results.Ok();
-        }
-
-
-        [HttpPost("reasignar-ruta/ruta/{rutaId:guid}/transportista/{transportistaId:guid}")]
-        public async Task<IResult> ReasignarRuta(Guid rutaId, Guid transportistaId)
-        {
-            
-            await _enviosService.ReasignarRuta(rutaId, transportistaId);
-
-            return Results.Ok();
-            
-        }
-    
 
         [HttpGet("seguimiento/{codigoSeguimiento}")]
         public async Task<IResult> Seguimiento(string codigoSeguimiento)
@@ -79,9 +41,6 @@ namespace Back.Controllers
             return Results.Ok(paquete);
         }
 
-
-
-
         [HttpGet("paquetes-en-sucursal")]
         public async Task<IResult> GetPaquetesEnSucursal()
         {
@@ -91,13 +50,6 @@ namespace Back.Controllers
             return Results.Ok(paquetes);
         }
 
-        [HttpGet("rutas/historial")]
-        public async Task<IResult> GetHistorialRutas()
-        {
-            var rutas = await _enviosRepository.GetHistorialRutas(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value is string userIdStr && Guid.TryParse(userIdStr, out var userId) ? userId : Guid.Empty);
-
-            return Results.Ok(rutas);
-        }
 
         [HttpPost("vehiculos/registrar-vehiculo")]
         public async Task<IResult> RegistrarVehiculo([FromBody] RegistrarVehiculoRequest request)
@@ -120,30 +72,72 @@ namespace Back.Controllers
 
             return Results.Ok(vehiculos);
         }
-    }
+
+        [HttpPost("sucursales/registrar-sucursal")]
+
+        public async Task<IResult> RegistrarSucursal([FromBody] RegistarSucursal request)
+        {
+            var sucursal = new Sucursal(
+                request.Nombre,
+                request.Direccion,
+                request.Ciudad,
+                request.Telefono
+            );
+
+            await _enviosRepository.Add(sucursal);
+
+            return Results.Ok();
+        }
 
 
-    public class RegistrarPaqueteRequest
-    {
-        public double Peso { get; set; }
-        public string? Comentarios { get; set; }
-        public RegistrarClienteRequest Remitente { get; set; }
-        public RegistrarClienteRequest Destinatario { get; set; }
-    }
+        [HttpPost("cambiar-estado-paquete/{paqueteId:guid}/estado/{status}")]
+        public async Task<IResult> CambiarEstadoPaquete(Guid paqueteId, PaqueteStatus status)
+        {
+            var paquete = await _enviosRepository.GetPaquete(paqueteId);
 
-    public class RegistrarClienteRequest
-    {
+            if (paquete is null)
+                return Results.NotFound();
+
+
+            paquete.CambiarEstado(status);
+
+            return Results.Ok();
+        }
+
+
+}
+
+
+public class RegistrarPaqueteRequest
+{
+    public double Peso { get; set; }
+    public string? Comentarios { get; set; }
+    public RegistrarClienteRequest Remitente { get; set; }
+    public RegistrarClienteRequest Destinatario { get; set; }
+}
+
+public class RegistrarClienteRequest
+{
     public string Direccion { get; set; } = string.Empty;
-        public string Localidad { get; set; } = string.Empty;
-        public string CP { get; set; } = string.Empty;
-        public string Nombre { get; set; } = string.Empty;
-        public string Apellido { get; set; } = string.Empty;
-    }
+    public string Localidad { get; set; } = string.Empty;
+    public string CP { get; set; } = string.Empty;
+    public string Nombre { get; set; } = string.Empty;
+    public string Apellido { get; set; } = string.Empty;
+}
 
-    public class RegistrarVehiculoRequest
-    {
-        public string Patente { get; set; } = string.Empty;
-        public string Modelo { get; set; } = string.Empty;
-        public double Capacidad { get; set; }
-    }
+public class RegistrarVehiculoRequest
+{
+    public string Patente { get; set; } = string.Empty;
+    public string Modelo { get; set; } = string.Empty;
+    public double Capacidad { get; set; }
+}
+
+public class RegistarSucursal
+{
+    public string Nombre { get; set; } = string.Empty;
+    public string Direccion { get; set; } = string.Empty;
+    public string Ciudad { get; set; } = string.Empty;
+    public string Telefono { get; set; } = string.Empty;
+
+}
 }

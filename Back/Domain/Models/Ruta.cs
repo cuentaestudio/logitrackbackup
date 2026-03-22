@@ -16,6 +16,7 @@ namespace Back.Domain.Models
         public DateTimeOffset? FinalizadoEn { get; private set; }
         public string? RazonCancelacion { get; private set; }
         public Transportista Transportista { get; private set; }
+
         public ICollection<Paquete> Paquetes { get; } = [];
 
         private Ruta()
