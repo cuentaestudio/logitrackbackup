@@ -23,7 +23,7 @@ interface LoginPageProps {
 }
 
 function LoginPage({ onLogin }: LoginPageProps) {
-  const isDev = true
+  const showDemoUsers = import.meta.env.VITE_SHOW_DEMO_USERS === 'true'
   const navigate = useNavigate()
   const [credentials, setCredentials] = useState<LoginCredentials>({
     dni: '',
