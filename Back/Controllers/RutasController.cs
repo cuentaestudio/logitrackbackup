@@ -12,8 +12,11 @@ namespace Back.Controllers
         private readonly IEnviosRepository _enviosRepository;
         private readonly EnviosService _enviosService;
 
-        public RutasController(IEnviosRepository enviosRepository, EnviosService enviosService)
+        private readonly IRutasRepository _rutasRepository;
+
+        public RutasController(IEnviosRepository enviosRepository, EnviosService enviosService, IRutasRepository rutasRepository)
         {
+            _rutasRepository = rutasRepository;
             _enviosRepository = enviosRepository;
             _enviosService = enviosService;
         }
@@ -21,7 +24,7 @@ namespace Back.Controllers
     [HttpGet()]
         public async Task<IResult> Index()
         {
-            var rutas = await _enviosRepository.GetRutas();
+            var rutas = await _rutasRepository.GetRutas();
 
             return Results.Ok(rutas);
         }
@@ -29,7 +32,7 @@ namespace Back.Controllers
         [HttpGet("historial")]
         public async Task<IResult> GetHistorialRutas()
         {
-            var rutas = await _enviosRepository.GetHistorialRutas(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value is string userIdStr && Guid.TryParse(userIdStr, out var userId) ? userId : Guid.Empty);
+            var rutas = await _rutasRepository.GetHistorialRutas(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value is string userIdStr && Guid.TryParse(userIdStr, out var userId) ? userId : Guid.Empty);
 
             return Results.Ok(rutas);
         }
@@ -38,7 +41,7 @@ namespace Back.Controllers
         public async Task<IResult> AddRuta(Guid rutaId)
         {
 
-            var ruta = await _enviosRepository.GetRutaById(rutaId);
+            var ruta = await _rutasRepository.GetRutaById(rutaId);
 
             if (ruta is null)
                 return Results.NotFound();
@@ -51,7 +54,7 @@ namespace Back.Controllers
         [HttpPost("finalizar-ruta/{rutaId:guid}")]
         public async Task<IResult> FinalizarRuta(Guid rutaId)
         {
-            var ruta = await _enviosRepository.GetRutaById(rutaId);
+            var ruta = await _rutasRepository.GetRutaById(rutaId);
 
             if (ruta is null)
                 return Results.NotFound();
@@ -64,7 +67,7 @@ namespace Back.Controllers
         [HttpPost("cancelar-ruta/{rutaId:guid}")]
         public async Task<IResult> CancelarRuta(Guid rutaId, [FromBody] string razon)
         {
-            var ruta = await _enviosRepository.GetRutaById(rutaId);
+            var ruta = await _rutasRepository.GetRutaById(rutaId);
 
             if (ruta is null)
                 return Results.NotFound();
@@ -82,8 +85,21 @@ namespace Back.Controllers
             await _enviosService.ReasignarRuta(rutaId, transportistaId);
 
             return Results.Ok();
-
         }
 
+        [HttpPost]
+        public async Task<IResult> CrearRuta([FromBody] CrearRutaRequest request)
+        {
+
+            return Results.Ok();
+        }
+    }
+
+
+    public class CrearRutaRequest
+    {
+        public Guid VehiculoId { get; set; }
+        public Guid TransportistaId { get; set; }
+        public List<Guid> PaqueteIds { get; set; }
     }
 }

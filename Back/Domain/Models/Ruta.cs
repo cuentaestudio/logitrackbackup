@@ -23,13 +23,28 @@ namespace Back.Domain.Models
         {
         }
 
-        public Ruta(Transportista transportista, List<Paquete> paquetes)
+        public Ruta(Transportista transportista)
         {
             Id = Guid.NewGuid();
             Transportista = transportista;
-            Paquetes = paquetes;
         }
 
+
+        public void AgregarPaquete(Paquete paquete)
+        {
+            if (Estado != RutaStatus.Pendiente)
+                throw new InvalidOperationException("Solo se pueden agregar paquetes a rutas pendientes.");
+
+            Paquetes.Add(paquete);
+        }
+
+        public void AgregarPaquetes(IEnumerable<Paquete> paquetes)
+        {
+            foreach (var paquete in paquetes)
+            {
+                AgregarPaquete(paquete);
+            }
+        }
 
         private Paquete? GetPaquete(Guid id)
         {
@@ -75,14 +90,6 @@ namespace Back.Domain.Models
 
             Estado = RutaStatus.Finalizada;
             FinalizadoEn = DateTimeOffset.UtcNow;
-        }
-
-        public void AgregarPaquete(Paquete paquete)
-        {
-            if (Estado != RutaStatus.Pendiente)
-                throw new InvalidOperationException("Solo se pueden agregar paquetes a rutas pendientes.");
-
-            Paquetes.Add(paquete);
         }
 
         public void ReasignarTransportista(Transportista nuevoTransportista)

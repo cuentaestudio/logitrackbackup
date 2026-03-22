@@ -7,7 +7,6 @@ namespace Back.Repositories
     {
 
         List<Paquete> _paquetes = [];
-        List<Ruta> _rutas = [];
         List<Sucursal> _sucursales = [];
         
 
@@ -17,11 +16,6 @@ namespace Back.Repositories
             return Task.CompletedTask;
         }
 
-        public Task Add(Ruta ruta)
-        {
-            _rutas.Add(ruta);
-            return Task.CompletedTask;
-        }
 
         public Task Add(Sucursal sucursal)
         {
@@ -29,11 +23,6 @@ namespace Back.Repositories
             return Task.CompletedTask;
         }
 
-        public Task<List<Ruta>> GetHistorialRutas(Guid id)
-        {   
-            var rutas = _rutas.Where(r => r.Transportista.Id == id).ToList();
-            return Task.FromResult(rutas);
-        }
 
         public Task<List<Ruta>> GetMisRutasSupervisadas(Guid supervisor)
         {
@@ -54,23 +43,17 @@ namespace Back.Repositories
             return Task.FromResult(paquete);
         }
 
+        public Task<List<Paquete>> GetPaquetes(List<Guid> paqueteIds)
+        {
+            var paquetes = _paquetes.Where(p => paqueteIds.Contains(p.Id)).ToList();
+            return Task.FromResult(paquetes);
+        }
+
         public Task<List<Paquete>> GetPaquetesEnSucursal()
         {     
             var paquetes = _paquetes.Where(p => p.EstaEnSucursal).ToList();
             return Task.FromResult(paquetes);
             
-        }
-
-        public Task<Ruta?> GetRutaById(Guid id)
-        {  
-            var ruta = _rutas.FirstOrDefault(r => r.Id == id);
-
-            return Task.FromResult(ruta);
-        }
-
-        public Task<List<Ruta>> GetRutas()
-        {   
-            return Task.FromResult(_rutas);
         }
 
         public Task<List<Sucursal>> GetSucursales()

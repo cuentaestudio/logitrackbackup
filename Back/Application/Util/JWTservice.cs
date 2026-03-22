@@ -13,6 +13,8 @@ namespace Back.Application.Util
 
             var claims = new[]
             {
+                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+                new Claim(ClaimTypes.Name, $"{usuario.Nombre}"),
                 new Claim(ClaimTypes.Email, usuario.Email),
                 new Claim(ClaimTypes.Role, usuario.GetType().Name),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())

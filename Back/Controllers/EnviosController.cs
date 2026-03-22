@@ -11,6 +11,8 @@ namespace Back.Controllers
     {
         private readonly IEnviosRepository _enviosRepository;
         private readonly IVehiculoRepository _vehiculoRepository;
+
+        private readonly IRutasRepository _rutasRepository;
         private readonly EnviosService _enviosService;
 
         public EnviosController(IEnviosRepository enviosRepository, IVehiculoRepository vehiculoRepository, EnviosService enviosService)
@@ -106,7 +108,7 @@ namespace Back.Controllers
         [HttpPost("entregar-paquete/ruta/{rutaId:guid}/paquete/{paqueteId:guid}")]
         public async Task<IResult> EntregarPaquete(Guid rutaId, Guid paqueteId)
         {
-            var ruta = await _enviosRepository.GetRutaById(rutaId);
+            var ruta = await _rutasRepository.GetRutaById(rutaId);
 
 
             if (ruta is null)
