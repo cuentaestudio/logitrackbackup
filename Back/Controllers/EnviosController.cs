@@ -83,6 +83,28 @@ namespace Back.Controllers
 
             return Results.Ok(rutas);
         }
+
+        [HttpPost("vehiculos/registrar-vehiculo")]
+        public async Task<IResult> RegistrarVehiculo([FromBody] RegistrarVehiculoRequest request)
+        {
+            var vehiculo = new Vehiculo(
+                request.Patente,
+                request.Modelo,
+                request.Capacidad
+            );
+
+            await _enviosRepository.Add(vehiculo);
+
+            return Results.Ok();
+        }
+
+        [HttpGet("vehiculos")]
+        public async Task<IResult> GetVehiculos()
+        {
+            var vehiculos = await _enviosRepository.GetVehiculosActivos();
+
+            return Results.Ok(vehiculos);
+        }
     }
 
 
@@ -101,5 +123,12 @@ namespace Back.Controllers
         public string CP { get; set; } = string.Empty;
         public string Nombre { get; set; } = string.Empty;
         public string Apellido { get; set; } = string.Empty;
+    }
+
+    public class RegistrarVehiculoRequest
+    {
+        public string Patente { get; set; } = string.Empty;
+        public string Modelo { get; set; } = string.Empty;
+        public double Capacidad { get; set; }
     }
 }

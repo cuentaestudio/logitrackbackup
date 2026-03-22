@@ -1,17 +1,21 @@
 using Back.Domain.Models;
 using Back.Domain.Repositories;
 
-namespace Back.Infraestructure.Repositories
+namespace Back.Repositories
 {
     public class LocalEnviosRepository : IEnviosRepository
     {
 
-        List<Paquete> _paquetes = [];
-        List<Ruta> _rutas = [];
+        private readonly List<Paquete> _paquetes = new List<Paquete>();
+
+        private readonly List<Ruta> _rutas = new List<Ruta>();
+        private readonly List<Vehiculo> _vehiculos = new List<Vehiculo>();
 
         public Task Add(Paquete envio)
         {
             _paquetes.Add(envio);
+
+            Console.WriteLine($"Paquete agregado: {envio.CodigoSeguimiento}, Peso: {envio.Peso}, Remitente: {envio.Remitente.Nombre} {envio.Remitente.Apellido}, Destinatario: {envio.Destinatario.Nombre} {envio.Destinatario.Apellido}");
             return Task.CompletedTask;
         }
 
@@ -21,9 +25,17 @@ namespace Back.Infraestructure.Repositories
             return Task.CompletedTask;
         }
 
+        public Task Add(Vehiculo vehiculo)
+        {   
+            _vehiculos.Add(vehiculo);
+            return Task.CompletedTask;
+        }
+
         public Task<List<Ruta>> GetHistorialRutas(Guid id)
-        {
-            throw new NotImplementedException();
+        {   
+            var rutas = _rutas.Where(r => r.Transportista.Id == id).ToList();
+            return Task.FromResult(rutas);
+            
         }
 
         public Task<Paquete?> GetPaquete(Guid id)
@@ -50,6 +62,12 @@ namespace Back.Infraestructure.Repositories
         {  
             var ruta = _rutas.FirstOrDefault(r => r.Id == id);
             return Task.FromResult(ruta);
+        }
+
+        public Task<List<Vehiculo>> GetVehiculosActivos()
+        {
+            var vehiculos = _vehiculos.Where(v => v.Activo).ToList();
+            return Task.FromResult(vehiculos);
         }
     }
 }

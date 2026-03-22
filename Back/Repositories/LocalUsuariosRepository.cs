@@ -1,7 +1,7 @@
 using Back.Domain.Models;
 using Back.Domain.Repositories;
 
-namespace Back.Infraestructure.Repositories
+namespace Back.Repositories
 {
     public class LocalUsuariosRepository : IUserRepository
     {

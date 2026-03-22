@@ -25,7 +25,6 @@ namespace Back.Domain.Models
 
         private Paquete()
         {
-            
         }
 
         public Paquete(string codigoSeguimiento, double peso, double altura, double ancho, Cliente origen, Cliente destino, string? descripcion)
@@ -60,6 +59,8 @@ namespace Back.Domain.Models
                 throw new InvalidOperationException("No se puede cancelar un paquete entregado.");
 
             Status = PaqueteStatus.Cancelado;
+
+            RazonCancelacion = razon;
         }
 
         public void CambiarEstado(PaqueteStatus status)
