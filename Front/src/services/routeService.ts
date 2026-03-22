@@ -1,5 +1,6 @@
 import type { Route } from '../types'
-
+import { shipmentService } from './shipmentService'
+import { vehicleService } from './vehicleService'
 // Mock data de rutas
 const mockRoutes: Route[] = [
   {
@@ -19,7 +20,7 @@ const mockRoutes: Route[] = [
     routeId: 'R-20260321-002',
     shipmentIds: ['2'],
     vehicleId: '2',
-    transportistId: '3',
+    transportistId: '4',
     status: 'Creada',
     createdDate: '2026-03-21',
     origin: 'Córdoba',
@@ -30,7 +31,7 @@ const mockRoutes: Route[] = [
     routeId: 'R-20260320-003',
     shipmentIds: ['4', '5', '6'],
     vehicleId: '3',
-    transportistId: '3',
+    transportistId: '5',
     status: 'Finalizada',
     createdDate: '2026-03-19',
     startDate: '2026-03-19',
@@ -43,7 +44,7 @@ const mockRoutes: Route[] = [
     routeId: 'R-20260321-004',
     shipmentIds: ['7', '8'],
     vehicleId: '1',
-    transportistId: '3',
+    transportistId: '6',
     status: 'Cancelada',
     createdDate: '2026-03-20',
     origin: 'Bahía Blanca',
@@ -51,18 +52,24 @@ const mockRoutes: Route[] = [
   },
 ]
 
+const cloneRoute = (route: Route): Route => ({
+  ...route,
+  shipmentIds: [...route.shipmentIds],
+})
+
 export const routeService = {
   // Obtener todas las rutas
   getAllRoutes: async (): Promise<Route[]> => {
     return new Promise((resolve) => {
-      setTimeout(() => resolve(mockRoutes), 500)
+      setTimeout(() => resolve(mockRoutes.map((cloneRoute))), 500)
     })
   },
 
   // Obtener ruta por ID
   getRouteById: async (id: string): Promise<Route | undefined> => {
     return new Promise((resolve) => {
-      setTimeout(() => resolve(mockRoutes.find((r) => r.id === id)), 300)
+      const route = mockRoutes.find((r) => r.id === id)
+      setTimeout(() => resolve(route ? cloneRoute(route) : undefined), 300)
     })
   },
 
@@ -75,14 +82,40 @@ export const routeService = {
 
   // Crear nueva ruta (Supervisor)
   createRoute: async (route: Omit<Route, 'id' | 'routeId'>): Promise<Route> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      const selectedShipments = new Set(route.shipmentIds)
+      const alreadyAssigned = mockRoutes.some((existingRoute) =>
+        existingRoute.status !== 'Cancelada' &&
+        existingRoute.shipmentIds.some((shipmentId) => selectedShipments.has(shipmentId)),
+      )
+
+      if (alreadyAssigned) {
+        setTimeout(() => reject(new Error('Uno o más envíos ya fueron asignados a otra ruta activa.')), 250)
+        return
+      }
+
       const newRoute: Route = {
         ...route,
         id: (mockRoutes.length + 1).toString(),
         routeId: routeService.generateRouteId(),
       }
       mockRoutes.push(newRoute)
-      setTimeout(() => resolve(newRoute), 500)
+      Promise.all([
+        shipmentService.assignShipmentsToRoute(route.shipmentIds, newRoute.id),
+        vehicleService.assignRoute(route.vehicleId, newRoute.id),
+      ]).finally(() => {
+        setTimeout(() => resolve(cloneRoute(newRoute)), 500)
+      })
+    })
+  },
+
+  assignTransportist: async (routeId: string, transportistId: string): Promise<Route | undefined> => {
+    return new Promise((resolve) => {
+      const route = mockRoutes.find((r) => r.id === routeId)
+      if (route && route.status === 'Creada') {
+        route.transportistId = transportistId
+      }
+      setTimeout(() => resolve(route ? cloneRoute(route) : undefined), 350)
     })
   },
 
@@ -94,7 +127,7 @@ export const routeService = {
         route.status = 'En Curso'
         route.startDate = new Date().toISOString().split('T')[0]
       }
-      setTimeout(() => resolve(route), 400)
+      setTimeout(() => resolve(route ? cloneRoute(route) : undefined), 400)
     })
   },
 
@@ -106,7 +139,7 @@ export const routeService = {
         route.status = 'Finalizada'
         route.endDate = new Date().toISOString().split('T')[0]
       }
-      setTimeout(() => resolve(route), 400)
+     setTimeout(() => resolve(route ? cloneRoute(route) : undefined), 400)
     })
   },
 
@@ -117,18 +150,14 @@ export const routeService = {
       if (route && (route.status === 'Creada' || route.status === 'En Curso')) {
         route.status = 'Cancelada'
       }
-      setTimeout(() => resolve(route), 400)
+     setTimeout(() => resolve(route ? cloneRoute(route) : undefined), 400)
     })
   },
 
   // Filtrar rutas por estado
   getRoutesByStatus: async (status: Route['status']): Promise<Route[]> => {
     return new Promise((resolve) => {
-      setTimeout(
-        () =>
-          resolve(mockRoutes.filter((r) => r.status === status)),
-        300,
-      )
+        setTimeout(() => resolve(mockRoutes.filter((r) => r.status === status).map(cloneRoute)), 300)
     })
   },
 
@@ -136,8 +165,7 @@ export const routeService = {
   getRoutesByTransportist: async (transportistId: string): Promise<Route[]> => {
     return new Promise((resolve) => {
       setTimeout(
-        () =>
-          resolve(mockRoutes.filter((r) => r.transportistId === transportistId)),
+       () => resolve(mockRoutes.filter((r) => r.transportistId === transportistId).map(cloneRoute)),
         300,
       )
     })
@@ -150,7 +178,7 @@ export const routeService = {
       if (route) {
         Object.assign(route, updates)
       }
-      setTimeout(() => resolve(route), 400)
+            setTimeout(() => resolve(route ? cloneRoute(route) : undefined), 400)
     })
   },
 }

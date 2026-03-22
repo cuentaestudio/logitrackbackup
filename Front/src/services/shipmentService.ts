@@ -204,6 +204,55 @@ const mockShipments: Shipment[] = [
     description: 'Libros y materiales de estudio',
     routeId: '4',
     cancellationReason: 'Ruta cancelada por el transportista',
+
+     },
+  {
+    id: '9',
+    trackingId: 'LT-2024-009',
+    sender: {
+      name: 'Alicia Benítez',
+      address: 'España 450',
+      city: 'Santa Fe',
+      postalCode: '3000',
+    },
+    receiver: {
+      name: 'Ramiro Núñez',
+      address: '9 de Julio 850',
+      city: 'Paraná',
+      postalCode: '3100',
+    },
+    status: 'Pendiente',
+    origin: 'Santa Fe',
+    destination: 'Paraná',
+    createdDate: '2026-03-21',
+    lastUpdate: '2026-03-21',
+    estimatedDelivery: '2026-03-24',
+    weight: 4.2,
+    description: 'Insumos médicos',
+  },
+  {
+    id: '10',
+    trackingId: 'LT-2024-010',
+    sender: {
+      name: 'Gabriel Soto',
+      address: 'Belgrano 75',
+      city: 'Neuquén',
+      postalCode: '8300',
+    },
+    receiver: {
+      name: 'Julieta Paz',
+      address: 'Brown 230',
+      city: 'Cipolletti',
+      postalCode: '8324',
+    },
+    status: 'Pendiente',
+    origin: 'Neuquén',
+    destination: 'Cipolletti',
+    createdDate: '2026-03-21',
+    lastUpdate: '2026-03-21',
+    estimatedDelivery: '2026-03-25',
+    weight: 2.9,
+    description: 'Repuestos electrónicos'
   },
 ]
 
@@ -263,7 +312,35 @@ export const shipmentService = {
       setTimeout(() => resolve(mockShipments.filter((s) => s.routeId === routeId)), 300)
     })
   },
+// Obtener envíos pendientes y sin ruta asignada
+  getAssignableShipments: async (): Promise<Shipment[]> => {
+    return new Promise((resolve) => {
+      setTimeout(
+        () =>
+          resolve(
+            mockShipments.filter(
+              (s) => s.status === 'Pendiente' && (!s.routeId || s.routeId.trim() === ''),
+            ),
+          ),
+        300,
+      )
+    })
+  },
 
+  // Asignar envíos a una ruta
+  assignShipmentsToRoute: async (shipmentIds: string[], routeId: string): Promise<Shipment[]> => {
+    return new Promise((resolve) => {
+      const updated = mockShipments
+        .filter((shipment) => shipmentIds.includes(shipment.id))
+        .map((shipment) => {
+          shipment.routeId = routeId
+          shipment.lastUpdate = new Date().toISOString().split('T')[0]
+          return { ...shipment }
+        })
+
+      setTimeout(() => resolve(updated), 400)
+    })
+  },
   // Buscar envíos por tracking ID
   searchByTrackingId: async (trackingId: string): Promise<Shipment[]> => {
     return new Promise((resolve) => {

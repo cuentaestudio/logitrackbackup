@@ -1,4 +1,4 @@
-import type { User, LoginCredentials, RegisterData } from '../types'
+import type { User, LoginCredentials, RegisterData,UserRole} from '../types'
 
 // Mock data de usuarios registrados
 const mockUsers: Array<User & { password: string }> = [
@@ -29,7 +29,36 @@ const mockUsers: Array<User & { password: string }> = [
     password: 'password123',
     role: 'transportista',
   },
+    {
+    id: '4',
+    name: 'Juan',
+    lastname: 'García',
+    email: 'juan.transportista@example.com',
+    dni: '22334455',
+    password: 'password123',
+    role: 'transportista',
+  },
+  {
+    id: '5',
+    name: 'María',
+    lastname: 'Rodríguez',
+    email: 'maria.transportista@example.com',
+    dni: '33445566',
+    password: 'password123',
+    role: 'transportista',
+  },
+  {
+    id: '6',
+    name: 'Pedro',
+    lastname: 'Fernández',
+    email: 'pedro.transportista@example.com',
+    dni: '44556677',
+    password: 'password123',
+    role: 'transportista',
+  },
 ]
+
+const sanitizeUser = ({ password, ...user }: User & { password: string }): User => user
 
 export const authService = {
   // Login
@@ -39,12 +68,8 @@ export const authService = {
         const user = mockUsers.find(
           (u) => u.dni === credentials.dni && u.password === credentials.password,
         )
-        if (user) {
-          const { password, ...userWithoutPassword } = user
-          resolve(userWithoutPassword)
-        } else {
-          resolve(null)
-        }
+        
+        resolve(user ? sanitizeUser(user) : null)
       }, 600)
     })
   },
@@ -53,19 +78,16 @@ export const authService = {
   register: async (data: RegisterData): Promise<User | null> => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        // Validar que el usuario no exista
         if (mockUsers.find((u) => u.dni === data.dni || u.email === data.email)) {
           resolve(null)
           return
         }
 
-        // Validar contraseñas
         if (data.password !== data.confirmPassword) {
           resolve(null)
           return
         }
 
-        // Crear nuevo usuario
         const newUser: User & { password: string } = {
           id: (mockUsers.length + 1).toString(),
           name: data.name,
@@ -78,9 +100,32 @@ export const authService = {
 
         mockUsers.push(newUser)
 
-        const { password, ...userWithoutPassword } = newUser
-        resolve(userWithoutPassword)
+       resolve
       }, 700)
+    })
+  },
+
+  
+  getAllUsers: async (): Promise<User[]> => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(mockUsers.map(sanitizeUser)), 300)
+    })
+  },
+
+  getUsersByRole: async (role: UserRole): Promise<User[]> => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(mockUsers.filter((user) => user.role === role).map(sanitizeUser)), 300)
+    })
+  },
+
+  getTransportistas: async (): Promise<User[]> => {
+    return authService.getUsersByRole('transportista')
+  },
+
+  getUserById: async (id: string): Promise<User | undefined> => {
+    return new Promise((resolve) => {
+      const user = mockUsers.find((currentUser) => currentUser.id === id)
+      setTimeout(() => resolve(user ? sanitizeUser(user) : undefined), 200)
     })
   },
 
