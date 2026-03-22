@@ -30,6 +30,13 @@ namespace Back.Domain.Models
             Paquetes = paquetes;
         }
 
+
+        private Paquete? GetPaquete(Guid id)
+        {
+            return Paquetes.FirstOrDefault(p => p.Id == id);
+        }
+
+        public bool HayPaquetesPendientes => Paquetes.Any(p => p.Status == PaqueteStatus.EnTransito);
         public int TotalPaquetes => Paquetes.Count;
         public int PaquetesEntregados => Paquetes.Count(p => p.Status == PaqueteStatus.Entregado);
         public int PaquetesCancelados => Paquetes.Count(p => p.Status == PaqueteStatus.Cancelado);
@@ -88,11 +95,14 @@ namespace Back.Domain.Models
 
         public void EntregarPaquete(Guid id)
         {
-            var paquete = Paquetes.FirstOrDefault(p => p.Id == id) ?? throw new InvalidOperationException("Paquete no encontrado en esta ruta.");
+            var paquete = GetPaquete(id);
+
+            if (paquete is null)
+                throw new InvalidOperationException("Paquete no encontrado en esta ruta.");
 
             paquete.Entregar();
 
-            if (Paquetes.All(p => p.Status == PaqueteStatus.Entregado))
+            if (!HayPaquetesPendientes)
             {
                 Finalizar();
             }

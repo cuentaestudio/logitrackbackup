@@ -74,7 +74,6 @@ namespace Back.Controllers
         }
 
         [HttpPost("sucursales/registrar-sucursal")]
-
         public async Task<IResult> RegistrarSucursal([FromBody] RegistarSucursal request)
         {
             var sucursal = new Sucursal(
@@ -104,7 +103,20 @@ namespace Back.Controllers
             return Results.Ok();
         }
 
+        [HttpPost("entregar-paquete/ruta/{rutaId:guid}/paquete/{paqueteId:guid}")]
+        public async Task<IResult> EntregarPaquete(Guid rutaId, Guid paqueteId)
+        {
+            var ruta = await _enviosRepository.GetRutaById(rutaId);
 
+
+            if (ruta is null)
+                return Results.NotFound();
+
+            ruta.EntregarPaquete(paqueteId);
+
+
+            return Results.Ok();
+        }
 }
 
 

@@ -6,7 +6,7 @@ namespace Back.Controllers
 {
 
     [ApiController]
-    [Route("rutas")]
+    [Route("api/rutas")]
     public class RutasController : ControllerBase
     {
         private readonly IEnviosRepository _enviosRepository;

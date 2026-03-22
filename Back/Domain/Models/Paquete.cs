@@ -53,6 +53,15 @@ namespace Back.Domain.Models
             Status = PaqueteStatus.Entregado;
         }
 
+        public void ReEnviar()
+        {
+            if (Status != PaqueteStatus.Cancelado)
+                throw new InvalidOperationException("Solo se pueden reenviar paquetes cancelados.");
+
+            Status = PaqueteStatus.EnSucursal;
+            RazonCancelacion = null;
+        }
+
         public void Cancelar(string razon)
         {
             if (Status == PaqueteStatus.Entregado)
