@@ -26,7 +26,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
   const showDemoUsers = import.meta.env.VITE_SHOW_DEMO_USERS === 'true'
   const navigate = useNavigate()
   const [credentials, setCredentials] = useState<LoginCredentials>({
-    dni: '',
+    email: '',
     password: '',
   })
   const [error, setError] = useState('')
@@ -43,14 +43,14 @@ function LoginPage({ onLogin }: LoginPageProps) {
     setLoading(true)
     setError('')
 
-    if (!credentials.dni || !credentials.password) {
+    if (!credentials.email || !credentials.password) {
       setError('Por favor completá todos los campos')
       setLoading(false)
       return
     }
 
-    if (!authService.isValidDni(credentials.dni)) {
-      setError('DNI inválido (debe tener 8 dígitos)')
+    if (!authService.isValidEmail(credentials.email)) {
+      setError('El email no tiene un formato válido')
       setLoading(false)
       return
     }
@@ -70,8 +70,8 @@ function LoginPage({ onLogin }: LoginPageProps) {
     }
   }
 
-  const fillDemo = (dni: string) => {
-    setCredentials({ dni, password: 'password123' })
+  const fillDemo = (email: string) => {
+    setCredentials({ email, password: 'password123' })
     setError('')
   }
 
@@ -137,15 +137,15 @@ function LoginPage({ onLogin }: LoginPageProps) {
           <form onSubmit={handleSubmit} noValidate>
             <Stack spacing={2.5}>
               <TextField
-                label="DNI"
-                name="dni"
-                value={credentials.dni}
+                label="Email"
+                name="email"
+                type="email"
+                value={credentials.email}
                 onChange={handleChange}
-                placeholder="12345678"
+                placeholder="usuario@ejemplo.com"
                 disabled={loading}
                 fullWidth
                 autoFocus
-                inputProps={{ maxLength: 10 }}
               />
               <TextField
                 label="Contraseña"
@@ -209,7 +209,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
                   color="error"
                   variant="outlined"
                   size="small"
-                  onClick={() => fillDemo('12345678')}
+                  onClick={() => fillDemo('supervisor@example.com')}
                   sx={{ cursor: 'pointer', fontWeight: 600 }}
                 />
                 <Chip
@@ -217,7 +217,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
                   color="primary"
                   variant="outlined"
                   size="small"
-                  onClick={() => fillDemo('87654321')}
+                  onClick={() => fillDemo('operador@example.com')}
                   sx={{ cursor: 'pointer', fontWeight: 600 }}
                 />
                 <Chip
@@ -225,7 +225,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
                   color="success"
                   variant="outlined"
                   size="small"
-                  onClick={() => fillDemo('11223344')}
+                  onClick={() => fillDemo('transportista@example.com')}
                   sx={{ cursor: 'pointer', fontWeight: 600 }}
                 />
               </Stack>

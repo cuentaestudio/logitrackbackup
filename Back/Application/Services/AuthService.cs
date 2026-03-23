@@ -15,7 +15,7 @@ namespace Back.Application.Services
             _userRepository = userRepository;
         }
 
-        public async Task<string> Login(LoginRequest request)
+        public async Task<dynamic> Login(LoginRequest request)
         {
             var user = await _userRepository.GetUsuarioByEmail(request.Email);
 
@@ -29,11 +29,26 @@ namespace Back.Application.Services
                 throw new InvalidOperationException("Contraseña incorrecta");
             }
 
-            return JWTservice.GenerateToken(user);
+            var token = JWTservice.GenerateToken(user);
+            
+            // Retornar token + info del usuario
+            return new
+            {
+                token = token,
+                user = new
+                {
+                    id = user.Id.ToString(),
+                    nombre = user.Nombre,
+                    apellido = user.Apellido,
+                    email = user.Email,
+                    role = user.GetType().Name.ToLower()
+                }
+            };
         }
 
         public async Task Registrarse(RegisterRequest request)
         {
+            Console.WriteLine($"Registrando usuario: {request.Email}, Role: {request.Role}");
 
             if (!EmailService.IsEmailValid(request.Email))
             {
@@ -51,9 +66,9 @@ namespace Back.Application.Services
             
             Usuario newUser = request.Role switch
             {
-                UserRole.Supervisor => new Supervisor(request.Nombre, request.Apellido, request.Email, hashedPassword, request.DNI),
-                UserRole.Operador => new Operador(request.Nombre, request.Apellido, request.Email, hashedPassword, request.DNI),
-                UserRole.Transportista => new Transportista(request.Nombre, request.Apellido, request.Email, hashedPassword, request.DNI),
+                "Supervisor" => new Supervisor(request.Nombre, request.Apellido, request.Email, hashedPassword, request.DNI),
+                "Operador" => new Operador(request.Nombre, request.Apellido, request.Email, hashedPassword, request.DNI),
+                "Transportista" => new Transportista(request.Nombre, request.Apellido, request.Email, hashedPassword, request.DNI),
                 _ => throw new InvalidOperationException("Rol no válido"),
             };
             await _userRepository.Add(newUser);

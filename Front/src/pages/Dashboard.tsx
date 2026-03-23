@@ -115,7 +115,7 @@ function Dashboard() {
         setHasSearched(false)
       } else {
         const results = await shipmentService.searchByTrackingId(query)
-        setFilteredShipments(results)
+        setFilteredShipments(results ? [results] : [])
         setHasSearched(true)
       }
     } catch (err) {
@@ -127,9 +127,11 @@ function Dashboard() {
 
   const handleCreateShipment = async (shipment: Omit<Shipment, 'id' | 'lastUpdate'>) => {
     try {
-      const newShipment = await shipmentService.createShipment(shipment)
-      setShipments((prev) => [newShipment, ...prev])
-      setFilteredShipments((prev) => [newShipment, ...prev])
+      const newShipment = await shipmentService.registerShipment(shipment)
+      if (newShipment) {
+        setShipments((prev) => [newShipment, ...prev])
+        setFilteredShipments((prev) => [newShipment, ...prev])
+      }
       setOpenShipmentForm(false)
     } catch (err) {
       setError('Error al crear el envío')

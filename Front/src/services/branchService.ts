@@ -9,23 +9,7 @@ interface RegistarSucursalRequest {
   Telefono: string
 }
 
-// Mapear status del backend al frontend (asumiendo que el backend no tiene status por ahora)
-const mapStatus = (status?: string): Branch['status'] => {
-  return status as Branch['status'] || 'Activa'
-}
-
 // Convertir respuesta del backend a tipo Branch
-const mapToBranch = (sucursal: any): Branch => ({
-  id: sucursal.id,
-  name: sucursal.nombre,
-  address: sucursal.direccion,
-  city: sucursal.ciudad,
-  postalCode: sucursal.cp || '', // Asumiendo que el backend tiene cp
-  phone: sucursal.telefono,
-  createdDate: sucursal.createdDate || new Date().toISOString().split('T')[0],
-  status: mapStatus(sucursal.status)
-})
-
 export const branchService = {
   // Obtener todas las sucursales
   getAllBranches: async (): Promise<Branch[]> => {
@@ -35,7 +19,7 @@ export const branchService = {
   },
 
   // Obtener una sucursal por ID
-  getBranchById: async (id: string): Promise<Branch | null> => {
+  getBranchById: async (_id: string): Promise<Branch | null> => {
     // Similar, no hay endpoint
     return null
   },
@@ -65,13 +49,13 @@ export const branchService = {
   },
 
   // Buscar sucursales por nombre
-  searchBranches: async (query: string): Promise<Branch[]> => {
+  searchBranches: async (_query: string): Promise<Branch[]> => {
     // No hay endpoint de búsqueda, devolver vacío
     return []
   },
 
   // Verificar si una sucursal existe por nombre
-  branchExists: async (name: string): Promise<boolean> => {
+  branchExists: async (_name: string): Promise<boolean> => {
     // No hay endpoint, asumir no existe
     return false
   }

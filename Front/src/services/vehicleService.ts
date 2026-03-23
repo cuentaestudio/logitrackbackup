@@ -86,5 +86,27 @@ export const vehicleService = {
       console.error('Create vehicle error:', error)
       throw error
     }
+  },
+
+  // Obtener vehículos asignables (disponibles)
+  getAssignableVehicles: async (): Promise<Vehicle[]> => {
+    try {
+      const vehicles = await vehicleService.getAllVehicles()
+      return vehicles.filter(v => v.estado === 'Disponible')
+    } catch (error) {
+      console.error('Get assignable vehicles error:', error)
+      return []
+    }
+  },
+
+  // Obtener vehículos por operador
+  getVehiclesByOperator: async (operatorId: string): Promise<Vehicle[]> => {
+    try {
+      const vehicles = await vehicleService.getAllVehicles()
+      return vehicles.filter(v => v.operator === operatorId)
+    } catch (error) {
+      console.error('Get vehicles by operator error:', error)
+      return []
+    }
   }
 }

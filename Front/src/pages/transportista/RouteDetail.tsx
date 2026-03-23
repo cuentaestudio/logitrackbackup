@@ -51,7 +51,7 @@ export default function RouteDetail() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
 
-  const { state, setLoading, setRoutes, setShipments, updateShipment, showSnackbar } =
+  const { state, setLoading, setRoutes, setShipments, showSnackbar } =
     useTransportistaState()
 
   const [route, setRoute] = useState<Route | null>(null)
@@ -73,27 +73,28 @@ export default function RouteDetail() {
 
   // ── Load data ─────────────────────────────────────────────────────────────
 
-  useEffect(() => {
+  const loadData = async () => {
     if (!id) return
-    const load = async () => {
-      setLoading(true)
-      try {
-        const [foundRoute, allShipments] = await Promise.all([
-          routeService.getRouteById(id),
-          shipmentService.getAllShipments(),
-        ])
-        if (foundRoute) {
-          setRoute(foundRoute)
-          const linked = allShipments.filter((s) => foundRoute.shipmentIds.includes(s.id))
-          setRouteShipments(linked)
-          setShipments(allShipments)
-          setRoutes([foundRoute])
-        }
-      } finally {
-        setLoading(false)
+    setLoading(true)
+    try {
+      const [foundRoute, allShipments] = await Promise.all([
+        routeService.getRouteById(id),
+        shipmentService.getAllShipments(),
+      ])
+      if (foundRoute) {
+        setRoute(foundRoute)
+        const linked = allShipments.filter((s) => foundRoute.shipmentIds.includes(s.id))
+        setRouteShipments(linked)
+        setShipments(allShipments)
+        setRoutes([foundRoute])
       }
+    } finally {
+      setLoading(false)
     }
-    load()
+  }
+
+  useEffect(() => {
+    loadData()
   }, [id, setLoading, setShipments, setRoutes])
 
   // Sync local list with global state updates
@@ -107,9 +108,9 @@ export default function RouteDetail() {
 
   const handleDelivered = async (shipment: Shipment) => {
     try {
-      const updated = await shipmentService.updateShipmentStatus(shipment.id, 'Entregado')
-      if (updated) {
-        updateShipment(updated)
+      const success = await shipmentService.changeShipmentStatus(shipment.id, 'Entregado')
+      if (success) {
+        await loadData()
         showSnackbar(`✓ ${shipment.trackingId} marcado como Entregado`, 'success')
         highlightRow(shipment.id, 'delivered')
       }
@@ -139,15 +140,14 @@ export default function RouteDetail() {
 
     closeRejectDialog()
     try {
-      const updated = await shipmentService.updateShipmentStatus(
-        rejectDialog.shipmentId,
-        'Rechazado',
-        rejectReason,
+      const success = await shipmentService.changeShipmentStatus(
+        rejectDialog.shipmentId!,
+        'Rechazado'
       )
-      if (updated) {
-        updateShipment(updated)
+      if (success) {
+        await loadData()
         showSnackbar(`Envío rechazado: ${rejectReason}`, 'warning')
-        highlightRow(rejectDialog.shipmentId, 'rejected')
+        highlightRow(rejectDialog.shipmentId!, 'rejected')
       }
     } catch {
       showSnackbar('Error al actualizar el envío', 'error')
@@ -175,9 +175,9 @@ export default function RouteDetail() {
       return
     }
 
-    const updated = await shipmentService.updateShipmentStatus(found.id, 'Entregado')
-    if (updated) {
-      updateShipment(updated)
+    const success = await shipmentService.changeShipmentStatus(found.id, 'Entregado')
+    if (success) {
+      await loadData()
       showSnackbar(`📦 ${trackingId} escaneado y marcado como Entregado`, 'success')
       setScanInput('')
       highlightRow(found.id, 'delivered')

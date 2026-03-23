@@ -21,7 +21,6 @@ namespace Back.Controllers
         public async Task<IResult> Login([FromBody] LoginRequest request)
         {
             var result = await _authService.Login(request);
-
             return Results.Ok(result);
         }
 
@@ -41,6 +40,21 @@ namespace Back.Controllers
         public string Password { get; set; }
     }
 
+    public class LoginResponse
+    {
+        public string Token { get; set; }
+        public UserInfo User { get; set; }
+    }
+
+    public class UserInfo
+    {
+        public string Id { get; set; }
+        public string Nombre { get; set; }
+        public string Apellido { get; set; }
+        public string Email { get; set; }
+        public string Role { get; set; }
+    }
+
     public class RegisterRequest
     {
         public string Nombre { get; set; }
@@ -48,14 +62,7 @@ namespace Back.Controllers
         public string Email { get; set; }
         public string Password { get; set; }
         public string DNI { get; set; }
-        public UserRole Role { get; set; }
-    }
-
-    public enum UserRole
-    {
-        Supervisor,
-        Operador,
-        Transportista
+        public string Role { get; set; }
     }
 }
 

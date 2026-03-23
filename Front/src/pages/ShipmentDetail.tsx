@@ -50,7 +50,7 @@ function ShipmentDetail() {
     setLoading(true)
     setError('')
     try {
-      const data = await shipmentService.getShipmentById(id)
+      const data = await shipmentService.getShipmentTracking(id)
       if (data) {
         setShipment(data)
         setNewStatus(data.status)
@@ -111,9 +111,13 @@ function ShipmentDetail() {
 
     setUpdatingStatus(true)
     try {
-      const updated = await shipmentService.updateShipmentStatus(id, newStatus, cancellationReason)
-      if (updated) {
-        setShipment(updated)
+      const success = await shipmentService.changeShipmentStatus(id, newStatus)
+      if (success) {
+        // Recargar el envío para obtener el estado actualizado
+        const updated = await shipmentService.getShipmentTracking(id)
+        if (updated) {
+          setShipment(updated)
+        }
         
         // Si cambia a Entregado, mostrar mensaje y cerrar después de 3 segundos
         if (newStatus === 'Entregado') {
@@ -145,10 +149,13 @@ function ShipmentDetail() {
     setError('')
     try {
       // Cambiar estado a "En sucursal" y limpiar motivo de cancelación
-      const updated = await shipmentService.updateShipmentStatus(id, 'En tránsito', '')
-      if (updated) {
-        setShipment(updated)
-        setStatusMessage('✓ Envío reenviado correctamente. Estado: En sucursal')
+      const success = await shipmentService.changeShipmentStatus(id, 'EnTransito')
+      if (success) {
+        const updated = await shipmentService.getShipmentTracking(id)
+        if (updated) {
+          setShipment(updated)
+        }
+        setStatusMessage('✓ Envío reenviado correctamente. Estado: En tránsito')
         setShowStatusMessage(true)
         
         // Limpiar mensaje después de 2 segundos

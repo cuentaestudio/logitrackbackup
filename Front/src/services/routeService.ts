@@ -134,5 +134,31 @@ export const routeService = {
       console.error('Get route history error:', error)
       return []
     }
+  },
+
+  // Obtener rutas por estado
+  getRoutesByStatus: async (status: Route['status']): Promise<Route[]> => {
+    try {
+      const routes = await routeService.getAllRoutes()
+      return routes.filter(r => r.status === status)
+    } catch (error) {
+      console.error('Get routes by status error:', error)
+      return []
+    }
+  },
+
+  // Asignar transportista a ruta
+  assignTransportist: async (routeId: string, transportistId: string): Promise<Route | undefined> => {
+    try {
+      // Usar el método reassignRoute que ya existe
+      const success = await routeService.reassignRoute(routeId, transportistId)
+      if (success) {
+        return await routeService.getRouteById(routeId)
+      }
+      return undefined
+    } catch (error) {
+      console.error('Assign transportist error:', error)
+      return undefined
+    }
   }
 }

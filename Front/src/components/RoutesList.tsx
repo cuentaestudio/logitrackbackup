@@ -147,7 +147,6 @@ const handleOpenCreateDialog = () => {
         transportistId: form.transportistId,
         shipmentIds: form.shipmentIds,
         status: 'Creada',
-        createdDate: new Date().toISOString().split('T')[0],
       })
       await loadRoutes()
       handleCloseCreateDialog()

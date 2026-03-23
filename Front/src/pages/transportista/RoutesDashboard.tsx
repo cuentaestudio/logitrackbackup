@@ -61,10 +61,11 @@ export default function RoutesDashboard({ user }: RoutesDashboardProps) {
     const loadData = async () => {
       setLoading(true)
       try {
-        const [routes, shipments] = await Promise.all([
-          routeService.getRoutesByTransportist(user.id),
+        const [allRoutes, shipments] = await Promise.all([
+          routeService.getAllRoutes(),
           shipmentService.getAllShipments(),
         ])
+        const routes = allRoutes.filter(r => r.transportistId === user.id)
         setRoutes(routes)
         setShipments(shipments)
       } catch {

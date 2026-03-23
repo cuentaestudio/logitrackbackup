@@ -153,11 +153,8 @@ export default function VehicleDetail() {
     if (!vehicle || !newEstado || newEstado === vehicle.estado) return
     setStatusLoading(true)
     try {
-      const updated = await vehicleService.updateVehicleStatus(vehicle.id, newEstado)
-      if (updated) {
-        setVehicle(updated)
-        showSnackbar(`Estado actualizado a "${newEstado}"`)
-      }
+      // TODO: Implementar actualización de estado en backend
+      showSnackbar('Funcionalidad no implementada en el backend', 'warning')
     } catch {
       showSnackbar('Error al actualizar el estado', 'error')
     } finally {
@@ -170,14 +167,8 @@ export default function VehicleDetail() {
     if (!vehicle) return
     setDeleteLoading(true)
     try {
-      const result = await vehicleService.deleteVehicle(vehicle.id)
-      if (result.success) {
-        showSnackbar('Vehículo eliminado correctamente')
-        setTimeout(() => navigate(-1), 1200)
-      } else {
-        showSnackbar(result.reason ?? 'No se pudo eliminar el vehículo', 'error')
-        setDeleteDialogOpen(false)
-      }
+      // TODO: Implementar eliminación en backend
+      showSnackbar('Funcionalidad no implementada en el backend', 'warning')
     } catch {
       showSnackbar('Error al eliminar el vehículo', 'error')
     } finally {
@@ -189,17 +180,8 @@ export default function VehicleDetail() {
     if (!vehicle || !selectedRouteId) return
     setAssignLoading(true)
     try {
-      const updated = await vehicleService.assignRoute(vehicle.id, selectedRouteId)
-      if (updated) {
-        setVehicle(updated)
-        const assignedRoute = availableRoutes.find((r) => r.id === selectedRouteId)
-        if (assignedRoute) {
-          setRoutes((prev) => [...prev, assignedRoute])
-          setAvailableRoutes((prev) => prev.filter((r) => r.id !== selectedRouteId))
-        }
-        showSnackbar('Ruta asignada correctamente')
-        setSelectedRouteId('')
-      }
+      // TODO: Implementar asignación de ruta en backend
+      showSnackbar('Funcionalidad no implementada en el backend', 'warning')
     } catch {
       showSnackbar('Error al asignar la ruta', 'error')
     } finally {
@@ -212,16 +194,8 @@ export default function VehicleDetail() {
     if (!vehicle || !unassignRouteId) return
     setUnassignLoading(true)
     try {
-      const updated = await vehicleService.unassignRoute(vehicle.id, unassignRouteId)
-      if (updated) {
-        setVehicle(updated)
-        const removedRoute = routes.find((r) => r.id === unassignRouteId)
-        setRoutes((prev) => prev.filter((r) => r.id !== unassignRouteId))
-        if (removedRoute) {
-          setAvailableRoutes((prev) => [...prev, removedRoute])
-        }
-        showSnackbar('Ruta desasignada correctamente')
-      }
+      // TODO: Implementar desasignación de ruta en backend
+      showSnackbar('Funcionalidad no implementada en el backend', 'warning')
     } catch {
       showSnackbar('Error al desasignar la ruta', 'error')
     } finally {

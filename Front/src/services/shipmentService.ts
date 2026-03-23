@@ -132,5 +132,51 @@ export const shipmentService = {
       console.error('Change shipment status error:', error)
       return false
     }
+  },
+
+  // Obtener envíos asignables (en sucursal)
+  getAssignableShipments: async (): Promise<Shipment[]> => {
+    try {
+      return await shipmentService.getShipmentsInBranch()
+    } catch (error) {
+      console.error('Get assignable shipments error:', error)
+      return []
+    }
+  },
+
+  // Generar tracking ID único
+  generateTrackingId: async (): Promise<string> => {
+    // En una implementación real, el backend generaría el ID
+    return `LT-${Date.now()}`
+  },
+
+  // Verificar si tracking ID existe
+  trackingIdExists: async (trackingId: string): Promise<boolean> => {
+    try {
+      const shipment = await shipmentService.getShipmentTracking(trackingId)
+      return shipment !== null
+    } catch (error) {
+      return false
+    }
+  },
+
+  // Obtener todos los envíos (usar getShipmentsInBranch por ahora)
+  getAllShipments: async (): Promise<Shipment[]> => {
+    try {
+      return await shipmentService.getShipmentsInBranch()
+    } catch (error) {
+      console.error('Get all shipments error:', error)
+      return []
+    }
+  },
+
+  // Buscar por tracking ID
+  searchByTrackingId: async (trackingId: string): Promise<Shipment | null> => {
+    try {
+      return await shipmentService.getShipmentTracking(trackingId)
+    } catch (error) {
+      console.error('Search by tracking ID error:', error)
+      return null
+    }
   }
 }
