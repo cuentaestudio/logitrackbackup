@@ -5,12 +5,26 @@ namespace Back.Repositories
 {
     public class LocalUsuariosRepository : IUserRepository
     {
-        private readonly List<Usuario> _usuarios = new List<Usuario>();
+        private readonly List<Usuario> _usuarios = new List<Usuario>()
+        {
+            new Supervisor("Juan", "Pérez", "juan.perez@logitrack.com", "$2a$11$xn5SmOrtPqherZH8ODaCLOoa9s8285SIAUC3VOHhVaU58LYk28pEO", "11111111"),
+            new Supervisor("Marta", "Gómez", "marta.gomez@logitrack.com", "$2a$11$xn5SmOrtPqherZH8ODaCLOoa9s8285SIAUC3VOHhVaU58LYk28pEO", "22222222"),
+            new Supervisor("Roberto", "Sánchez", "roberto.sanchez@logitrack.com", "$2a$11$xn5SmOrtPqherZH8ODaCLOoa9s8285SIAUC3VOHhVaU58LYk28pEO", "33333333"),
+            new Operador("Ana", "López", "ana.lopez@logitrack.com", "$2a$11$xn5SmOrtPqherZH8ODaCLOoa9s8285SIAUC3VOHhVaU58LYk28pEO", "44444444"),
+            new Operador("Carlos", "Rodríguez", "carlos.rodriguez@logitrack.com", "$2a$11$xn5SmOrtPqherZH8ODaCLOoa9s8285SIAUC3VOHhVaU58LYk28pEO", "55555555"),
+            new Operador("Lucía", "Fernández", "lucia.fernandez@logitrack.com", "$2a$11$xn5SmOrtPqherZH8ODaCLOoa9s8285SIAUC3VOHhVaU58LYk28pEO", "66666666"),
+            new Operador("Diego", "Martínez", "diego.martinez@logitrack.com", "$2a$11$xn5SmOrtPqherZH8ODaCLOoa9s8285SIAUC3VOHhVaU58LYk28pEO", "77777777"),
+            new Operador("Elena", "Vázquez", "elena.vazquez@logitrack.com", "$2a$11$xn5SmOrtPqherZH8ODaCLOoa9s8285SIAUC3VOHhVaU58LYk28pEO", "88888888"),
+            new Operador("Sofía", "Castro", "sofia.castro@logitrack.com", "$2a$11$xn5SmOrtPqherZH8ODaCLOoa9s8285SIAUC3VOHhVaU58LYk28pEO", "99999999"),
+            new Operador("Javier", "Ruiz", "javier.ruiz@logitrack.com", "$2a$11$xn5SmOrtPqherZH8ODaCLOoa9s8285SIAUC3VOHhVaU58LYk28pEO", "10101010"),
+            new Transportista("Pedro", "García", "pedro.garcia@logitrack.com", "$2a$11$xn5SmOrtPqherZH8ODaCLOoa9s8285SIAUC3VOHhVaU58LYk28pEO", "12121212"),
+            new Transportista("Luis", "Torres", "luis.torres@logitrack.com", "$2a$11$xn5SmOrtPqherZH8ODaCLOoa9s8285SIAUC3VOHhVaU58LYk28pEO", "13131313")
+        };
 
         public Task Add(Usuario usuario)
         {
             _usuarios.Add(usuario);
-            Console.WriteLine($"Usuario agregado: {usuario.Email} (ID: {usuario.Id}) "+ "TYpe "+ usuario.GetType());
+            Console.WriteLine($"Usuario agregado: {usuario.Email} (ID: {usuario.Id}) Password: {usuario.Password}"+ usuario.GetType());
             
             return Task.CompletedTask;
         }
