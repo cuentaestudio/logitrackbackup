@@ -43,6 +43,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddScoped<AuthService>().AddScoped<EnviosService>().AddScoped<RutasService>();
+builder.Services.AddScoped<DatabaseSeeder>();
 
 builder.Services.AddSingleton<IUserRepository, LocalUsuariosRepository>().AddSingleton<IEnviosRepository, LocalEnviosRepository>().AddSingleton<IVehiculoRepository, LocalVehiculoRepository>().AddSingleton<IRutasRepository, LocalRutasReposiory>();
 
