@@ -24,6 +24,7 @@ interface ShipmentFormProps {
 }
 
 function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
+  const cityRegex = /^[A-Za-zÀ-ÿ\s'-]+$/
   const [loading, setLoading] = useState(false)
   const [generatingId, setGeneratingId] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -84,7 +85,17 @@ function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+    const { name } = e.target
+    let { value } = e.target
+
+    if (name === 'senderCity' || name === 'receiverCity') {
+      value = value.replace(/[^A-Za-zÀ-ÿ\s'-]/g, '')
+    }
+
+    if (name === 'senderPostal' || name === 'receiverPostal') {
+      value = value.replace(/\D/g, '')
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -103,6 +114,8 @@ function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
     if (!formData.trackingId) newErrors.trackingId = 'Requerido'
     if (!formData.senderName) newErrors.senderName = 'Requerido'
     if (!formData.receiverName) newErrors.receiverName = 'Requerido'
+    if (formData.senderCity && !cityRegex.test(formData.senderCity.trim())) newErrors.senderCity = 'Solo letras'
+    if (formData.receiverCity && !cityRegex.test(formData.receiverCity.trim())) newErrors.receiverCity = 'Solo letras'
     if (!formData.origin) newErrors.origin = 'Requerido'
     if (!formData.destination) newErrors.destination = 'Requerido'
     if (!formData.weight || isNaN(Number(formData.weight))) newErrors.weight = 'Debe ser un número'
@@ -238,6 +251,8 @@ function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
                   name="senderCity"
                   value={formData.senderCity}
                   onChange={handleChange}
+                  error={!!errors.senderCity}
+                  helperText={errors.senderCity}
                   fullWidth
                   size="small"
                 />
@@ -248,6 +263,7 @@ function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
                   name="senderPostal"
                   value={formData.senderPostal}
                   onChange={handleChange}
+                  inputProps={{ inputMode: 'numeric' }}
                   fullWidth
                   size="small"
                 />
@@ -288,6 +304,8 @@ function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
                   name="receiverCity"
                   value={formData.receiverCity}
                   onChange={handleChange}
+                  error={!!errors.receiverCity}
+                  helperText={errors.receiverCity}
                   fullWidth
                   size="small"
                 />
@@ -298,6 +316,7 @@ function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
                   name="receiverPostal"
                   value={formData.receiverPostal}
                   onChange={handleChange}
+                  inputProps={{ inputMode: 'numeric' }}
                   fullWidth
                   size="small"
                 />

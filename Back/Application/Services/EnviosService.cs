@@ -45,6 +45,9 @@ namespace Back.Application.Services
             if (usuario is null || usuario is not Transportista transportista)
                 throw new InvalidOperationException("Transportista no encontrado");
 
+            if (!transportista.PuedeSerAsignado)
+                throw new InvalidOperationException("El transportista está suspendido o inhabilitado y no puede recibir rutas.");
+
             ruta.ReasignarTransportista(transportista);
 
             await _rutasRepository.Add(ruta);

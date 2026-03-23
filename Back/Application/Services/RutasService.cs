@@ -47,6 +47,9 @@ namespace Back.Application.Services
             if (user is null || user is not Transportista transportista)
                 throw new InvalidOperationException("Transportista no encontrado.");
 
+            if (!transportista.PuedeSerAsignado)
+                throw new InvalidOperationException("El transportista está suspendido o inhabilitado y no puede recibir rutas.");
+
             var ruta = new Ruta(transportista, vehiculo);
 
             ruta.AgregarPaquetes(paquetes);

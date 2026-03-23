@@ -20,6 +20,7 @@ interface BranchFormProps {
 }
 
 function BranchForm({ open, onClose, onBranchCreated }: BranchFormProps) {
+  const cityRegex = /^[A-Za-zÀ-ÿ\s'-]+$/
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -32,7 +33,17 @@ function BranchForm({ open, onClose, onBranchCreated }: BranchFormProps) {
   const [loading, setLoading] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+    const { name } = e.target
+    let { value } = e.target
+
+    if (name === 'postalCode' || name === 'phone') {
+      value = value.replace(/\D/g, '')
+    }
+
+    if (name === 'city') {
+      value = value.replace(/[^A-Za-zÀ-ÿ\s'-]/g, '')
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -52,12 +63,24 @@ function BranchForm({ open, onClose, onBranchCreated }: BranchFormProps) {
       setError('La ciudad es requerida')
       return false
     }
+    if (!cityRegex.test(formData.city.trim())) {
+      setError('La ciudad debe contener solo letras')
+      return false
+    }
     if (!formData.postalCode.trim()) {
       setError('El código postal es requerido')
       return false
     }
+    if (!/^\d+$/.test(formData.postalCode)) {
+      setError('El código postal debe contener solo números')
+      return false
+    }
     if (!formData.phone.trim()) {
       setError('El teléfono es requerido')
+      return false
+    }
+    if (!/^\d+$/.test(formData.phone)) {
+      setError('El teléfono debe contener solo números')
       return false
     }
     return true
@@ -157,6 +180,7 @@ function BranchForm({ open, onClose, onBranchCreated }: BranchFormProps) {
             name="postalCode"
             value={formData.postalCode}
             onChange={handleChange}
+            inputProps={{ inputMode: 'numeric' }}
             fullWidth
             placeholder="Ej: 1043"
             disabled={loading}
@@ -167,8 +191,9 @@ function BranchForm({ open, onClose, onBranchCreated }: BranchFormProps) {
             name="phone"
             value={formData.phone}
             onChange={handleChange}
+            inputProps={{ inputMode: 'numeric' }}
             fullWidth
-            placeholder="Ej: +54 11 1234-5678"
+            placeholder="Ej: 1145678901"
             disabled={loading}
           />
         </Stack>

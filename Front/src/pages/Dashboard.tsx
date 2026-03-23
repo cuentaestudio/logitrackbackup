@@ -151,8 +151,20 @@ function Dashboard() {
         setFilteredShipments(shipments)
         setHasSearched(false)
       } else {
-        const results = await shipmentService.searchByTrackingId(query)
-        setFilteredShipments(results ? [results] : [])
+        const normalizedQuery = query.trim().toLowerCase()
+        const localMatches = shipments.filter((shipment) => {
+          const trackingMatch = shipment.trackingId.toLowerCase().includes(normalizedQuery)
+          const destinatarioFullName = `${shipment.receiver.name}`.toLowerCase()
+          const destinatarioNameOnly = shipment.receiver.name.split(' ')[0]?.toLowerCase() || ''
+          return trackingMatch || destinatarioFullName.includes(normalizedQuery) || destinatarioNameOnly.includes(normalizedQuery)
+        })
+
+        if (localMatches.length > 0) {
+          setFilteredShipments(localMatches)
+        } else {
+          const byTracking = await shipmentService.searchByTrackingId(query)
+          setFilteredShipments(byTracking ? [byTracking] : [])
+        }
         setHasSearched(true)
       }
     } catch (err) {
@@ -256,6 +268,7 @@ function Dashboard() {
           <Tabs value={tab} onChange={(_, newValue) => setTab(newValue)} sx={{ mb: 3 }}>
             <Tab label={`Envíos ${filteredShipments.length > 0 ? `(${filteredShipments.length})` : ''}`} />
             <Tab label={`Sucursales ${branches.length > 0 ? `(${branches.length})` : ''}`} />
+            <Tab label="Transportistas" />
             <Tab label="Rutas" />
           </Tabs>
 
@@ -306,8 +319,11 @@ function Dashboard() {
             />
           )}
 
+          {/* TAB TRANSPORTISTAS */}
+          {tab === 2 && <TransportistasList userRole="supervisor" />}
+
           {/* TAB RUTAS */}
-          {tab === 2 && <RoutesList userRole="supervisor" />}
+          {tab === 3 && <RoutesList userRole="supervisor" />}
         </Box>
       )}
 

@@ -4,6 +4,7 @@ using Back.Application.Services;
 using Back.Domain.Models;
 using Back.Domain.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using static Back.Domain.Models.Transportista;
 
 
 namespace Back.Controllers
@@ -33,9 +34,15 @@ namespace Back.Controllers
         [HttpPost("registrarse")]
         public async Task<IActionResult> Registrarse([FromBody] RegisterRequest request)
         {
-            await _authService.Registrarse(request);
-
-            return Ok();
+            try
+            {
+                await _authService.Registrarse(request);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("transportistas")]
@@ -49,10 +56,66 @@ namespace Back.Controllers
                 Apellido = t.Apellido,
                 Email = t.Email,
                 DNI = t.DNI,
-                Role = "Transportista"
+                Role = "Transportista",
+                Licencia = t.Licencia,
+                Estado = t.EstadoLabel
             }).ToList();
 
             return Ok(transportistasList);
+        }
+
+        [HttpPost("transportistas")]
+        public async Task<IActionResult> RegistrarTransportista([FromBody] RegistrarTransportistaRequest request)
+        {
+            var transportista = await _authService.RegistrarTransportista(request);
+
+            return Ok(new UserInfoResponse
+            {
+                Id = transportista.Id.ToString(),
+                Nombre = transportista.Nombre,
+                Apellido = transportista.Apellido,
+                Email = transportista.Email,
+                DNI = transportista.DNI,
+                Role = "Transportista",
+                Licencia = transportista.Licencia,
+                Estado = transportista.EstadoLabel
+            });
+        }
+
+        [HttpPut("transportistas/{transportistaId:guid}/licencia")]
+        public async Task<IActionResult> ActualizarLicenciaTransportista(Guid transportistaId, [FromBody] ActualizarLicenciaTransportistaRequest request)
+        {
+            var transportista = await _authService.ActualizarLicenciaTransportista(transportistaId, request.Licencia);
+
+            return Ok(new UserInfoResponse
+            {
+                Id = transportista.Id.ToString(),
+                Nombre = transportista.Nombre,
+                Apellido = transportista.Apellido,
+                Email = transportista.Email,
+                DNI = transportista.DNI,
+                Role = "Transportista",
+                Licencia = transportista.Licencia,
+                Estado = transportista.EstadoLabel
+            });
+        }
+
+        [HttpPut("transportistas/{transportistaId:guid}/estado")]
+        public async Task<IActionResult> CambiarEstadoTransportista(Guid transportistaId, [FromBody] CambiarEstadoTransportistaRequest request)
+        {
+            var transportista = await _authService.CambiarEstadoTransportista(transportistaId, request.Estado);
+
+            return Ok(new UserInfoResponse
+            {
+                Id = transportista.Id.ToString(),
+                Nombre = transportista.Nombre,
+                Apellido = transportista.Apellido,
+                Email = transportista.Email,
+                DNI = transportista.DNI,
+                Role = "Transportista",
+                Licencia = transportista.Licencia,
+                Estado = transportista.EstadoLabel
+            });
         }
 
         [HttpGet("usuarios")]
@@ -66,6 +129,8 @@ namespace Back.Controllers
                 Apellido = u.Apellido,
                 Email = u.Email,
                 DNI = u.DNI,
+                Licencia = u is Transportista t ? t.Licencia : null,
+                Estado = u is Transportista t2 ? t2.EstadoLabel : null,
                 Role = u switch
                 {
                     Supervisor => "Supervisor",
@@ -87,6 +152,33 @@ namespace Back.Controllers
         public string Email { get; set; }
         public string DNI { get; set; }
         public string Role { get; set; }
+        public string? Licencia { get; set; }
+        public string? Estado { get; set; }
+    }
+
+    public class RegistrarTransportistaRequest
+    {
+        [Required]
+        public string Nombre { get; set; } = string.Empty;
+        [Required]
+        public string Apellido { get; set; } = string.Empty;
+        [Required]
+        [Length(8, 8, ErrorMessage = "El DNI debe tener exactamente 8 caracteres.")]
+        public string DNI { get; set; } = string.Empty;
+        [Required]
+        public string Licencia { get; set; } = string.Empty;
+    }
+
+    public class ActualizarLicenciaTransportistaRequest
+    {
+        [Required]
+        public string Licencia { get; set; } = string.Empty;
+    }
+
+    public class CambiarEstadoTransportistaRequest
+    {
+        [Required]
+        public EstadoTransportista Estado { get; set; }
     }
 
     public class LoginRequest

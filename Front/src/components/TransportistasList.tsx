@@ -1,17 +1,30 @@
-import { useState, useEffect ,useMemo} from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
+  Alert,
   Box,
+  Button,
   Card,
   CardContent,
-  Typography,
   Chip,
   CircularProgress,
-  Alert,
-  Stack,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Grid,
+  MenuItem,
+  Select,
+  Stack,
+  TextField,
+  Typography,
 } from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
+import BadgeIcon from '@mui/icons-material/Badge'
+import BlockIcon from '@mui/icons-material/Block'
+import EditIcon from '@mui/icons-material/Edit'
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser'
 
-import type { User, Route } from '../types'
+import type { User, Route, TransportistaEstado } from '../types'
 import { authService } from '../services/authService'
 import { routeService } from '../services/routeService'
 
@@ -19,11 +32,35 @@ interface TransportistsListProps {
   userRole?: string
 }
 
-function TransportistasList({ }: TransportistsListProps) {
+const estadoColorMap: Record<TransportistaEstado, 'success' | 'warning' | 'error'> = {
+  Activo: 'success',
+  Suspendido: 'warning',
+  Inhabilitado: 'error',
+}
+
+function TransportistasList({ userRole }: TransportistsListProps) {
+  const nameRegex = /^[A-Za-zÀ-ÿ\s'-]+$/
+  const isSupervisor = userRole === 'supervisor'
   const [transportistas, setTransportistas] = useState<User[]>([])
   const [routes, setRoutes] = useState<Route[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const [openCreateDialog, setOpenCreateDialog] = useState(false)
+  const [openLicenciaDialog, setOpenLicenciaDialog] = useState(false)
+  const [openEstadoDialog, setOpenEstadoDialog] = useState(false)
+  const [selectedTransportista, setSelectedTransportista] = useState<User | null>(null)
+
+  const [formData, setFormData] = useState({
+    name: '',
+    lastname: '',
+    dni: '',
+    licencia: '',
+  })
+  const [formError, setFormError] = useState('')
+  const [licenciaValue, setLicenciaValue] = useState('')
+  const [estadoValue, setEstadoValue] = useState<TransportistaEstado>('Suspendido')
 
   useEffect(() => {
     loadTransportistas()
@@ -35,7 +72,6 @@ function TransportistasList({ }: TransportistsListProps) {
       return acc
     }, {})
   }, [routes])
-
 
   const loadTransportistas = async () => {
     setLoading(true)
@@ -54,7 +90,7 @@ function TransportistasList({ }: TransportistsListProps) {
     }
   }
 
-    const getStatus = (transportistaId: string) => {
+  const getRouteStatus = (transportistaId: string) => {
     const assignedRoutes = routesByTransportista[transportistaId] ?? []
     if (assignedRoutes.some((route) => route.status === 'En Curso')) {
       return { label: 'En viaje', color: 'warning' as const }
@@ -66,6 +102,104 @@ function TransportistasList({ }: TransportistsListProps) {
       return { label: 'Disponible', color: 'success' as const }
     }
     return { label: 'Sin asignación', color: 'default' as const }
+  }
+
+  const handleOpenCreateDialog = () => {
+    setFormData({ name: '', lastname: '', dni: '', licencia: '' })
+    setFormError('')
+    setOpenCreateDialog(true)
+  }
+
+  const handleCreateTransportista = async () => {
+    if (!formData.name.trim() || !formData.lastname.trim() || !formData.licencia.trim()) {
+      setFormError('Completá nombre, apellido y licencia.')
+      return
+    }
+    if (!nameRegex.test(formData.name.trim()) || !nameRegex.test(formData.lastname.trim())) {
+      setFormError('Nombre y apellido solo pueden contener letras.')
+      return
+    }
+    if (!/^\d{8}$/.test(formData.dni)) {
+      setFormError('El DNI debe tener exactamente 8 dígitos.')
+      return
+    }
+
+    setSubmitting(true)
+    setFormError('')
+    try {
+      const created = await authService.createTransportista({
+        name: formData.name,
+        lastname: formData.lastname,
+        dni: formData.dni,
+        licencia: formData.licencia,
+      })
+
+      if (!created) {
+        setFormError('No se pudo registrar el transportista.')
+        return
+      }
+
+      await loadTransportistas()
+      setOpenCreateDialog(false)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const openEditLicenciaDialog = (transportista: User) => {
+    setSelectedTransportista(transportista)
+    setLicenciaValue(transportista.licencia ?? '')
+    setFormError('')
+    setOpenLicenciaDialog(true)
+  }
+
+  const handleUpdateLicencia = async () => {
+    if (!selectedTransportista) return
+    if (!licenciaValue.trim()) {
+      setFormError('La licencia es obligatoria.')
+      return
+    }
+
+    setSubmitting(true)
+    setFormError('')
+    try {
+      const updated = await authService.updateTransportistaLicencia(selectedTransportista.id, licenciaValue.trim())
+      if (!updated) {
+        setFormError('No se pudo actualizar la licencia.')
+        return
+      }
+      await loadTransportistas()
+      setOpenLicenciaDialog(false)
+      setSelectedTransportista(null)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const openChangeEstadoDialog = (transportista: User) => {
+    setSelectedTransportista(transportista)
+    setEstadoValue('Suspendido')
+    setFormError('')
+    setOpenEstadoDialog(true)
+  }
+
+  const handleUpdateEstado = async () => {
+    if (!selectedTransportista) return
+
+    setSubmitting(true)
+    setFormError('')
+    try {
+      const updated = await authService.updateTransportistaEstado(selectedTransportista.id, estadoValue)
+      if (!updated) {
+        setFormError('No se pudo cambiar el estado del transportista.')
+        return
+      }
+      await loadTransportistas()
+      setOpenEstadoDialog(false)
+      setSelectedTransportista(null)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   if (loading) {
@@ -83,6 +217,11 @@ function TransportistasList({ }: TransportistsListProps) {
           <Typography variant="h6">
             Transportistas - Total: {transportistas.length}
           </Typography>
+          {isSupervisor && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreateDialog}>
+              Registrar transportista
+            </Button>
+          )}
         </Box>
 
         {error && <Alert severity="error">{error}</Alert>}
@@ -92,8 +231,9 @@ function TransportistasList({ }: TransportistsListProps) {
         ) : (
           <Grid container spacing={3}>
             {transportistas.map((transportista) => {
-              const status = getStatus(transportista.id)
+              const routeStatus = getRouteStatus(transportista.id)
               const assignedRoutes = routesByTransportista[transportista.id] ?? []
+              const estadoCuenta = (transportista.estado ?? 'Activo') as TransportistaEstado
 
               return (
                 <Grid item xs={12} sm={6} md={4} lg={3} key={transportista.id}>
@@ -117,18 +257,52 @@ function TransportistasList({ }: TransportistsListProps) {
                         </Box>
                         <Box>
                           <Typography variant="body2" color="textSecondary">
+                            Licencia
+                          </Typography>
+                          <Typography variant="body2">{transportista.licencia || 'No informada'}</Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="body2" color="textSecondary">
                             Rutas asignadas
                           </Typography>
                           <Typography variant="body2">{assignedRoutes.length}</Typography>
                         </Box>
-                        <Box sx={{ pt: 1 }}>
+                        <Box sx={{ pt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                           <Chip
-                            label={status.label}
-                            color={status.color}
+                            label={`Cuenta: ${estadoCuenta}`}
+                            color={estadoColorMap[estadoCuenta]}
+                            size="small"
+                            variant="filled"
+                            icon={<VerifiedUserIcon />}
+                          />
+                          <Chip
+                            label={routeStatus.label}
+                            color={routeStatus.color}
                             size="small"
                             variant="filled"
                           />
                         </Box>
+                        {isSupervisor && (
+                          <Box sx={{ pt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<BadgeIcon />}
+                              onClick={() => openEditLicenciaDialog(transportista)}
+                            >
+                              Editar licencia
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="warning"
+                              startIcon={<BlockIcon />}
+                              onClick={() => openChangeEstadoDialog(transportista)}
+                            >
+                              Suspender/Inhabilitar
+                            </Button>
+                          </Box>
+                        )}
                       </Stack>
                     </CardContent>
                   </Card>
@@ -138,6 +312,107 @@ function TransportistasList({ }: TransportistsListProps) {
           </Grid>
         )}
       </Box>
+
+      <Dialog open={openCreateDialog} onClose={() => !submitting && setOpenCreateDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Registrar transportista</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            {formError && <Alert severity="error">{formError}</Alert>}
+            <TextField
+              label="Nombre"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData((current) => ({
+                  ...current,
+                  name: e.target.value.replace(/[^A-Za-zÀ-ÿ\s'-]/g, ''),
+                }))
+              }
+              fullWidth
+            />
+            <TextField
+              label="Apellido"
+              value={formData.lastname}
+              onChange={(e) =>
+                setFormData((current) => ({
+                  ...current,
+                  lastname: e.target.value.replace(/[^A-Za-zÀ-ÿ\s'-]/g, ''),
+                }))
+              }
+              fullWidth
+            />
+            <TextField
+              label="DNI"
+              value={formData.dni}
+              inputProps={{ maxLength: 8 }}
+              onChange={(e) => setFormData((current) => ({ ...current, dni: e.target.value.replace(/\D/g, '') }))}
+              fullWidth
+            />
+            <TextField
+              label="Licencia"
+              value={formData.licencia}
+              onChange={(e) => setFormData((current) => ({ ...current, licencia: e.target.value }))}
+              fullWidth
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenCreateDialog(false)} disabled={submitting}>Cancelar</Button>
+          <Button onClick={handleCreateTransportista} variant="contained" disabled={submitting}>
+            Guardar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openLicenciaDialog} onClose={() => !submitting && setOpenLicenciaDialog(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Modificar licencia</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            {formError && <Alert severity="error">{formError}</Alert>}
+            <Typography variant="body2" color="text.secondary">
+              Transportista: {selectedTransportista?.name} {selectedTransportista?.lastname}
+            </Typography>
+            <TextField
+              label="Licencia"
+              value={licenciaValue}
+              onChange={(e) => setLicenciaValue(e.target.value)}
+              fullWidth
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenLicenciaDialog(false)} disabled={submitting}>Cancelar</Button>
+          <Button onClick={handleUpdateLicencia} variant="contained" startIcon={<EditIcon />} disabled={submitting}>
+            Actualizar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openEstadoDialog} onClose={() => !submitting && setOpenEstadoDialog(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Cambiar estado del transportista</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            {formError && <Alert severity="error">{formError}</Alert>}
+            <Typography variant="body2" color="text.secondary">
+              Seleccioná el nuevo estado para {selectedTransportista?.name} {selectedTransportista?.lastname}.
+            </Typography>
+            <Select
+              value={estadoValue}
+              onChange={(e) => setEstadoValue(e.target.value as TransportistaEstado)}
+              fullWidth
+            >
+              <MenuItem value="Suspendido">Suspendido</MenuItem>
+              <MenuItem value="Inhabilitado">Inhabilitado</MenuItem>
+              <MenuItem value="Activo">Activo</MenuItem>
+            </Select>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenEstadoDialog(false)} disabled={submitting}>Cancelar</Button>
+          <Button onClick={handleUpdateEstado} variant="contained" color="warning" disabled={submitting}>
+            Cambiar estado
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

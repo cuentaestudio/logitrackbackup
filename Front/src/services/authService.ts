@@ -1,4 +1,11 @@
-import type { User, LoginCredentials, RegisterData, UserRole } from '../types'
+import type {
+  User,
+  LoginCredentials,
+  RegisterData,
+  UserRole,
+  TransportistaEstado,
+  CreateTransportistaData,
+} from '../types'
 import api from './api'
 
 export const authService = {
@@ -42,8 +49,12 @@ export const authService = {
       const roleMap = {
         supervisor: 'Supervisor',
         operador: 'Operador',
-        transportista: 'Transportista'
       } as const
+
+      if (data.role === 'transportista') {
+        console.error('Transportista public registration is disabled')
+        return null
+      }
 
       await api.post('/auth/registrarse', {
         Nombre: data.name,
@@ -51,14 +62,16 @@ export const authService = {
         Email: data.email,
         Password: data.password,
         DNI: data.dni,
-        Role: roleMap[data.role]
+        Role: roleMap[data.role as 'supervisor' | 'operador']
       })
 
       // Después del registro, hacer login automáticamente
       return await authService.login({ email: data.email, password: data.password })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Register error:', error)
-      return null
+      const errorMessage =
+        error?.response?.data || error?.message || 'Error al registrarse'
+      throw new Error(errorMessage)
     }
   },
 
@@ -99,11 +112,83 @@ export const authService = {
         lastname: transportista.apellido,
         email: transportista.email,
         dni: transportista.dni,
-        role: 'transportista' as const
+        role: 'transportista' as const,
+        licencia: transportista.licencia,
+        estado: (transportista.estado as TransportistaEstado) || 'Activo',
       }))
     } catch (error) {
       console.error('Get transportistas error:', error)
       return []
+    }
+  },
+
+  // Registrar transportista (solo gestión interna)
+  createTransportista: async (data: CreateTransportistaData): Promise<User | null> => {
+    try {
+      const response = await api.post('/auth/transportistas', {
+        Nombre: data.name,
+        Apellido: data.lastname,
+        DNI: data.dni,
+        Licencia: data.licencia,
+      })
+      const t = response.data
+      return {
+        id: t.id,
+        name: t.nombre,
+        lastname: t.apellido,
+        email: t.email,
+        dni: t.dni,
+        role: 'transportista',
+        licencia: t.licencia,
+        estado: (t.estado as TransportistaEstado) || 'Activo',
+      }
+    } catch (error) {
+      console.error('Create transportista error:', error)
+      return null
+    }
+  },
+
+  updateTransportistaLicencia: async (transportistaId: string, licencia: string): Promise<User | null> => {
+    try {
+      const response = await api.put(`/auth/transportistas/${transportistaId}/licencia`, {
+        Licencia: licencia,
+      })
+      const t = response.data
+      return {
+        id: t.id,
+        name: t.nombre,
+        lastname: t.apellido,
+        email: t.email,
+        dni: t.dni,
+        role: 'transportista',
+        licencia: t.licencia,
+        estado: (t.estado as TransportistaEstado) || 'Activo',
+      }
+    } catch (error) {
+      console.error('Update transportista licencia error:', error)
+      return null
+    }
+  },
+
+  updateTransportistaEstado: async (transportistaId: string, estado: TransportistaEstado): Promise<User | null> => {
+    try {
+      const response = await api.put(`/auth/transportistas/${transportistaId}/estado`, {
+        Estado: estado,
+      })
+      const t = response.data
+      return {
+        id: t.id,
+        name: t.nombre,
+        lastname: t.apellido,
+        email: t.email,
+        dni: t.dni,
+        role: 'transportista',
+        licencia: t.licencia,
+        estado: (t.estado as TransportistaEstado) || 'Activo',
+      }
+    } catch (error) {
+      console.error('Update transportista estado error:', error)
+      return null
     }
   },
 
@@ -117,7 +202,9 @@ export const authService = {
         lastname: usuario.apellido,
         email: usuario.email,
         dni: usuario.dni,
-        role: usuario.role.toLowerCase() as UserRole
+        role: usuario.role.toLowerCase() as UserRole,
+        licencia: usuario.licencia,
+        estado: usuario.estado as TransportistaEstado | undefined,
       }))
     } catch (error) {
       console.error('Get usuarios error:', error)

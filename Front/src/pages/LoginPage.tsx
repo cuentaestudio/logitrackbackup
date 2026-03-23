@@ -220,14 +220,6 @@ function LoginPage({ onLogin }: LoginPageProps) {
                   onClick={() => fillDemo('operador@logitrack.com')}
                   sx={{ cursor: 'pointer', fontWeight: 600 }}
                 />
-                <Chip
-                  label="Transportista"
-                  color="success"
-                  variant="outlined"
-                  size="small"
-                  onClick={() => fillDemo('transportista@logitrack.com')}
-                  sx={{ cursor: 'pointer', fontWeight: 600 }}
-                />
               </Stack>
             </Box>
           )}

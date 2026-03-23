@@ -70,6 +70,11 @@ function RoutesList({ userRole }: RoutesListProps) {
   const [form, setForm] = useState<RouteFormState>(initialForm)
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  const activeTransportistas = useMemo(
+    () => transportistas.filter((transportista) => (transportista.estado ?? 'Activo') === 'Activo'),
+    [transportistas],
+  )
   
   useEffect(() => {
     loadRoutes()
@@ -356,13 +361,16 @@ const handleOpenCreateDialog = () => {
                 label="Transportista"
                 onChange={(e) => setForm((current) => ({ ...current, transportistId: e.target.value }))}
               >
-                {transportistas.map((transportista) => (
+                {activeTransportistas.map((transportista) => (
                   <MenuItem key={transportista.id} value={transportista.id}>
                     {transportista.name} {transportista.lastname} · DNI {transportista.dni}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
+            {activeTransportistas.length === 0 && (
+              <Alert severity="warning">No hay transportistas activos disponibles para asignar.</Alert>
+            )}
             <FormControl fullWidth>
               <InputLabel>Envíos disponibles</InputLabel>
               <Select
@@ -414,13 +422,16 @@ const handleOpenCreateDialog = () => {
                 onChange={(e) => setSelectedTransportistId(e.target.value)}
                 disabled={submitting}
               >
-                {transportistas.map((transportista) => (
+                {activeTransportistas.map((transportista) => (
                   <MenuItem key={transportista.id} value={transportista.id}>
                     {transportista.name} {transportista.lastname}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
+            {activeTransportistas.length === 0 && (
+              <Alert severity="warning">No hay transportistas activos disponibles para reasignar.</Alert>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>

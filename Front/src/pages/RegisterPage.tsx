@@ -25,6 +25,7 @@ interface RegisterPageProps {
 }
 
 function RegisterPage({ onLogin }: RegisterPageProps) {
+  const nameRegex = /^[A-Za-zÀ-ÿ\s'-]+$/
   const navigate = useNavigate()
   const [formData, setFormData] = useState<RegisterData>({
     name: '',
@@ -40,7 +41,17 @@ function RegisterPage({ onLogin }: RegisterPageProps) {
   const [loading, setLoading] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+    const { name } = e.target
+    let { value } = e.target
+
+    if (name === 'name' || name === 'lastname') {
+      value = value.replace(/[^A-Za-zÀ-ÿ\s'-]/g, '')
+    }
+
+    if (name === 'dni') {
+      value = value.replace(/\D/g, '')
+    }
+
     const nextFormData = {
       ...formData,
       [name]: value,
@@ -90,7 +101,9 @@ function RegisterPage({ onLogin }: RegisterPageProps) {
     const newErrors: Record<string, string> = {}
 
     if (!formData.name.trim()) newErrors.name = 'Requerido'
+    else if (!nameRegex.test(formData.name.trim())) newErrors.name = 'Solo se permiten letras'
     if (!formData.lastname.trim()) newErrors.lastname = 'Requerido'
+    else if (!nameRegex.test(formData.lastname.trim())) newErrors.lastname = 'Solo se permiten letras'
     if (!authService.isValidEmail(formData.email)) newErrors.email = 'Email inválido'
     if (!authService.isValidDni(formData.dni)) newErrors.dni = 'DNI debe tener 8 dígitos'
     if (!authService.isValidPassword(formData.password))
@@ -118,8 +131,8 @@ function RegisterPage({ onLogin }: RegisterPageProps) {
       } else {
         setGeneralError('El DNI o email ya están registrados, o las contraseñas no coinciden')
       }
-    } catch (err) {
-      setGeneralError('Error al registrarse')
+    } catch (err: any) {
+      setGeneralError(err?.message || 'Error al registrarse')
     } finally {
       setLoading(false)
     }
@@ -230,9 +243,11 @@ function RegisterPage({ onLogin }: RegisterPageProps) {
                 >
                   <MenuItem value="supervisor">Supervisor</MenuItem>
                   <MenuItem value="operador">Operador</MenuItem>
-                  <MenuItem value="transportista">Transportista</MenuItem>
                 </Select>
               </FormControl>
+              <Typography variant="caption" color="text.secondary">
+                El rol transportista solo puede ser creado por un supervisor desde el panel interno.
+              </Typography>
 
               <TextField
                 label="Contraseña"
