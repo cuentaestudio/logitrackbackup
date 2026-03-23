@@ -67,7 +67,8 @@ namespace Back.Controllers
         [HttpPost("transportistas")]
         public async Task<IActionResult> RegistrarTransportista([FromBody] RegistrarTransportistaRequest request)
         {
-            var transportista = await _authService.RegistrarTransportista(request);
+            var result = await _authService.RegistrarTransportista(request);
+            var transportista = result.Transportista;
 
             return Ok(new UserInfoResponse
             {
@@ -78,7 +79,8 @@ namespace Back.Controllers
                 DNI = transportista.DNI,
                 Role = "Transportista",
                 Licencia = transportista.Licencia,
-                Estado = transportista.EstadoLabel
+                Estado = transportista.EstadoLabel,
+                TemporaryPassword = result.TemporaryPassword
             });
         }
 
@@ -154,6 +156,7 @@ namespace Back.Controllers
         public string Role { get; set; }
         public string? Licencia { get; set; }
         public string? Estado { get; set; }
+        public string? TemporaryPassword { get; set; }
     }
 
     public class RegistrarTransportistaRequest
@@ -162,6 +165,9 @@ namespace Back.Controllers
         public string Nombre { get; set; } = string.Empty;
         [Required]
         public string Apellido { get; set; } = string.Empty;
+        [Required]
+        [EmailAddress(ErrorMessage = "El correo electrónico no es válido.")]
+        public string Email { get; set; } = string.Empty;
         [Required]
         [Length(8, 8, ErrorMessage = "El DNI debe tener exactamente 8 caracteres.")]
         public string DNI { get; set; } = string.Empty;

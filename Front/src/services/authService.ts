@@ -8,6 +8,11 @@ import type {
 } from '../types'
 import api from './api'
 
+interface CreateTransportistaResult {
+  user: User
+  temporaryPassword: string
+}
+
 export const authService = {
   // Login
   login: async (credentials: LoginCredentials): Promise<User | null> => {
@@ -123,16 +128,18 @@ export const authService = {
   },
 
   // Registrar transportista (solo gestión interna)
-  createTransportista: async (data: CreateTransportistaData): Promise<User | null> => {
+  createTransportista: async (data: CreateTransportistaData): Promise<CreateTransportistaResult | null> => {
     try {
       const response = await api.post('/auth/transportistas', {
         Nombre: data.name,
         Apellido: data.lastname,
+        Email: data.email,
         DNI: data.dni,
         Licencia: data.licencia,
       })
       const t = response.data
       return {
+        user: {
         id: t.id,
         name: t.nombre,
         lastname: t.apellido,
@@ -141,6 +148,8 @@ export const authService = {
         role: 'transportista',
         licencia: t.licencia,
         estado: (t.estado as TransportistaEstado) || 'Activo',
+        },
+        temporaryPassword: t.temporaryPassword || '',
       }
     } catch (error) {
       console.error('Create transportista error:', error)

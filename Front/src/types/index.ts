@@ -15,6 +15,7 @@ export interface User {
 export interface CreateTransportistaData {
   name: string
   lastname: string
+  email: string
   dni: string
   licencia: string
 }

@@ -45,6 +45,7 @@ function TransportistasList({ userRole }: TransportistsListProps) {
   const [routes, setRoutes] = useState<Route[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   const [openCreateDialog, setOpenCreateDialog] = useState(false)
@@ -55,6 +56,7 @@ function TransportistasList({ userRole }: TransportistsListProps) {
   const [formData, setFormData] = useState({
     name: '',
     lastname: '',
+    email: '',
     dni: '',
     licencia: '',
   })
@@ -105,14 +107,18 @@ function TransportistasList({ userRole }: TransportistsListProps) {
   }
 
   const handleOpenCreateDialog = () => {
-    setFormData({ name: '', lastname: '', dni: '', licencia: '' })
+    setFormData({ name: '', lastname: '', email: '', dni: '', licencia: '' })
     setFormError('')
     setOpenCreateDialog(true)
   }
 
   const handleCreateTransportista = async () => {
-    if (!formData.name.trim() || !formData.lastname.trim() || !formData.licencia.trim()) {
-      setFormError('Completá nombre, apellido y licencia.')
+    if (!formData.name.trim() || !formData.lastname.trim() || !formData.licencia.trim() || !formData.email.trim()) {
+      setFormError('Completá nombre, apellido, email y licencia.')
+      return
+    }
+    if (!authService.isValidEmail(formData.email.trim())) {
+      setFormError('Ingresá un email válido.')
       return
     }
     if (!nameRegex.test(formData.name.trim()) || !nameRegex.test(formData.lastname.trim())) {
@@ -130,6 +136,7 @@ function TransportistasList({ userRole }: TransportistsListProps) {
       const created = await authService.createTransportista({
         name: formData.name,
         lastname: formData.lastname,
+        email: formData.email,
         dni: formData.dni,
         licencia: formData.licencia,
       })
@@ -140,6 +147,9 @@ function TransportistasList({ userRole }: TransportistsListProps) {
       }
 
       await loadTransportistas()
+      setSuccessMessage(
+        `Transportista registrado. Credenciales de acceso: ${created.user.email}. Contraseña temporal: ${created.temporaryPassword}`,
+      )
       setOpenCreateDialog(false)
     } finally {
       setSubmitting(false)
@@ -225,6 +235,11 @@ function TransportistasList({ userRole }: TransportistsListProps) {
         </Box>
 
         {error && <Alert severity="error">{error}</Alert>}
+        {successMessage && (
+          <Alert severity="success" onClose={() => setSuccessMessage('')}>
+            {successMessage}
+          </Alert>
+        )}
 
         {transportistas.length === 0 ? (
           <Alert severity="info">No hay transportistas registrados</Alert>
@@ -338,6 +353,12 @@ function TransportistasList({ userRole }: TransportistsListProps) {
                   lastname: e.target.value.replace(/[^A-Za-zÀ-ÿ\s'-]/g, ''),
                 }))
               }
+              fullWidth
+            />
+            <TextField
+              label="Email"
+              value={formData.email}
+              onChange={(e) => setFormData((current) => ({ ...current, email: e.target.value }))}
               fullWidth
             />
             <TextField

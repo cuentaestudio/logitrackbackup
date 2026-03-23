@@ -60,6 +60,9 @@ namespace Back.Domain.Models
             if (Status == PaqueteStatus.Cancelado)
                 throw new InvalidOperationException("No se puede entregar un paquete cancelado.");
 
+            if (Status != PaqueteStatus.EnTransito)
+                throw new InvalidOperationException("Solo se pueden entregar paquetes que están en tránsito.");
+
             Status = PaqueteStatus.Entregado;
         }
 

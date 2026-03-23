@@ -77,6 +77,24 @@ function ShipmentDetail() {
     return true
   }
 
+  const getAllowedTransitions = (currentStatus: Shipment['status']): Shipment['status'][] => {
+    switch (currentStatus) {
+      case 'En sucursal':
+        return ['En tránsito', 'Cancelado']
+      case 'En tránsito':
+        return ['Entregado', 'Cancelado']
+      default:
+        return []
+    }
+  }
+
+  useEffect(() => {
+    if (!openStatusDialog || !shipment) return
+    const allowed = getAllowedTransitions(shipment.status)
+    setNewStatus(allowed[0] ?? shipment.status)
+    setCancellationReason('')
+  }, [openStatusDialog, shipment])
+
   // Obtener mensaje de error para cambio de estado no permitido
   const getStatusChangeErrorMessage = (): string => {
     if (shipment?.status === 'Entregado') {
@@ -100,6 +118,12 @@ function ShipmentDetail() {
     // Validar transición de estado
     if (!canChangeStatus(shipment.status)) {
       setError(getStatusChangeErrorMessage())
+      return
+    }
+
+    const allowedTransitions = getAllowedTransitions(shipment.status)
+    if (!allowedTransitions.includes(newStatus)) {
+      setError('Transición de estado no válida para el estado actual del envío')
       return
     }
 
@@ -229,6 +253,8 @@ function ShipmentDetail() {
       </Box>
     )
   }
+
+  const allowedTransitions = getAllowedTransitions(shipment.status)
 
   return (
     <Box>
@@ -492,13 +518,18 @@ function ShipmentDetail() {
                   }
                 }}
                 fullWidth
-        disabled={!canChangeStatus(shipment.status) || updatingStatus}
+                disabled={!canChangeStatus(shipment.status) || updatingStatus || allowedTransitions.length === 0}
               >
-                <MenuItem value="En sucursal">En sucursal</MenuItem>
-                <MenuItem value="En tránsito">En tránsito</MenuItem>
-                <MenuItem value="Entregado">Entregado</MenuItem>
-                <MenuItem value="Cancelado">Cancelado</MenuItem>
+                {allowedTransitions.map((status) => (
+                  <MenuItem key={status} value={status}>{status}</MenuItem>
+                ))}
               </Select>
+
+              {allowedTransitions.length === 0 && (
+                <Alert severity="info" sx={{ mt: 2 }}>
+                  No hay transiciones disponibles para el estado actual.
+                </Alert>
+              )}
 
               {newStatus === 'Cancelado' && (
                 <TextField

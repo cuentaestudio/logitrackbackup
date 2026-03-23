@@ -6,6 +6,12 @@ using static Back.Domain.Models.Transportista;
 
 namespace Back.Application.Services
 {
+    public class RegistrarTransportistaResult
+    {
+        public required Transportista Transportista { get; init; }
+        public required string TemporaryPassword { get; init; }
+    }
+
     public class AuthService
     {
 
@@ -83,10 +89,13 @@ namespace Back.Application.Services
             await _userRepository.Add(newUser);
         }
 
-        public async Task<Transportista> RegistrarTransportista(RegistrarTransportistaRequest request)
+        public async Task<RegistrarTransportistaResult> RegistrarTransportista(RegistrarTransportistaRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Nombre) || string.IsNullOrWhiteSpace(request.Apellido))
                 throw new InvalidOperationException("Nombre y apellido son obligatorios.");
+
+            if (string.IsNullOrWhiteSpace(request.Email) || !EmailService.IsEmailValid(request.Email.Trim()))
+                throw new InvalidOperationException("El email del transportista no es válido.");
 
             if (string.IsNullOrWhiteSpace(request.DNI) || request.DNI.Trim().Length != 8)
                 throw new InvalidOperationException("El DNI debe tener exactamente 8 caracteres.");
@@ -98,25 +107,33 @@ namespace Back.Application.Services
             if (existingByDni is not null)
                 throw new InvalidOperationException("El DNI ya está registrado.");
 
-            // Mantener la creación simple: email técnico interno y contraseña temporal.
-            var generatedEmail = $"transportista.{request.DNI.Trim()}@logitrack.local";
-            var generatedPassword = PasswordHasher.HashPassword("password123");
-
-            var existingByEmail = await _userRepository.GetUsuarioByEmail(generatedEmail);
+            var existingByEmail = await _userRepository.GetUsuarioByEmail(request.Email.Trim());
             if (existingByEmail is not null)
-                throw new InvalidOperationException("No se pudo generar un email único para el transportista.");
+                throw new InvalidOperationException("El email ya está registrado.");
+
+            var temporaryPassword = GenerateTemporaryPassword();
+            var generatedPassword = PasswordHasher.HashPassword(temporaryPassword);
 
             var transportista = new Transportista(
                 request.Nombre.Trim(),
                 request.Apellido.Trim(),
-                generatedEmail,
+                request.Email.Trim(),
                 generatedPassword,
                 request.DNI.Trim(),
                 request.Licencia.Trim()
             );
 
             await _userRepository.Add(transportista);
-            return transportista;
+            return new RegistrarTransportistaResult
+            {
+                Transportista = transportista,
+                TemporaryPassword = temporaryPassword,
+            };
+        }
+
+        private static string GenerateTemporaryPassword()
+        {
+            return $"Tmp{Guid.NewGuid().ToString("N")[..8]}";
         }
 
         public async Task<Transportista> ActualizarLicenciaTransportista(Guid transportistaId, string licencia)
