@@ -1,0 +1,68 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+*.ixml
+.idea_modules/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sln.docstates
+
+# Build folders
+bin/
+obj/
+dist/
+build/
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS specific
+.DS_Store
+Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Build outputs
+/bin/
+/obj/
+/dist/
+
+# IDE databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
