@@ -209,7 +209,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
                   color="error"
                   variant="outlined"
                   size="small"
-                  onClick={() => fillDemo('supervisor@example.com')}
+                  onClick={() => fillDemo('supervisor@logitrack.com')}
                   sx={{ cursor: 'pointer', fontWeight: 600 }}
                 />
                 <Chip
@@ -217,7 +217,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
                   color="primary"
                   variant="outlined"
                   size="small"
-                  onClick={() => fillDemo('operador@example.com')}
+                  onClick={() => fillDemo('operador@logitrack.com')}
                   sx={{ cursor: 'pointer', fontWeight: 600 }}
                 />
                 <Chip
@@ -225,7 +225,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
                   color="success"
                   variant="outlined"
                   size="small"
-                  onClick={() => fillDemo('transportista@example.com')}
+                  onClick={() => fillDemo('transportista@logitrack.com')}
                   sx={{ cursor: 'pointer', fontWeight: 600 }}
                 />
               </Stack>

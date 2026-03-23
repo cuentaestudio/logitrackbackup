@@ -19,20 +19,39 @@ const mapStatus = (status: string): Route['status'] => {
   }
 }
 
+const getValue = <T = any>(obj: any, ...keys: string[]): T | undefined => {
+  for (const key of keys) {
+    if (obj && obj[key] !== undefined && obj[key] !== null) {
+      return obj[key] as T
+    }
+  }
+  return undefined
+}
+
 // Convertir respuesta del backend a tipo Route
-const mapToRoute = (ruta: any): Route => ({
-  id: ruta.id,
-  routeId: ruta.routeId || `R-${ruta.id.split('-')[0].substring(0, 4)}`,
-  shipmentIds: ruta.paquetes?.map((p: any) => p.id) || [],
-  vehicleId: ruta.vehiculo?.id,
-  transportistId: ruta.transportista?.id,
-  status: mapStatus(ruta.estado || ruta.status),
-  createdDate: ruta.iniciadoEn ? new Date(ruta.iniciadoEn).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-  startDate: ruta.iniciadoEn ? new Date(ruta.iniciadoEn).toISOString() : undefined,
-  endDate: ruta.finalizadoEn ? new Date(ruta.finalizadoEn).toISOString() : undefined,
-  origin: ruta.origin || `${ruta.vehiculo?.marca || 'Vehículo'} - Transporte`,
-  destination: ruta.destination || `Destino - ${ruta.paquetes?.length || 0} paquetes`
-})
+const mapToRoute = (ruta: any): Route => {
+  const id = String(getValue<string>(ruta, 'id', 'Id') ?? '')
+  const estado = String(getValue<string>(ruta, 'estado', 'Estado', 'status', 'Status') ?? 'Pendiente')
+  const iniciadoEn = getValue<string>(ruta, 'iniciadoEn', 'IniciadoEn')
+  const finalizadoEn = getValue<string>(ruta, 'finalizadoEn', 'FinalizadoEn')
+  const vehiculo = getValue<any>(ruta, 'vehiculo', 'Vehiculo') ?? {}
+  const transportista = getValue<any>(ruta, 'transportista', 'Transportista') ?? {}
+  const paquetes = getValue<any[]>(ruta, 'paquetes', 'Paquetes') ?? []
+
+  return {
+    id,
+    routeId: getValue<string>(ruta, 'routeId', 'RouteId') || (id ? `R-${id.split('-')[0].substring(0, 4)}` : 'R-0000'),
+    shipmentIds: paquetes.map((p: any) => String(getValue<string>(p, 'id', 'Id') ?? '')).filter(Boolean),
+    vehicleId: String(getValue<string>(vehiculo, 'id', 'Id') ?? getValue<string>(ruta, 'vehiculoId', 'VehiculoId') ?? ''),
+    transportistId: String(getValue<string>(transportista, 'id', 'Id') ?? getValue<string>(ruta, 'transportistaId', 'TransportistaId') ?? ''),
+    status: mapStatus(estado),
+    createdDate: iniciadoEn ? new Date(iniciadoEn).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    startDate: iniciadoEn ? new Date(iniciadoEn).toISOString() : undefined,
+    endDate: finalizadoEn ? new Date(finalizadoEn).toISOString() : undefined,
+    origin: getValue<string>(ruta, 'origin', 'Origin') || `${getValue<string>(vehiculo, 'marca', 'Marca') || 'Vehículo'} - Transporte`,
+    destination: getValue<string>(ruta, 'destination', 'Destination') || `Destino - ${paquetes.length} paquetes`
+  }
+}
 
 export const routeService = {
   // Obtener todas las rutas

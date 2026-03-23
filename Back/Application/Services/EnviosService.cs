@@ -27,7 +27,7 @@ namespace Back.Application.Services
                 0,
                 new Cliente(request.Remitente.Nombre, request.Remitente.Apellido, new Direccion(request.Remitente.Direccion, request.Remitente.Localidad, request.Remitente.CP)),
                 new Cliente(request.Destinatario.Nombre, request.Destinatario.Apellido, new Direccion(request.Destinatario.Direccion, request.Destinatario.Localidad, request.Destinatario.CP)),
-                request.Descripcion
+                request.Comentarios
             );
 
             await _enviosRepository.Add(paquete);

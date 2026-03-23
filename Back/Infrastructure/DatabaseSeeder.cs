@@ -66,6 +66,13 @@ namespace Back.Infrastructure
 
         private async Task<Supervisor> SeedSupervisor()
         {
+            var existing = await _userRepository.GetUsuarioByEmail("supervisor@logitrack.com");
+            if (existing is Supervisor existingSupervisor)
+            {
+                _logger.LogInformation($"[SEED] Usuario Supervisor ya existe: {existingSupervisor.Email}");
+                return existingSupervisor;
+            }
+
             var passwordHash = PasswordHasher.HashPassword("password123");
             var supervisor = new Supervisor(
                 "María",
@@ -81,6 +88,13 @@ namespace Back.Infrastructure
 
         private async Task<Operador> SeedOperador()
         {
+            var existing = await _userRepository.GetUsuarioByEmail("operador@logitrack.com");
+            if (existing is Operador existingOperador)
+            {
+                _logger.LogInformation($"[SEED] Usuario Operador ya existe: {existingOperador.Email}");
+                return existingOperador;
+            }
+
             var passwordHash = PasswordHasher.HashPassword("password123");
             var operador = new Operador(
                 "Juan",
@@ -96,6 +110,13 @@ namespace Back.Infrastructure
 
         private async Task<Transportista> SeedTransportista()
         {
+            var existing = await _userRepository.GetUsuarioByEmail("transportista@logitrack.com");
+            if (existing is Transportista existingTransportista)
+            {
+                _logger.LogInformation($"[SEED] Usuario Transportista ya existe: {existingTransportista.Email}");
+                return existingTransportista;
+            }
+
             var passwordHash = PasswordHasher.HashPassword("password123");
             var transportista = new Transportista(
                 "Carlos",

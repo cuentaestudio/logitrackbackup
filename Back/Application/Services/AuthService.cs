@@ -17,7 +17,7 @@ namespace Back.Application.Services
 
         public async Task<dynamic> Login(LoginRequest request)
         {
-            var user = await _userRepository.GetUsuarioByDni(request.DNI);
+            var user = await _userRepository.GetUsuarioByEmail(request.Email);
 
             if (user == null)
             {

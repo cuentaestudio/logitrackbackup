@@ -30,6 +30,7 @@ import DirectionsIcon from '@mui/icons-material/Directions'
 import type { Route, User } from '../../types'
 import { routeService } from '../../services/routeService'
 import { shipmentService } from '../../services/shipmentService'
+import { authService } from '../../services/authService'
 import { useTransportistaState } from '../../hooks/useTransportistaState'
 import StatusBadge from '../../components/StatusBadge'
 import LoadingState from '../../components/LoadingState'
@@ -61,11 +62,26 @@ export default function RoutesDashboard({ user }: RoutesDashboardProps) {
     const loadData = async () => {
       setLoading(true)
       try {
-        // Usar endpoint específico para rutas del transportista
-        const [routes, shipments] = await Promise.all([
+        // Intentar con el ID actual del usuario logueado
+        const [initialRoutes, shipments] = await Promise.all([
           routeService.getRoutesByTransportista(user.id),
           shipmentService.getAllShipments(),
         ])
+
+        let routes = initialRoutes
+
+        // Fallback para sesiones viejas: resolver transportista por email y reintentar
+        if (routes.length === 0 && user.email) {
+          const transportistas = await authService.getTransportistas()
+          const transportistaActual = transportistas.find(
+            (t) => t.email.toLowerCase() === user.email.toLowerCase(),
+          )
+
+          if (transportistaActual && transportistaActual.id !== user.id) {
+            routes = await routeService.getRoutesByTransportista(transportistaActual.id)
+          }
+        }
+
         setRoutes(routes)
         setShipments(shipments)
       } catch {

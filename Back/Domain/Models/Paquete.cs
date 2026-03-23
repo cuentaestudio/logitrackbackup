@@ -42,6 +42,12 @@ namespace Back.Domain.Models
             Descripcion = descripcion;
         }
 
+        public Paquete(string codigoSeguimiento, double peso, double altura, double ancho, Cliente origen, Cliente destino, string? descripcion)
+            : this(peso, altura, ancho, origen, destino, descripcion)
+        {
+            CodigoSeguimiento = codigoSeguimiento;
+        }
+
         public void EnTransito()
         {
             if (Status != PaqueteStatus.EnSucursal)

@@ -12,16 +12,20 @@ export const authService = {
 
       const token = response.data.token
       const userInfo = response.data.user
+
+      const userId = userInfo?.id ?? userInfo?.Id ?? ''
+      const userRoleRaw = userInfo?.role ?? userInfo?.Role ?? ''
+      const userRole = String(userRoleRaw).toLowerCase() as UserRole
       
       localStorage.setItem('authToken', token)
 
       const user: User = {
-        id: userInfo.id,
-        name: userInfo.nombre,
-        lastname: userInfo.apellido,
-        email: userInfo.email,
+        id: userId,
+        name: userInfo?.nombre ?? userInfo?.Nombre ?? '',
+        lastname: userInfo?.apellido ?? userInfo?.Apellido ?? '',
+        email: userInfo?.email ?? userInfo?.Email ?? '',
         dni: '',
-        role: userInfo.role as UserRole
+        role: userRole
       }
 
       console.log('✓ Login exitoso:', user)
