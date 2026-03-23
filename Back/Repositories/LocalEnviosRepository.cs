@@ -6,7 +6,25 @@ namespace Back.Repositories
     public class LocalEnviosRepository : IEnviosRepository
     {
 
-        List<Paquete> _paquetes = [];
+        List<Paquete> _paquetes = [
+            new Paquete( 2.5, 20, 15, new Cliente("Juan", "Pérez", new Direccion("Calle 1", "CABA", "1001")), new Cliente("María", "García", new Direccion("Calle 10", "CABA", "1010")), "Documentos"),
+            new Paquete( 5.0, 30, 25, new Cliente("Carlos", "López", new Direccion("Calle 2", "CABA", "1002")), new Cliente("Ana", "Martínez", new Direccion("Calle 11", "Rosario", "2000")), "Electrónicos"),
+            new Paquete(1.2, 10, 10, new Cliente("Luis", "Rodríguez", new Direccion("Calle 3", "La Plata", "1900")), new Cliente("Sofía", "Sánchez", new Direccion("Calle 12", "CABA", "1012")), "Ropa"),
+            new Paquete( 10.5, 50, 40, new Cliente("Elena", "Gómez", new Direccion("Calle 4", "Córdoba", "5000")), new Cliente("Pedro", "Díaz", new Direccion("Calle 13", "Mendoza", "5500")), "Herramientas"),
+            new Paquete(0.8, 15, 5, new Cliente("Marta", "Fernández", new Direccion("Calle 5", "CABA", "1005")), new Cliente("Diego", "Ruiz", new Direccion("Calle 14", "CABA", "1014")), "Libros"),
+            new Paquete(3.4, 25, 20, new Cliente("Roberto", "Álvarez", new Direccion("Calle 6", "Rosario", "2000")), new Cliente("Lucía", "Torres", new Direccion("Calle 15", "La Plata", "1900")), "Juguetes"),
+            new Paquete(1.5, 15, 10, new Cliente("Hugo", "Sosa", new Direccion("Av. Siempreviva 742", "CABA", "1400")), new Cliente("Bart", "Simpson", new Direccion("Calle Falsa 123", "CABA", "1400")), "Skate"),
+            new Paquete(4.2, 35, 30, new Cliente("Miguel", "Angel", new Direccion("Vaticano 1", "CABA", "1000")), new Cliente("Leonardo", "Da Vinci", new Direccion("Florencia 500", "CABA", "1000")), "Pinturas"),
+            new Paquete(0.5, 5, 5, new Cliente("Jorge", "Luis", new Direccion("Maipú 900", "CABA", "1006")), new Cliente("Adolfo", "Bioy", new Direccion("Posadas 1600", "CABA", "1011")), "Manuscritos"),
+            new Paquete(12.0, 60, 50, new Cliente("Esteban", "Quito", new Direccion("Lomas 45", "Lomas de Zamora", "1832")), new Cliente("Aquiles", "Bailo", new Direccion("Paz 100", "Tandil", "7000")), "Muebles"),
+            new Paquete(2.1, 20, 20, new Cliente("Inés", "Table", new Direccion("Ruta 2", "Mar del Plata", "7600")), new Cliente("Elsa", "Pato", new Direccion("Laguna 4", "Chascomús", "7130")), "Inflables"),
+            new Paquete(1.8, 15, 15, new Cliente("Marcos", "Paz", new Direccion("Belgrano 200", "CABA", "1000")), new Cliente("Julia", "Domínguez", new Direccion("San Martín 450", "Salta", "4400")), "Indumentaria"),
+            new Paquete(0.3, 5, 5, new Cliente("Luciano", "Pereyra", new Direccion("Luján 123", "Luján", "6700")), new Cliente("Abel", "Pintos", new Direccion("Bahía Blanca 800", "Bahía Blanca", "8000")), "CDs Autografiados"),
+            new Paquete(7.5, 40, 30, new Cliente("Ricardo", "Darin", new Direccion("Corrientes 1500", "CABA", "1000")), new Cliente("Guillermo", "Francella", new Direccion("Avellaneda 300", "Avellaneda", "1870")), "Premios"),
+            new Paquete(2.2, 20, 10, new Cliente("Lionel", "Messi", new Direccion("Rosario 10", "Rosario", "2000")), new Cliente("Angel", "Di Maria", new Direccion("Funes 50", "Funes", "2132")), "Botines"),
+            new Paquete(15.0, 80, 60, new Cliente("Mirtha", "Legrand", new Direccion("Libertador 2000", "CABA", "1425")), new Cliente("Susana", "Gimenez", new Direccion("Barrio Parque 1", "CABA", "1425")), "Vajilla de Cristal"),
+        ];
+
         List<Sucursal> _sucursales = [new Sucursal("Sucursal Central", "Av. Corrientes 1234", "CABA", "011-4567-8901"),
             new Sucursal("Sucursal Almagro", "Rivadavia 3800", "CABA", "011-4981-2233"),
             new Sucursal("Sucursal Belgrano", "Cabildo 2100", "CABA", "011-4784-5566"),
@@ -20,7 +38,6 @@ namespace Back.Repositories
             new Sucursal("Sucursal Villa Carlos Paz", "Av. Libertad 150", "Villa Carlos Paz", "03541-422-5566"),
             new Sucursal("Sucursal Mendoza Centro", "Av. San Martín 1100", "Mendoza", "0261-423-7788"),
             new Sucursal("Sucursal San Rafael", "Hipólito Yrigoyen 500", "San Rafael", "0261-422-3344")];
-
 
         public Task Add(Paquete envio)
         {

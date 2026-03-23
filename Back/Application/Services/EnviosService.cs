@@ -5,7 +5,7 @@ using Back.Domain.Repositories;
 
 namespace Back.Application.Services
 {
-    public class EnviosService
+    public class EnviosService 
     {
         private readonly IEnviosRepository _enviosRepository;
         private readonly IUserRepository _userRepository;
@@ -18,12 +18,9 @@ namespace Back.Application.Services
             _userRepository = userRepository;
         }
 
-
         public async Task RegistrarPaquete(RegistrarPaqueteRequest request)
         {
-
             var paquete = new Paquete(
-                TrackIdGenerator.GenerateTrackId(),
                 request.Peso,
                 0,
                 0,

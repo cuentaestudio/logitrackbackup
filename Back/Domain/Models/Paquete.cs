@@ -1,3 +1,5 @@
+using Back.Application.Util;
+
 namespace Back.Domain.Models
 {
     public enum PaqueteStatus
@@ -11,7 +13,7 @@ namespace Back.Domain.Models
     public class Paquete
     {
         public Guid Id { get; init; } = Guid.NewGuid();
-        public string CodigoSeguimiento { get; set; } = string.Empty;
+        public string CodigoSeguimiento { get; set; } = TrackIdGenerator.GenerateTrackId();
         public double Peso { get; set; }
         public double Altura { get; set; }
         public double Ancho { get; set; }
@@ -30,9 +32,8 @@ namespace Back.Domain.Models
         {
         }
 
-        public Paquete(string codigoSeguimiento, double peso, double altura, double ancho, Cliente origen, Cliente destino, string? descripcion)
+        public Paquete(double peso, double altura, double ancho, Cliente origen, Cliente destino, string? descripcion)
         {
-            CodigoSeguimiento = codigoSeguimiento;
             Peso = peso;
             Altura = altura;
             Ancho = ancho;

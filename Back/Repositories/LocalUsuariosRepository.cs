@@ -40,6 +40,21 @@ namespace Back.Repositories
             return Task.CompletedTask;
         }
 
+        public Task<List<Operador>> GetOperadores()
+        {
+            return Task.FromResult(_usuarios.OfType<Operador>().ToList());
+        }
+
+        public Task<List<Supervisor>> GetSupervisores()
+        {
+            return Task.FromResult(_usuarios.OfType<Supervisor>().ToList());
+        }
+
+        public Task<List<Transportista>> GetTransportistas()
+        {
+            return Task.FromResult(_usuarios.OfType<Transportista>().ToList());
+        }
+
         public Task<Usuario?> GetUsuarioByDni(string dni)
         {
             var usuario = _usuarios.FirstOrDefault(u => u.DNI == dni);
