@@ -18,17 +18,31 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-            
-            "https://69c175b9f2e4c71e1edfb14b--logitrack-08.netlify.app"
-        )
-        .AllowAnyMethod()
-        .AllowAnyHeader();
+        policy
+            .SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrWhiteSpace(origin)) return false;
+
+                if (origin.Equals("http://localhost:5173", StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                    return false;
+
+                if (!uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                // Netlify dominio principal + deploy previews dinámicos del mismo sitio.
+                return uri.Host.Equals("logitrack-08.netlify.app", StringComparison.OrdinalIgnoreCase)
+                    || uri.Host.EndsWith("--logitrack-08.netlify.app", StringComparison.OrdinalIgnoreCase);
+            })
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
 
 builder.Services.AddScoped<AuthService>().AddScoped<EnviosService>().AddScoped<RutasService>();
-builder.Services.AddScoped<DatabaseSeeder>();
 
 builder.Services.AddSingleton<IUserRepository, LocalUsuariosRepository>().AddSingleton<IEnviosRepository, LocalEnviosRepository>().AddSingleton<IVehiculoRepository, LocalVehiculoRepository>().AddSingleton<IRutasRepository, LocalRutasReposiory>();
 
