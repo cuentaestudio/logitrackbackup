@@ -75,7 +75,7 @@ export interface Shipment {
 }
 
 export interface LoginCredentials {
-  dni: string
+  email: string
   password: string
 }
 

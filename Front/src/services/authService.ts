@@ -1,132 +1,85 @@
-import type { User, LoginCredentials, RegisterData,UserRole} from '../types'
+import type { User, LoginCredentials, RegisterData, UserRole } from '../types'
+import api from './api'
 
-// Mock data de usuarios registrados
-const mockUsers: Array<User & { password: string }> = [
-  {
-    id: '1',
-    name: 'Juan',
-    lastname: 'García',
-    email: 'juan@example.com',
-    dni: '12345678',
-    password: 'password123',
-    role: 'supervisor',
-  },
-  {
-    id: '2',
-    name: 'María',
-    lastname: 'Rodríguez',
-    email: 'maria@example.com',
-    dni: '87654321',
-    password: 'password123',
-    role: 'operador',
-  },
-  {
-    id: '3',
-    name: 'Carlos',
-    lastname: 'López',
-    email: 'carlos@example.com',
-    dni: '11223344',
-    password: 'password123',
-    role: 'transportista',
-  },
-    {
-    id: '4',
-    name: 'Juan',
-    lastname: 'García',
-    email: 'juan.transportista@example.com',
-    dni: '22334455',
-    password: 'password123',
-    role: 'transportista',
-  },
-  {
-    id: '5',
-    name: 'María',
-    lastname: 'Rodríguez',
-    email: 'maria.transportista@example.com',
-    dni: '33445566',
-    password: 'password123',
-    role: 'transportista',
-  },
-  {
-    id: '6',
-    name: 'Pedro',
-    lastname: 'Fernández',
-    email: 'pedro.transportista@example.com',
-    dni: '44556677',
-    password: 'password123',
-    role: 'transportista',
-  },
-]
+// Tipos para las respuestas del backend
+interface LoginResponse {
+  token: string
+}
 
-const sanitizeUser = ({ password, ...user }: User & { password: string }): User => user
+interface RegisterRequest {
+  Nombre: string
+  Apellido: string
+  Email: string
+  Password: string
+  DNI: string
+  Role: 'Supervisor' | 'Operador' | 'Transportista'
+}
 
 export const authService = {
   // Login
   login: async (credentials: LoginCredentials): Promise<User | null> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const user = mockUsers.find(
-          (u) => u.dni === credentials.dni && u.password === credentials.password,
-        )
-        
-        resolve(user ? sanitizeUser(user) : null)
-      }, 600)
-    })
+    try {
+      const response = await api.post<LoginResponse>('/auth/login', {
+        Email: credentials.email,
+        Password: credentials.password
+      })
+
+      const token = response.data.token
+      localStorage.setItem('authToken', token)
+
+      // Decodificar el token para obtener la info del usuario
+      // Nota: En producción, usar una librería como jwt-decode
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const user: User = {
+        id: payload['nameid'],
+        name: payload['unique_name'].split(' ')[0],
+        lastname: payload['unique_name'].split(' ')[1] || '',
+        email: payload.email,
+        dni: '', // El backend no devuelve DNI en el token
+        role: payload.role.toLowerCase() as UserRole
+      }
+
+      return user
+    } catch (error) {
+      console.error('Login error:', error)
+      return null
+    }
   },
 
   // Registro
   register: async (data: RegisterData): Promise<User | null> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        if (mockUsers.find((u) => u.dni === data.dni || u.email === data.email)) {
-          resolve(null)
-          return
-        }
+    try {
+      const roleMap = {
+        supervisor: 'Supervisor',
+        operador: 'Operador',
+        transportista: 'Transportista'
+      } as const
 
-        if (data.password !== data.confirmPassword) {
-          resolve(null)
-          return
-        }
+      await api.post('/auth/registrarse', {
+        Nombre: data.name,
+        Apellido: data.lastname,
+        Email: data.email,
+        Password: data.password,
+        DNI: data.dni,
+        Role: roleMap[data.role]
+      })
 
-        const newUser: User & { password: string } = {
-          id: (mockUsers.length + 1).toString(),
-          name: data.name,
-          lastname: data.lastname,
-          email: data.email,
-          dni: data.dni,
-          password: data.password,
-          role: data.role,
-        }
-
-        mockUsers.push(newUser)
-
-       resolve
-      }, 700)
-    })
+      // Después del registro, hacer login automáticamente
+      return await authService.login({ email: data.email, password: data.password })
+    } catch (error) {
+      console.error('Register error:', error)
+      return null
+    }
   },
 
-  
-  getAllUsers: async (): Promise<User[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(mockUsers.map(sanitizeUser)), 300)
-    })
+  // Logout
+  logout: () => {
+    localStorage.removeItem('authToken')
   },
 
-  getUsersByRole: async (role: UserRole): Promise<User[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(mockUsers.filter((user) => user.role === role).map(sanitizeUser)), 300)
-    })
-  },
-
-  getTransportistas: async (): Promise<User[]> => {
-    return authService.getUsersByRole('transportista')
-  },
-
-  getUserById: async (id: string): Promise<User | undefined> => {
-    return new Promise((resolve) => {
-      const user = mockUsers.find((currentUser) => currentUser.id === id)
-      setTimeout(() => resolve(user ? sanitizeUser(user) : undefined), 200)
-    })
+  // Verificar si está autenticado
+  isAuthenticated: (): boolean => {
+    return !!localStorage.getItem('authToken')
   },
 
   // Validar DNI básico (formato argentino)

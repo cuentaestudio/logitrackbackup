@@ -1,184 +1,138 @@
 import type { Route } from '../types'
-import { shipmentService } from './shipmentService'
-import { vehicleService } from './vehicleService'
-// Mock data de rutas
-const mockRoutes: Route[] = [
-  {
-    id: '1',
-    routeId: 'R-20260321-001',
-    shipmentIds: ['1', '3'],
-    vehicleId: '1',
-    transportistId: '3',
-    status: 'En Curso',
-    createdDate: '2026-03-15',
-    startDate: '2026-03-20',
-    origin: 'Buenos Aires',
-    destination: 'La Plata',
-  },
-  {
-    id: '2',
-    routeId: 'R-20260321-002',
-    shipmentIds: ['2'],
-    vehicleId: '2',
-    transportistId: '4',
-    status: 'Creada',
-    createdDate: '2026-03-21',
-    origin: 'Córdoba',
-    destination: 'Rosario',
-  },
-  {
-    id: '3',
-    routeId: 'R-20260320-003',
-    shipmentIds: ['4', '5', '6'],
-    vehicleId: '3',
-    transportistId: '5',
-    status: 'Finalizada',
-    createdDate: '2026-03-19',
-    startDate: '2026-03-19',
-    endDate: '2026-03-20',
-    origin: 'Mendoza',
-    destination: 'San Juan',
-  },
-  {
-    id: '4',
-    routeId: 'R-20260321-004',
-    shipmentIds: ['7', '8'],
-    vehicleId: '1',
-    transportistId: '6',
-    status: 'Cancelada',
-    createdDate: '2026-03-20',
-    origin: 'Bahía Blanca',
-    destination: 'Mar del Plata',
-  },
-]
+import api from './api'
 
-const cloneRoute = (route: Route): Route => ({
-  ...route,
-  shipmentIds: [...route.shipmentIds],
+// Tipos para requests al backend
+interface CrearRutaRequest {
+  VehiculoId: string
+  TransportistaId: string
+  PaqueteIds: string[]
+}
+
+// Mapear status del backend al frontend
+const mapStatus = (status: string): Route['status'] => {
+  switch (status) {
+    case 'Creada': return 'Creada'
+    case 'EnCurso': return 'En Curso'
+    case 'Finalizada': return 'Finalizada'
+    case 'Cancelada': return 'Cancelada'
+    default: return 'Creada'
+  }
+}
+
+// Convertir respuesta del backend a tipo Route
+const mapToRoute = (ruta: any): Route => ({
+  id: ruta.id,
+  routeId: ruta.routeId || `R-${new Date().toISOString().split('T')[0].replace(/-/g, '')}`,
+  shipmentIds: ruta.paqueteIds || [],
+  vehicleId: ruta.vehiculoId,
+  transportistId: ruta.transportistaId,
+  status: mapStatus(ruta.status),
+  createdDate: ruta.createdDate || new Date().toISOString().split('T')[0],
+  startDate: ruta.startDate,
+  endDate: ruta.endDate,
+  origin: ruta.origin || '',
+  destination: ruta.destination || ''
 })
 
 export const routeService = {
   // Obtener todas las rutas
   getAllRoutes: async (): Promise<Route[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(mockRoutes.map((cloneRoute))), 500)
-    })
+    try {
+      const response = await api.get('/rutas')
+      return response.data.map(mapToRoute)
+    } catch (error) {
+      console.error('Get all routes error:', error)
+      return []
+    }
   },
 
   // Obtener ruta por ID
   getRouteById: async (id: string): Promise<Route | undefined> => {
-    return new Promise((resolve) => {
-      const route = mockRoutes.find((r) => r.id === id)
-      setTimeout(() => resolve(route ? cloneRoute(route) : undefined), 300)
-    })
+    try {
+      const routes = await routeService.getAllRoutes()
+      return routes.find(r => r.id === id)
+    } catch (error) {
+      console.error('Get route by id error:', error)
+      return undefined
+    }
   },
 
-  // Generar nuevo route ID
-  generateRouteId: (): string => {
-    const date = new Date().toISOString().split('T')[0].replace(/-/g, '')
-    const sequential = mockRoutes.length + 1
-    return `R-${date}-${sequential.toString().padStart(3, '0')}`
-  },
-
-  // Crear nueva ruta (Supervisor)
-  createRoute: async (route: Omit<Route, 'id' | 'routeId'>): Promise<Route> => {
-    return new Promise((resolve, reject) => {
-      const selectedShipments = new Set(route.shipmentIds)
-      const alreadyAssigned = mockRoutes.some((existingRoute) =>
-        existingRoute.status !== 'Cancelada' &&
-        existingRoute.shipmentIds.some((shipmentId) => selectedShipments.has(shipmentId)),
-      )
-
-      if (alreadyAssigned) {
-        setTimeout(() => reject(new Error('Uno o más envíos ya fueron asignados a otra ruta activa.')), 250)
-        return
+  // Crear nueva ruta
+  createRoute: async (route: Omit<Route, 'id' | 'routeId' | 'createdDate' | 'startDate' | 'endDate'>): Promise<Route> => {
+    try {
+      const request: CrearRutaRequest = {
+        VehiculoId: route.vehicleId,
+        TransportistaId: route.transportistId,
+        PaqueteIds: route.shipmentIds
       }
 
-      const newRoute: Route = {
+      await api.post('/rutas/crear-ruta', request)
+
+      // Devolver un objeto simulado ya que el backend no devuelve la ruta creada
+      return {
         ...route,
-        id: (mockRoutes.length + 1).toString(),
-        routeId: routeService.generateRouteId(),
+        id: Date.now().toString(),
+        routeId: `R-${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${Date.now()}`,
+        createdDate: new Date().toISOString().split('T')[0]
       }
-      mockRoutes.push(newRoute)
-      Promise.all([
-        shipmentService.assignShipmentsToRoute(route.shipmentIds, newRoute.id),
-        vehicleService.assignRoute(route.vehicleId, newRoute.id),
-      ]).finally(() => {
-        setTimeout(() => resolve(cloneRoute(newRoute)), 500)
-      })
-    })
+    } catch (error) {
+      console.error('Create route error:', error)
+      throw error
+    }
   },
 
-  assignTransportist: async (routeId: string, transportistId: string): Promise<Route | undefined> => {
-    return new Promise((resolve) => {
-      const route = mockRoutes.find((r) => r.id === routeId)
-      if (route && route.status === 'Creada') {
-        route.transportistId = transportistId
-      }
-      setTimeout(() => resolve(route ? cloneRoute(route) : undefined), 350)
-    })
-  },
-
-  // Comenzar una ruta (Transportista)
+  // Comenzar una ruta
   startRoute: async (routeId: string): Promise<Route | undefined> => {
-    return new Promise((resolve) => {
-      const route = mockRoutes.find((r) => r.id === routeId)
-      if (route && route.status === 'Creada') {
-        route.status = 'En Curso'
-        route.startDate = new Date().toISOString().split('T')[0]
-      }
-      setTimeout(() => resolve(route ? cloneRoute(route) : undefined), 400)
-    })
+    try {
+      await api.post(`/rutas/comenzar-ruta/${routeId}`)
+      return await routeService.getRouteById(routeId)
+    } catch (error) {
+      console.error('Start route error:', error)
+      return undefined
+    }
   },
 
-  // Completar una ruta (Transportista)
+  // Finalizar una ruta
   completeRoute: async (routeId: string): Promise<Route | undefined> => {
-    return new Promise((resolve) => {
-      const route = mockRoutes.find((r) => r.id === routeId)
-      if (route && route.status === 'En Curso') {
-        route.status = 'Finalizada'
-        route.endDate = new Date().toISOString().split('T')[0]
-      }
-     setTimeout(() => resolve(route ? cloneRoute(route) : undefined), 400)
-    })
+    try {
+      await api.post(`/rutas/finalizar-ruta/${routeId}`)
+      return await routeService.getRouteById(routeId)
+    } catch (error) {
+      console.error('Complete route error:', error)
+      return undefined
+    }
   },
 
-  // Cancelar una ruta (Transportista)
+  // Cancelar una ruta
   cancelRoute: async (routeId: string): Promise<Route | undefined> => {
-    return new Promise((resolve) => {
-      const route = mockRoutes.find((r) => r.id === routeId)
-      if (route && (route.status === 'Creada' || route.status === 'En Curso')) {
-        route.status = 'Cancelada'
-      }
-     setTimeout(() => resolve(route ? cloneRoute(route) : undefined), 400)
-    })
+    try {
+      await api.post(`/rutas/cancelar-ruta/${routeId}`, { razon: 'Cancelada desde frontend' })
+      return await routeService.getRouteById(routeId)
+    } catch (error) {
+      console.error('Cancel route error:', error)
+      return undefined
+    }
   },
 
-  // Filtrar rutas por estado
-  getRoutesByStatus: async (status: Route['status']): Promise<Route[]> => {
-    return new Promise((resolve) => {
-        setTimeout(() => resolve(mockRoutes.filter((r) => r.status === status).map(cloneRoute)), 300)
-    })
+  // Reasignar ruta
+  reassignRoute: async (routeId: string, transportistId: string): Promise<boolean> => {
+    try {
+      await api.post(`/rutas/reasignar-ruta/ruta/${routeId}/transportista/${transportistId}`)
+      return true
+    } catch (error) {
+      console.error('Reassign route error:', error)
+      return false
+    }
   },
 
-  // Obtener rutas de un transportista
-  getRoutesByTransportist: async (transportistId: string): Promise<Route[]> => {
-    return new Promise((resolve) => {
-      setTimeout(
-       () => resolve(mockRoutes.filter((r) => r.transportistId === transportistId).map(cloneRoute)),
-        300,
-      )
-    })
-  },
-
-  // Actualizar ruta
-  updateRoute: async (id: string, updates: Partial<Route>): Promise<Route | undefined> => {
-    return new Promise((resolve) => {
-      const route = mockRoutes.find((r) => r.id === id)
-      if (route) {
-        Object.assign(route, updates)
-      }
-            setTimeout(() => resolve(route ? cloneRoute(route) : undefined), 400)
-    })
-  },
+  // Obtener historial de rutas
+  getRouteHistory: async (): Promise<Route[]> => {
+    try {
+      const response = await api.get('/rutas/historial')
+      return response.data.map(mapToRoute)
+    } catch (error) {
+      console.error('Get route history error:', error)
+      return []
+    }
+  }
 }
