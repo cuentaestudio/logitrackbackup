@@ -39,7 +39,7 @@ namespace Back.Application.Services
 
 
 
-            var paquetes = await _enviosRepository.GetPaquetes(request.PaqueteIds);
+            var paquetes = await _enviosRepository.GetPaquetesByIds(request.PaqueteIds);
 
 
             Usuario? user = await _userRepository.GetUsuarioById(request.TransportistaId);

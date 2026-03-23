@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Back.Application.Services;
 using Back.Domain.Models;
 using Back.Domain.Repositories;
@@ -46,12 +47,19 @@ namespace Back.Controllers
         [HttpGet("paquetes-en-sucursal")]
         public async Task<IResult> GetPaquetesEnSucursal()
         {
-
             var paquetes = await _enviosRepository.GetPaquetesEnSucursal();
 
             return Results.Ok(paquetes);
         }
 
+
+        [HttpGet("busqueda-de-paquetes")]
+        public async Task<IResult> BusquedaDePaquetes([FromBody] BusquedaDePaquetesRequest request)
+        {
+            var paquetes = await _enviosRepository.GetPaquetes(request.CodigoSeguimiento, request.Destinatario);
+
+            return Results.Ok(paquetes);
+        }
 
         [HttpPost("vehiculos/registrar-vehiculo")]
         public async Task<IResult> RegistrarVehiculo([FromBody] RegistrarVehiculoRequest request)
@@ -132,10 +140,15 @@ public class RegistrarPaqueteRequest
 
 public class RegistrarClienteRequest
 {
+    [Required]
     public string Direccion { get; set; } = string.Empty;
+    [Required]
     public string Localidad { get; set; } = string.Empty;
+    [Required]
     public string CP { get; set; } = string.Empty;
+    [Required]
     public string Nombre { get; set; } = string.Empty;
+    [Required]
     public string Apellido { get; set; } = string.Empty;
 }
 
@@ -148,10 +161,20 @@ public class RegistrarVehiculoRequest
 
 public class RegistarSucursal
 {
+    [Required]
     public string Nombre { get; set; } = string.Empty;
+    [Required]
     public string Direccion { get; set; } = string.Empty;
+    [Required]
     public string Ciudad { get; set; } = string.Empty;
+    [Required]
     public string Telefono { get; set; } = string.Empty;
 
+}
+
+public class BusquedaDePaquetesRequest
+{
+    public string? CodigoSeguimiento { get; set; }
+    public string? Destinatario { get; set; }
 }
 }

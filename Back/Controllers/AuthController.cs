@@ -1,4 +1,5 @@
 
+using System.ComponentModel.DataAnnotations;
 using Back.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -37,16 +38,29 @@ namespace Back.Controllers
 
     public class LoginRequest
     {
+        [Required]
+        [Length(8, 8, ErrorMessage = "El DNI debe tener exactamente 8 caracteres.")]
         public string DNI { get; set; }
+
+        [Required]
+        [MinLength(8, ErrorMessage = "La contraseña debe tener al menos 8 caracteres.")]
         public string Password { get; set; }
     }
 
     public class RegisterRequest
     {
+        [Required]
         public string Nombre { get; set; }
+        [Required]
         public string Apellido { get; set; }
+        [Required]
+        [EmailAddress(ErrorMessage = "El correo electrónico no es válido.")]   
         public string Email { get; set; }
+        [Required]
+        [MinLength(8, ErrorMessage = "La contraseña debe tener al menos 8 caracteres.")]
         public string Password { get; set; }
+        [Required]
+        [Length(8, 8, ErrorMessage = "El DNI debe tener exactamente 8 caracteres.")]
         public string DNI { get; set; }
         public UserRole Role { get; set; }
     }
