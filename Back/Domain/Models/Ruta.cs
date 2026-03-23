@@ -89,6 +89,9 @@ namespace Back.Domain.Models
             if (Estado != RutaStatus.EnCurso)
                 throw new InvalidOperationException("Solo se puede finalizar ruta en curso.");
 
+            if (HayPaquetesPendientes)
+                throw new InvalidOperationException("No se puede finalizar una ruta con paquetes pendientes.");
+
             Estado = RutaStatus.Finalizada;
             FinalizadoEn = DateTimeOffset.UtcNow;
         }

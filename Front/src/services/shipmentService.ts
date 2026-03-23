@@ -27,6 +27,7 @@ const mapStatus = (status: string): Shipment['status'] => {
     case 'EnSucursal': return 'En sucursal'
     case 'EnTransito': return 'En tránsito'
     case 'Entregado': return 'Entregado'
+    case 'Rechazado': return 'Rechazado'
     case 'Cancelado': return 'Cancelado'
     default: return 'En sucursal'
   }
@@ -43,6 +44,8 @@ const mapStatusToBackend = (status: string): string => {
       return 'EnTransito'
     case 'Entregado':
       return 'Entregado'
+    case 'Rechazado':
+      return 'Cancelado'
     case 'Cancelado':
       return 'Cancelado'
     default:

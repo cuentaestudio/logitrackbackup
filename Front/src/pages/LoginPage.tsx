@@ -61,7 +61,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
         onLogin(user)
         navigate(user.role === 'transportista' ? '/transportista' : '/app')
       } else {
-        setError('DNI o contraseña incorrectos')
+        setError('Email o contraseña incorrectos')
       }
     } catch {
       setError('Error al iniciar sesión')

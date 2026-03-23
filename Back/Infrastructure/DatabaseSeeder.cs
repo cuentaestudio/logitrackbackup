@@ -300,7 +300,7 @@ namespace Back.Infrastructure
             ruta2.Iniciar(); // Aquí se cambian a EnTransito
             await _rutasRepository.Add(ruta2);
 
-            // Ruta 3: Finalizada - Paquetes en EnSucursal, se pasan a EnTransito y Entregado
+            // Ruta 3: Finalizada - completar entregas antes de cerrar la ruta
             var ruta3 = new Ruta(transportista, vehiculos[0]);
             var p3_1 = new Paquete("LOG-RUTA3-001", 1.0, 20, 15, sucursalBsAs, cliente5, "Envío Ruta 3 - Paquete 1");
             var p3_2 = new Paquete("LOG-RUTA3-002", 2.0, 30, 20, sucursalBsAs, cliente6, "Envío Ruta 3 - Paquete 2");
@@ -308,8 +308,9 @@ namespace Back.Infrastructure
             await _enviosRepository.Add(p3_2);
             ruta3.AgregarPaquete(p3_1);
             ruta3.AgregarPaquete(p3_2);
-            ruta3.Iniciar(); // Aquí se cambian a EnTransito
-            ruta3.Finalizar(); // Finaliza ruta (paquetes siguen en EnTransito)
+            ruta3.Iniciar();
+            ruta3.EntregarPaquete(p3_1.Id);
+            ruta3.EntregarPaquete(p3_2.Id); // La ruta se finaliza automáticamente al no quedar pendientes
             await _rutasRepository.Add(ruta3);
 
             _logger.LogInformation($"[SEED] 3 rutas creadas (Pendiente, EnCurso, Finalizada)");

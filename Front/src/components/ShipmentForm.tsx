@@ -188,7 +188,7 @@ function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
                 value={formData.trackingId}
                 onChange={handleChange}
                 error={!!errors.trackingId}
-                helperText={errors.trackingId || 'Puedes editarlo, pero debe ser único'}
+               
                 fullWidth
                 size="small"
               />

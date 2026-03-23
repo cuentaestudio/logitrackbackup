@@ -108,11 +108,13 @@ export default function RouteDetail() {
 
   const handleDelivered = async (shipment: Shipment) => {
     try {
-      const success = await shipmentService.changeShipmentStatus(shipment.id, 'Entregado')
-      if (success) {
+      const result = await shipmentService.changeShipmentStatus(shipment.id, 'Entregado')
+      if (result.success) {
         await loadData()
         showSnackbar(`✓ ${shipment.trackingId} marcado como Entregado`, 'success')
         highlightRow(shipment.id, 'delivered')
+      } else {
+        showSnackbar(result.error || 'No se pudo marcar el envío como entregado', 'error')
       }
     } catch {
       showSnackbar('Error al actualizar el envío', 'error')
@@ -140,14 +142,13 @@ export default function RouteDetail() {
 
     closeRejectDialog()
     try {
-      const success = await shipmentService.changeShipmentStatus(
-        rejectDialog.shipmentId!,
-        'Rechazado'
-      )
-      if (success) {
+      const result = await shipmentService.cancelShipment(rejectDialog.shipmentId!, rejectReason)
+      if (result.success) {
         await loadData()
         showSnackbar(`Envío rechazado: ${rejectReason}`, 'warning')
         highlightRow(rejectDialog.shipmentId!, 'rejected')
+      } else {
+        showSnackbar(result.error || 'No se pudo rechazar el envío', 'error')
       }
     } catch {
       showSnackbar('Error al actualizar el envío', 'error')
@@ -170,18 +171,20 @@ export default function RouteDetail() {
       return
     }
 
-    if (found.status === 'Entregado' || found.status === 'Rechazado') {
+    if (found.status === 'Entregado' || found.status === 'Rechazado' || found.status === 'Cancelado') {
       setScanError(`Este paquete ya fue ${found.status.toLowerCase()}`)
       return
     }
 
-    const success = await shipmentService.changeShipmentStatus(found.id, 'Entregado')
-    if (success) {
+    const result = await shipmentService.changeShipmentStatus(found.id, 'Entregado')
+    if (result.success) {
       await loadData()
       showSnackbar(`📦 ${trackingId} escaneado y marcado como Entregado`, 'success')
       setScanInput('')
       highlightRow(found.id, 'delivered')
       scanRef.current?.focus()
+    } else {
+      setScanError(result.error || 'No se pudo actualizar el estado del paquete')
     }
   }
 
@@ -197,12 +200,15 @@ export default function RouteDetail() {
   // ── Derived ───────────────────────────────────────────────────────────────
 
   const delivered = routeShipments.filter((s) => s.status === 'Entregado').length
-  const rejected = routeShipments.filter((s) => s.status === 'Rechazado').length
+  const rejected = routeShipments.filter((s) => s.status === 'Rechazado' || s.status === 'Cancelado').length
   const pending = routeShipments.filter(
     (s) => s.status !== 'Entregado' && s.status !== 'Rechazado' && s.status !== 'Cancelado',
   ).length
   const total = routeShipments.length
   const progress = total > 0 ? Math.round(((delivered + rejected) / total) * 100) : 0
+  const displayRouteStatus: Route['status'] =
+    route?.status === 'Finalizada' && pending > 0 ? 'En Curso' : route?.status ?? 'Creada'
+  const canManageShipments = displayRouteStatus === 'En Curso'
 
   if (state.loading) return <LoadingState message="Cargando ruta..." />
 
@@ -235,7 +241,7 @@ export default function RouteDetail() {
             <Typography variant="h5" fontWeight={700} noWrap>
               {route.routeId}
             </Typography>
-            <StatusBadge status={route.status} size="medium" />
+            <StatusBadge status={displayRouteStatus} size="medium" />
           </Box>
           <Typography variant="caption" color="text.secondary" noWrap display="block">
             {route.origin} → {route.destination}
@@ -278,7 +284,7 @@ export default function RouteDetail() {
       )}
 
       {/* Scan section — only for active routes */}
-      {route.status === 'En Curso' && (
+      {canManageShipments && (
         <Paper
           variant="outlined"
           sx={{
@@ -372,7 +378,7 @@ export default function RouteDetail() {
                 <TableCell>Destino</TableCell>
                 <TableCell>Peso</TableCell>
                 <TableCell>Estado</TableCell>
-                {route.status === 'En Curso' && (
+                {canManageShipments && (
                   <TableCell align="center">Acciones</TableCell>
                 )}
               </TableRow>
@@ -426,7 +432,7 @@ export default function RouteDetail() {
                         </Typography>
                       )}
                     </TableCell>
-                    {route.status === 'En Curso' && (
+                    {canManageShipments && (
                       <TableCell align="center">
                         {!isDone ? (
                           <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>

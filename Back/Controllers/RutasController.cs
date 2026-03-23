@@ -126,9 +126,15 @@ namespace Back.Controllers
             if (ruta is null)
                 return NotFound();
 
-            ruta.Finalizar();
-
-            return Ok();
+            try
+            {
+                ruta.Finalizar();
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost("cancelar-ruta/{rutaId:guid}")]
