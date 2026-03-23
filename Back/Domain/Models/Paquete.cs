@@ -20,6 +20,7 @@ namespace Back.Domain.Models
         public PaqueteStatus Status { get; private set; } = PaqueteStatus.EnSucursal;
         public Cliente Remitente { get; set; }
         public Cliente Destinatario { get; set; }
+        public string DestinatarioCompleto => $"{Destinatario.Nombre} {Destinatario.Apellido}";
         public string? Descripcion { get; set; } = string.Empty;
         public string? RazonCancelacion { get; private set; }
 

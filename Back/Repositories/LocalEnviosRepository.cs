@@ -42,8 +42,21 @@ namespace Back.Repositories
             var paquete = _paquetes.FirstOrDefault(p => p.CodigoSeguimiento == codigoSeguimiento);
             return Task.FromResult(paquete);
         }
+ 
+        public Task<List<Paquete>> GetPaquetes(string? codigoSeguimiento, string? destinatario)
+        {   
 
-        public Task<List<Paquete>> GetPaquetes(List<Guid> paqueteIds)
+            if(codigoSeguimiento is not null)
+            {
+                return GetPaqueteByCodigoSeguimiento(codigoSeguimiento).ContinueWith(t => t.Result is not null ? new List<Paquete> { t.Result } : new List<Paquete>());
+            }
+
+            var paquetes = _paquetes.Where(p => p.DestinatarioCompleto.Contains(destinatario ?? string.Empty, StringComparison.OrdinalIgnoreCase)).ToList(); 
+           
+            return Task.FromResult(paquetes);
+        }
+
+        public Task<List<Paquete>> GetPaquetesByIds(List<Guid> paqueteIds)
         {
             var paquetes = _paquetes.Where(p => paqueteIds.Contains(p.Id)).ToList();
             return Task.FromResult(paquetes);

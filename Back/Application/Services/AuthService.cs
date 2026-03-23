@@ -34,12 +34,6 @@ namespace Back.Application.Services
 
         public async Task Registrarse(RegisterRequest request)
         {
-
-            if (!EmailService.IsEmailValid(request.Email))
-            {
-                throw new InvalidOperationException("Correo electrónico no válido");
-            }
-
             var existingUser = await _userRepository.GetUsuarioByEmail(request.Email);
 
             if (existingUser != null)

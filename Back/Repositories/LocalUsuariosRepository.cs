@@ -15,6 +15,12 @@ namespace Back.Repositories
             return Task.CompletedTask;
         }
 
+        public Task<Usuario?> GetUsuarioByDni(string dni)
+        {
+            var usuario = _usuarios.FirstOrDefault(u => u.DNI == dni);
+            return Task.FromResult(usuario);
+        }
+
         public Task<Usuario?> GetUsuarioByEmail(string email)
         {
             var usuario = _usuarios.FirstOrDefault(u => u.Email == email);
