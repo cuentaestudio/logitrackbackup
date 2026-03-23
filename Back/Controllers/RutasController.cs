@@ -148,7 +148,6 @@ namespace Back.Controllers
         [HttpPost("reasignar-ruta/ruta/{rutaId:guid}/transportista/{transportistaId:guid}")]
         public async Task<IActionResult> ReasignarRuta(Guid rutaId, Guid transportistaId)
         {
-
             await _enviosService.ReasignarRuta(rutaId, transportistaId);
 
             return Ok();

@@ -5,7 +5,7 @@ using Back.Domain.Repositories;
 
 namespace Back.Application.Services
 {
-    public class EnviosService
+    public class EnviosService 
     {
         private readonly IEnviosRepository _enviosRepository;
         private readonly IUserRepository _userRepository;
@@ -13,23 +13,21 @@ namespace Back.Application.Services
 
         public EnviosService(IEnviosRepository enviosRepository, IUserRepository userRepository, IRutasRepository rutasRepository)
         {
+            _rutasRepository = rutasRepository;
             _enviosRepository = enviosRepository;
             _userRepository = userRepository;
             _rutasRepository = rutasRepository;
         }
 
-
         public async Task RegistrarPaquete(RegistrarPaqueteRequest request)
         {
-
             var paquete = new Paquete(
-                TrackIdGenerator.GenerateTrackId(),
                 request.Peso,
                 0,
                 0,
                 new Cliente(request.Remitente.Nombre, request.Remitente.Apellido, new Direccion(request.Remitente.Direccion, request.Remitente.Localidad, request.Remitente.CP)),
                 new Cliente(request.Destinatario.Nombre, request.Destinatario.Apellido, new Direccion(request.Destinatario.Direccion, request.Destinatario.Localidad, request.Destinatario.CP)),
-                request.Comentarios
+                request.Descripcion
             );
 
             await _enviosRepository.Add(paquete);
