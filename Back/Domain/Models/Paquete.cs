@@ -15,9 +15,12 @@ namespace Back.Domain.Models
         public double Peso { get; set; }
         public double Altura { get; set; }
         public double Ancho { get; set; }
+
+        public DateTime CreadoEn { get; init; } = DateTime.UtcNow;
         public PaqueteStatus Status { get; private set; } = PaqueteStatus.EnSucursal;
         public Cliente Remitente { get; set; }
         public Cliente Destinatario { get; set; }
+        public string DestinatarioCompleto => $"{Destinatario.Nombre} {Destinatario.Apellido}";
         public string? Descripcion { get; set; } = string.Empty;
         public string? RazonCancelacion { get; private set; }
 
