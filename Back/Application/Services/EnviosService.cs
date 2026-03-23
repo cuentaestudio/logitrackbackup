@@ -11,8 +11,9 @@ namespace Back.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly IRutasRepository _rutasRepository;
 
-        public EnviosService(IEnviosRepository enviosRepository, IUserRepository userRepository)
+        public EnviosService(IEnviosRepository enviosRepository, IUserRepository userRepository, IRutasRepository rutasRepository)
         {
+            _rutasRepository = rutasRepository;
             _enviosRepository = enviosRepository;
             _userRepository = userRepository;
         }
@@ -28,7 +29,7 @@ namespace Back.Application.Services
                 0,
                 new Cliente(request.Remitente.Nombre, request.Remitente.Apellido, new Direccion(request.Remitente.Direccion, request.Remitente.Localidad, request.Remitente.CP)),
                 new Cliente(request.Destinatario.Nombre, request.Destinatario.Apellido, new Direccion(request.Destinatario.Direccion, request.Destinatario.Localidad, request.Destinatario.CP)),
-                request.Comentarios
+                request.Descripcion
             );
 
             await _enviosRepository.Add(paquete);

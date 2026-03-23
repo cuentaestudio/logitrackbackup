@@ -12,15 +12,16 @@ namespace Back.Controllers
     {
         private readonly IEnviosRepository _enviosRepository;
         private readonly IVehiculoRepository _vehiculoRepository;
-
         private readonly IRutasRepository _rutasRepository;
         private readonly EnviosService _enviosService;
 
-        public EnviosController(IEnviosRepository enviosRepository, IVehiculoRepository vehiculoRepository, EnviosService enviosService)
+        public EnviosController(IEnviosRepository enviosRepository, IVehiculoRepository vehiculoRepository, EnviosService enviosService, IRutasRepository rutasRepository)
         {
+
             _enviosService = enviosService;
             _vehiculoRepository = vehiculoRepository;
             _enviosRepository = enviosRepository;
+            _rutasRepository = rutasRepository;
         }
 
         [HttpPost("registrar-paquete")]
@@ -127,54 +128,60 @@ namespace Back.Controllers
 
             return Results.Ok();
         }
-}
+    }
 
 
-public class RegistrarPaqueteRequest
-{
-    public double Peso { get; set; }
-    public string? Comentarios { get; set; }
-    public RegistrarClienteRequest Remitente { get; set; }
-    public RegistrarClienteRequest Destinatario { get; set; }
-}
+    public class RegistrarPaqueteRequest
+    {
 
-public class RegistrarClienteRequest
-{
-    [Required]
-    public string Direccion { get; set; } = string.Empty;
-    [Required]
-    public string Localidad { get; set; } = string.Empty;
-    [Required]
-    public string CP { get; set; } = string.Empty;
-    [Required]
-    public string Nombre { get; set; } = string.Empty;
-    [Required]
-    public string Apellido { get; set; } = string.Empty;
-}
+        public string Descripcion { get; set; } = string.Empty;
 
-public class RegistrarVehiculoRequest
-{
-    public string Patente { get; set; } = string.Empty;
-    public string Modelo { get; set; } = string.Empty;
-    public double Capacidad { get; set; }
-}
+        [Range(1, double.MaxValue, ErrorMessage = "El peso debe ser mayor a 1KG")]
 
-public class RegistarSucursal
-{
-    [Required]
-    public string Nombre { get; set; } = string.Empty;
-    [Required]
-    public string Direccion { get; set; } = string.Empty;
-    [Required]
-    public string Ciudad { get; set; } = string.Empty;
-    [Required]
-    public string Telefono { get; set; } = string.Empty;
+        public double Peso { get; set; }
+        public RegistrarClienteRequest Remitente { get; set; }
+        public RegistrarClienteRequest Destinatario { get; set; }
+    }
 
-}
+    public class RegistrarClienteRequest
+    {
+        [Required]
+        public string Direccion { get; set; } = string.Empty;
+        [Required]
+        public string Localidad { get; set; } = string.Empty;
+        [Required]
+        public string CP { get; set; } = string.Empty;
+        [Required]
+        public string Nombre { get; set; } = string.Empty;
+        [Required]
+        public string Apellido { get; set; } = string.Empty;
+    }
 
-public class BusquedaDePaquetesRequest
-{
-    public string? CodigoSeguimiento { get; set; }
-    public string? Destinatario { get; set; }
-}
+    public class RegistrarVehiculoRequest
+    {
+        public string Patente { get; set; } = string.Empty;
+        public string Modelo { get; set; } = string.Empty;
+
+        [Range(1, double.MaxValue, ErrorMessage = "La capacidad debe ser mayor a 0.")]
+        public double Capacidad { get; set; }
+    }
+
+    public class RegistarSucursal
+    {
+        [Required]
+        public string Nombre { get; set; } = string.Empty;
+        [Required]
+        public string Direccion { get; set; } = string.Empty;
+        [Required]
+        public string Ciudad { get; set; } = string.Empty;
+        [Required]
+        public string Telefono { get; set; } = string.Empty;
+
+    }
+
+    public class BusquedaDePaquetesRequest
+    {
+        public string? CodigoSeguimiento { get; set; }
+        public string? Destinatario { get; set; }
+    }
 }
