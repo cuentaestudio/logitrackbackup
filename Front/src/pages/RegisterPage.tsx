@@ -16,6 +16,7 @@ import {
   FormControl,
   InputLabel,
 } from '@mui/material'
+import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded'
 import { authService } from '../services/authService'
 import type { User, RegisterData, UserRole } from '../types'
 
@@ -40,16 +41,41 @@ function RegisterPage({ onLogin }: RegisterPageProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
+    const nextFormData = {
+      ...formData,
       [name]: value,
-    }))
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: '',
-      }))
     }
+
+    setFormData(nextFormData)
+
+    setErrors((prev) => {
+      const nextErrors = { ...prev }
+
+      if (name === 'password') {
+        if (value.length > 0 && value.length < 8) {
+          nextErrors.password = 'Contraseña debe tener al menos 8 caracteres'
+        } else {
+          nextErrors.password = ''
+        }
+
+        if (nextFormData.confirmPassword && nextFormData.confirmPassword !== value) {
+          nextErrors.confirmPassword = 'Las contraseñas no coinciden'
+        } else {
+          nextErrors.confirmPassword = ''
+        }
+      } else if (name === 'confirmPassword') {
+        if (value && value !== nextFormData.password) {
+          nextErrors.confirmPassword = 'Las contraseñas no coinciden'
+        } else {
+          nextErrors.confirmPassword = ''
+        }
+      } else if (nextErrors[name]) {
+        nextErrors[name] = ''
+      }
+
+      return nextErrors
+    })
+
     setGeneralError('')
   }
 
@@ -68,7 +94,7 @@ function RegisterPage({ onLogin }: RegisterPageProps) {
     if (!authService.isValidEmail(formData.email)) newErrors.email = 'Email inválido'
     if (!authService.isValidDni(formData.dni)) newErrors.dni = 'DNI debe tener 8 dígitos'
     if (!authService.isValidPassword(formData.password))
-      newErrors.password = 'Contraseña debe tener al menos 6 caracteres'
+      newErrors.password = 'Contraseña debe tener al menos 8 caracteres'
     if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = 'Las contraseñas no coinciden'
 
@@ -113,9 +139,24 @@ function RegisterPage({ onLogin }: RegisterPageProps) {
       >
         <Card sx={{ width: '100%', p: 4 }}>
           <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <Typography variant="h4" component="h1" gutterBottom>
-              📦 LogiTrack
-            </Typography>
+            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Box
+                sx={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: '11px',
+                  display: 'grid',
+                  placeItems: 'center',
+                  background: 'linear-gradient(135deg,#0288D1,#29B6F6)',
+                  boxShadow: '0 8px 18px rgba(2,136,209,0.24)',
+                }}
+              >
+                <LocalShippingRoundedIcon sx={{ color: '#fff', fontSize: 19 }} />
+              </Box>
+              <Typography variant="h4" component="h1">
+                LogiTrack
+              </Typography>
+            </Box>
             <Typography variant="body2" color="textSecondary">
               Crear nueva cuenta
             </Typography>

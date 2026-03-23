@@ -15,6 +15,7 @@ import {
   Tooltip,
 } from '@mui/material'
 import LogoutIcon from '@mui/icons-material/Logout'
+import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded'
 import { useState } from 'react'
 import type { User } from '../types'
 
@@ -62,22 +63,40 @@ function Layout({ user, onLogout }: LayoutProps) {
       <AppBar position="sticky" elevation={0} sx={{ borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
         <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }}>
           {/* Logo */}
-          <Typography
-            variant="h6"
-            component="div"
+          <Box
             sx={{
               flexGrow: 1,
               cursor: 'pointer',
-              fontWeight: 700,
-              letterSpacing: '-0.3px',
               display: 'flex',
               alignItems: 'center',
-              gap: 0.5,
+              gap: 1,
             }}
             onClick={() => navigate(user.role === 'transportista' ? '/transportista' : '/app')}
           >
-            📦 LogiTrack
-          </Typography>
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: '12px',
+                display: 'grid',
+                placeItems: 'center',
+                background: 'linear-gradient(135deg,#0288D1,#29B6F6)',
+                boxShadow: '0 8px 18px rgba(2,136,209,0.24)',
+              }}
+            >
+              <LocalShippingRoundedIcon sx={{ color: '#fff', fontSize: 20 }} />
+            </Box>
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{
+                fontWeight: 800,
+                letterSpacing: '-0.3px',
+              }}
+            >
+              LogiTrack
+            </Typography>
+          </Box>
 
           {/* Right side */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>

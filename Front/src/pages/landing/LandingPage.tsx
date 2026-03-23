@@ -303,7 +303,7 @@ export default function LandingPage() {
 
   const navItems: Array<{ label: string; ref: React.RefObject<HTMLElement | null> }> = [
     { label: 'Inicio', ref: heroRef },
-    { label: 'Solución', ref: aboutRef },
+    { label: 'Servicios', ref: aboutRef },
     { label: 'Reseñas', ref: reviewsRef },
     { label: 'Acceso', ref: loginRef },
   ]
@@ -865,15 +865,13 @@ export default function LandingPage() {
               <Typography variant="h3" sx={{ mt: 1.2, color: '#fff', fontWeight: 900, lineHeight: 1.1 }}>
                 Ingresá desde la pantalla de login que ya tenías
               </Typography>
-              <Typography sx={{ mt: 2.2, color: 'rgba(255,255,255,0.74)', lineHeight: 1.9, maxWidth: 680 }}>
-                Dejé la landing enfocada en presentar el servicio. El acceso quedó separado para que el botón de ingresar te lleve a la página de inicio de sesión del front, manteniendo una experiencia más clara.
-              </Typography>
+              
 
               <Stack spacing={1.5} sx={{ mt: 3.5 }}>
                 {[
-                  'La landing queda limpia y orientada a mostrar la propuesta logística.',
-                  'Las cuentas demo ya no aparecen acá, solo en la pantalla de login.',
-                  'El registro también sigue disponible desde su página dedicada.',
+                  'Orientada a mostrar la propuesta logística.',
+        
+                 'El registro puede realizarse desde su sección específica dentro de la plataforma.',
                 ].map((item) => (
                   <Stack key={item} direction="row" spacing={1.5} alignItems="center">
                     <CheckCircleRoundedIcon sx={{ color: '#4FC3F7' }} />
