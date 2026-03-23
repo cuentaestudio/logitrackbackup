@@ -148,7 +148,7 @@ export default function RoutesDashboard({ user }: RoutesDashboardProps) {
     setLoading(true)
     closeCancelDialog()
     try {
-      const updated = await routeService.cancelRoute(cancelDialog.routeId)
+      const updated = await routeService.cancelRoute(cancelDialog.routeId, cancelReason.trim())
       if (updated) {
         updateRoute(updated)
         showSnackbar(`Ruta cancelada: ${cancelReason}`, 'warning')

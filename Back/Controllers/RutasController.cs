@@ -132,12 +132,16 @@ namespace Back.Controllers
         }
 
         [HttpPost("cancelar-ruta/{rutaId:guid}")]
-        public async Task<IActionResult> CancelarRuta(Guid rutaId, [FromBody] string razon)
+        public async Task<IActionResult> CancelarRuta(Guid rutaId, [FromBody] CancelarRutaRequest request)
         {
             var ruta = await _rutasRepository.GetRutaById(rutaId);
 
             if (ruta is null)
                 return NotFound();
+
+            var razon = string.IsNullOrWhiteSpace(request?.Razon)
+                ? "Cancelada desde el sistema"
+                : request.Razon;
 
             ruta.Cancelar(razon);
 
@@ -170,5 +174,10 @@ namespace Back.Controllers
         public Guid VehiculoId { get; set; }
         public Guid TransportistaId { get; set; }
         public List<Guid> PaqueteIds { get; set; }
+    }
+
+    public class CancelarRutaRequest
+    {
+        public string Razon { get; set; } = string.Empty;
     }
 }

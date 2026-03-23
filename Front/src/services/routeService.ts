@@ -134,9 +134,9 @@ export const routeService = {
   },
 
   // Cancelar una ruta
-  cancelRoute: async (routeId: string): Promise<Route | undefined> => {
+  cancelRoute: async (routeId: string, razon: string): Promise<Route | undefined> => {
     try {
-      await api.post(`/rutas/cancelar-ruta/${routeId}`, { razon: 'Cancelada desde frontend' })
+      await api.post(`/rutas/cancelar-ruta/${routeId}`, { Razon: razon })
       return await routeService.getRouteById(routeId)
     } catch (error) {
       console.error('Cancel route error:', error)
