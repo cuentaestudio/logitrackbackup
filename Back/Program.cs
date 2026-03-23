@@ -14,15 +14,16 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-// Configurar CORS para permitir requests desde el frontend
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // Puerto de desarrollo de Vite
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+        policy.WithOrigins(
+            
+            "https://69c175b9f2e4c71e1edfb14b--logitrack-08.netlify.app"
+        )
+        .AllowAnyMethod()
+        .AllowAnyHeader();
     });
 });
 
