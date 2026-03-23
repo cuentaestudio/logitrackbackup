@@ -11,10 +11,11 @@ namespace Back.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly IRutasRepository _rutasRepository;
 
-        public EnviosService(IEnviosRepository enviosRepository, IUserRepository userRepository)
+        public EnviosService(IEnviosRepository enviosRepository, IUserRepository userRepository, IRutasRepository rutasRepository)
         {
             _enviosRepository = enviosRepository;
             _userRepository = userRepository;
+            _rutasRepository = rutasRepository;
         }
 
 

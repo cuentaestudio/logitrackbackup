@@ -11,7 +11,7 @@ interface CrearRutaRequest {
 // Mapear status del backend al frontend
 const mapStatus = (status: string): Route['status'] => {
   switch (status) {
-    case 'Creada': return 'Creada'
+    case 'Pendiente': return 'Creada'
     case 'EnCurso': return 'En Curso'
     case 'Finalizada': return 'Finalizada'
     case 'Cancelada': return 'Cancelada'
@@ -22,16 +22,16 @@ const mapStatus = (status: string): Route['status'] => {
 // Convertir respuesta del backend a tipo Route
 const mapToRoute = (ruta: any): Route => ({
   id: ruta.id,
-  routeId: ruta.routeId || `R-${new Date().toISOString().split('T')[0].replace(/-/g, '')}`,
-  shipmentIds: ruta.paqueteIds || [],
-  vehicleId: ruta.vehiculoId,
-  transportistId: ruta.transportistaId,
-  status: mapStatus(ruta.status),
-  createdDate: ruta.createdDate || new Date().toISOString().split('T')[0],
-  startDate: ruta.startDate,
-  endDate: ruta.endDate,
-  origin: ruta.origin || '',
-  destination: ruta.destination || ''
+  routeId: ruta.routeId || `R-${ruta.id.split('-')[0].substring(0, 4)}`,
+  shipmentIds: ruta.paquetes?.map((p: any) => p.id) || [],
+  vehicleId: ruta.vehiculo?.id,
+  transportistId: ruta.transportista?.id,
+  status: mapStatus(ruta.estado || ruta.status),
+  createdDate: ruta.iniciadoEn ? new Date(ruta.iniciadoEn).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+  startDate: ruta.iniciadoEn ? new Date(ruta.iniciadoEn).toISOString() : undefined,
+  endDate: ruta.finalizadoEn ? new Date(ruta.finalizadoEn).toISOString() : undefined,
+  origin: ruta.origin || `${ruta.vehiculo?.marca || 'Vehículo'} - Transporte`,
+  destination: ruta.destination || `Destino - ${ruta.paquetes?.length || 0} paquetes`
 })
 
 export const routeService = {
@@ -42,6 +42,17 @@ export const routeService = {
       return response.data.map(mapToRoute)
     } catch (error) {
       console.error('Get all routes error:', error)
+      return []
+    }
+  },
+
+  // Obtener rutas por transportista
+  getRoutesByTransportista: async (transportistaId: string): Promise<Route[]> => {
+    try {
+      const response = await api.get(`/rutas/transportista/${transportistaId}`)
+      return response.data.map(mapToRoute)
+    } catch (error) {
+      console.error('Get routes by transportista error:', error)
       return []
     }
   },

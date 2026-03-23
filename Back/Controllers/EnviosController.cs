@@ -24,45 +24,63 @@ namespace Back.Controllers
         }
 
         [HttpPost("registrar-paquete")]
-        public async Task<IResult> RegistrarPaquete([FromBody] RegistrarPaqueteRequest request)
+        public async Task<IActionResult> RegistrarPaquete([FromBody] RegistrarPaqueteRequest request)
         {
             await _enviosService.RegistrarPaquete(request);
 
-            return Results.Ok();
+            return Ok();
         }
 
 
         [HttpGet("seguimiento/{codigoSeguimiento}")]
-        public async Task<IResult> Seguimiento(string codigoSeguimiento)
+        public async Task<IActionResult> Seguimiento(string codigoSeguimiento)
         {
 
             var paquete = await _enviosRepository.GetPaqueteByCodigoSeguimiento(codigoSeguimiento);
 
             if (paquete is null)
-                return Results.NotFound();
+                return NotFound();
 
-            return Results.Ok(paquete);
+            return Ok(paquete);
+        }
+
+        [HttpGet("paquete/{paqueteId:guid}")]
+        public async Task<IActionResult> GetPaquete(Guid paqueteId)
+        {
+            var paquete = await _enviosRepository.GetPaquete(paqueteId);
+
+            if (paquete is null)
+                return NotFound();
+
+            return Ok(paquete);
         }
 
         [HttpGet("paquetes-en-sucursal")]
-        public async Task<IResult> GetPaquetesEnSucursal()
+        public async Task<IActionResult> GetPaquetesEnSucursal()
         {
             var paquetes = await _enviosRepository.GetPaquetesEnSucursal();
 
-            return Results.Ok(paquetes);
+            return Ok(paquetes);
+        }
+
+        [HttpGet("todos-los-paquetes")]
+        public async Task<IActionResult> GetTodosLosPaquetes()
+        {
+            var paquetes = await _enviosRepository.GetAll();
+            return Ok(paquetes);
         }
 
 
         [HttpGet("busqueda-de-paquetes")]
-        public async Task<IResult> BusquedaDePaquetes([FromBody] BusquedaDePaquetesRequest request)
+        public async Task<IActionResult> BusquedaDePaquetes([FromBody] BusquedaDePaquetesRequest request)
         {
             var paquetes = await _enviosRepository.GetPaquetes(request.CodigoSeguimiento, request.Destinatario);
 
-            return Results.Ok(paquetes);
+            return Ok(paquetes);
         }
 
         [HttpPost("vehiculos/registrar-vehiculo")]
-        public async Task<IResult> RegistrarVehiculo([FromBody] RegistrarVehiculoRequest request)
+        public async Task<IActionResult> RegistrarVehiculo([FromBody] RegistrarVehiculoRequest request)
         {
             var vehiculo = new Vehiculo(
                 request.Patente,
@@ -72,19 +90,63 @@ namespace Back.Controllers
 
             await _vehiculoRepository.Add(vehiculo);
 
-            return Results.Ok();
+            return Ok();
         }
 
         [HttpGet("vehiculos/activos")]
-        public async Task<IResult> GetVehiculos()
+        public async Task<IActionResult> GetVehiculos()
         {
             var vehiculos = await _vehiculoRepository.GetVehiculosActivos();
 
-            return Results.Ok(vehiculos);
+            return Ok(vehiculos);
+        }
+
+        [HttpGet("vehiculos/{vehiculoId:guid}")]
+        public async Task<IActionResult> GetVehiculo(Guid vehiculoId)
+        {
+            var vehiculo = await _vehiculoRepository.GetVehiculo(vehiculoId);
+
+            if (vehiculo is null)
+                return NotFound("Vehículo no encontrado");
+
+            return Ok(vehiculo);
+        }
+
+        [HttpPost("vehiculos/{vehiculoId:guid}/suspender")]
+        public async Task<IActionResult> SuspenderVehiculo(Guid vehiculoId)
+        {
+            var vehiculo = await _vehiculoRepository.GetVehiculo(vehiculoId);
+
+            if (vehiculo is null)
+                return NotFound("Vehículo no encontrado");
+
+            vehiculo.Suspender();
+
+            return Ok();
+        }
+
+        [HttpPost("vehiculos/{vehiculoId:guid}/estado/{estado}")]
+        public async Task<IActionResult> CambiarEstadoVehiculo(Guid vehiculoId, VehiculoEstado estado)
+        {
+            var vehiculo = await _vehiculoRepository.GetVehiculo(vehiculoId);
+
+            if (vehiculo is null)
+                return NotFound("Vehículo no encontrado");
+
+            vehiculo.CambiarEstado(estado);
+
+            return Ok();
+        }
+
+        [HttpGet("sucursales")]
+        public async Task<IActionResult> GetSucursales()
+        {
+            var sucursales = await _enviosRepository.GetSucursales();
+            return Ok(sucursales);
         }
 
         [HttpPost("sucursales/registrar-sucursal")]
-        public async Task<IResult> RegistrarSucursal([FromBody] RegistarSucursal request)
+        public async Task<IActionResult> RegistrarSucursal([FromBody] RegistarSucursal request)
         {
             var sucursal = new Sucursal(
                 request.Nombre,
@@ -95,40 +157,118 @@ namespace Back.Controllers
 
             await _enviosRepository.Add(sucursal);
 
-            return Results.Ok();
+            return Ok();
         }
 
 
         [HttpPost("cambiar-estado-paquete/{paqueteId:guid}/estado/{status}")]
-        public async Task<IResult> CambiarEstadoPaquete(Guid paqueteId, PaqueteStatus status)
+        public async Task<IActionResult> CambiarEstadoPaquete(Guid paqueteId, PaqueteStatus status)
         {
             var paquete = await _enviosRepository.GetPaquete(paqueteId);
 
             if (paquete is null)
-                return Results.NotFound();
+                return NotFound("Paquete no encontrado");
 
+            try
+            {
+                // Usar los métodos del dominio que incluyen validaciones
+                switch (status)
+                {
+                    case PaqueteStatus.EnTransito:
+                        paquete.EnTransito();
+                        break;
+                    case PaqueteStatus.Entregado:
+                        paquete.Entregar();
+                        break;
+                    case PaqueteStatus.Cancelado:
+                        paquete.Cancelar("Cancelado desde el sistema");
+                        break;
+                    case PaqueteStatus.EnSucursal:
+                        // Para volver a sucursal, usar reenvío si está cancelado
+                        if (paquete.Status == PaqueteStatus.Cancelado)
+                        {
+                            paquete.ReEnviar();
+                        }
+                        else
+                        {
+                            return BadRequest("Transición de estado no válida");
+                        }
+                        break;
+                    default:
+                        return BadRequest("Estado no válido");
+                }
 
-            paquete.CambiarEstado(status);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
-            return Results.Ok();
+        [HttpPost("cancelar-paquete/{paqueteId:guid}")]
+        public async Task<IActionResult> CancelarPaquete(Guid paqueteId, [FromBody] CancelarPaqueteRequest request)
+        {
+            var paquete = await _enviosRepository.GetPaquete(paqueteId);
+
+            if (paquete is null)
+                return NotFound("Paquete no encontrado");
+
+            try
+            {
+                var motivo = !string.IsNullOrWhiteSpace(request.Motivo)
+                    ? request.Motivo
+                    : "Cancelado desde el sistema";
+
+                paquete.Cancelar(motivo);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("reenviar-paquete/{paqueteId:guid}")]
+        public async Task<IActionResult> ReenviarPaquete(Guid paqueteId)
+        {
+            var paquete = await _enviosRepository.GetPaquete(paqueteId);
+
+            if (paquete is null)
+                return NotFound("Paquete no encontrado");
+
+            try
+            {
+                paquete.ReEnviar();
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost("entregar-paquete/ruta/{rutaId:guid}/paquete/{paqueteId:guid}")]
-        public async Task<IResult> EntregarPaquete(Guid rutaId, Guid paqueteId)
+        public async Task<IActionResult> EntregarPaquete(Guid rutaId, Guid paqueteId)
         {
             var ruta = await _rutasRepository.GetRutaById(rutaId);
 
 
             if (ruta is null)
-                return Results.NotFound();
+                return NotFound();
 
             ruta.EntregarPaquete(paqueteId);
 
 
-            return Results.Ok();
+            return Ok();
         }
 }
 
+
+public class CancelarPaqueteRequest
+{
+    public string Motivo { get; set; } = string.Empty;
+}
 
 public class RegistrarPaqueteRequest
 {

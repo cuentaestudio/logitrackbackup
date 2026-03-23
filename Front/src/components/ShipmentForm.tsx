@@ -183,13 +183,13 @@ function ShipmentForm({ open, onClose, onSubmit }: ShipmentFormProps) {
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mt: 1 }}>
               <TextField
                 label="ID de Tracking"
+                disabled={true}
                 name="trackingId"
                 value={formData.trackingId}
                 onChange={handleChange}
                 error={!!errors.trackingId}
                 helperText={errors.trackingId || 'Puedes editarlo, pero debe ser único'}
                 fullWidth
-                disabled={generatingId}
                 size="small"
               />
               <Button

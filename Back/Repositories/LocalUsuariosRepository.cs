@@ -57,5 +57,10 @@ namespace Back.Repositories
             var usuario = _usuarios.FirstOrDefault(u => u.Id == id);
             return Task.FromResult(usuario);
         }
+
+        public Task<List<Usuario>> GetAll()
+        {
+            return Task.FromResult(_usuarios.ToList());
+        }
     }
 }

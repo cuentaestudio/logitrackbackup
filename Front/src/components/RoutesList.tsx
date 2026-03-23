@@ -66,6 +66,7 @@ function RoutesList({ userRole }: RoutesListProps) {
   const [selectedStatus, setSelectedStatus] = useState<Route['status'] | 'Todas'>('Todas')
   const [openCreateDialog, setOpenCreateDialog] = useState(false)
   const [assignDialogRoute, setAssignDialogRoute] = useState<Route | null>(null)
+  const [selectedTransportistId, setSelectedTransportistId] = useState<string>('')
   const [form, setForm] = useState<RouteFormState>(initialForm)
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -159,20 +160,30 @@ const handleOpenCreateDialog = () => {
 
   const handleOpenAssignDialog = (route: Route) => {
     setAssignDialogRoute(route)
+    setSelectedTransportistId(route.transportistId)
     setFormError('')
   }
 
-  const handleAssignTransportist = async (transportistId: string) => {
-    if (!assignDialogRoute) return
+  const handleCloseAssignDialog = () => {
+    if (!submitting) {
+      setAssignDialogRoute(null)
+      setSelectedTransportistId('')
+      setFormError('')
+    }
+  }
+
+  const handleAssignTransportist = async () => {
+    if (!assignDialogRoute || !selectedTransportistId) return
 
     setSubmitting(true)
     setFormError('')
     try {
-      await routeService.assignTransportist(assignDialogRoute.id, transportistId)
+      await routeService.assignTransportist(assignDialogRoute.id, selectedTransportistId)
       const updatedRoutes = await routeService.getAllRoutes()
       setRoutes(updatedRoutes)
       applyStatusFilter(updatedRoutes, selectedStatus)
       setAssignDialogRoute(null)
+      setSelectedTransportistId('')
     } catch {
       setFormError('No se pudo asignar el transportista.')
     } finally {
@@ -387,20 +398,21 @@ const handleOpenCreateDialog = () => {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={Boolean(assignDialogRoute)} onClose={() => setAssignDialogRoute(null)} maxWidth="xs" fullWidth>
+      <Dialog open={Boolean(assignDialogRoute)} onClose={handleCloseAssignDialog} maxWidth="xs" fullWidth>
         <DialogTitle>Reasignar transportista</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2} sx={{ mt: 1 }}>
             {formError && <Alert severity="error">{formError}</Alert>}
             <Typography variant="body2" color="text.secondary">
-              Seleccioná el transportista responsable de la ruta {assignDialogRoute?.routeId}.
+              Seleccioná el nuevo transportista responsable de la ruta {assignDialogRoute?.routeId}.
             </Typography>
             <FormControl fullWidth>
               <InputLabel>Transportista</InputLabel>
               <Select
-                value={assignDialogRoute?.transportistId ?? ''}
+                value={selectedTransportistId}
                 label="Transportista"
-                onChange={(e) => void handleAssignTransportist(e.target.value)}
+                onChange={(e) => setSelectedTransportistId(e.target.value)}
+                disabled={submitting}
               >
                 {transportistas.map((transportista) => (
                   <MenuItem key={transportista.id} value={transportista.id}>
@@ -412,7 +424,14 @@ const handleOpenCreateDialog = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAssignDialogRoute(null)} disabled={submitting}>Cerrar</Button>
+          <Button onClick={handleCloseAssignDialog} disabled={submitting}>Cancelar</Button>
+          <Button
+            onClick={handleAssignTransportist}
+            variant="contained"
+            disabled={submitting || selectedTransportistId === assignDialogRoute?.transportistId}
+          >
+            {submitting ? <CircularProgress size={20} /> : 'Confirmar'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

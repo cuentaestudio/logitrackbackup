@@ -153,8 +153,14 @@ export default function VehicleDetail() {
     if (!vehicle || !newEstado || newEstado === vehicle.estado) return
     setStatusLoading(true)
     try {
-      // TODO: Implementar actualización de estado en backend
-      showSnackbar('Funcionalidad no implementada en el backend', 'warning')
+      const result = await vehicleService.changeVehicleStatus(vehicle.id, newEstado)
+      if (result.success) {
+        showSnackbar(`Estado cambiado a "${newEstado}" correctamente`, 'success')
+        // Recargar datos
+        if (id) await loadData(id)
+      } else {
+        showSnackbar(result.error || 'Error al cambiar el estado', 'error')
+      }
     } catch {
       showSnackbar('Error al actualizar el estado', 'error')
     } finally {
@@ -167,10 +173,15 @@ export default function VehicleDetail() {
     if (!vehicle) return
     setDeleteLoading(true)
     try {
-      // TODO: Implementar eliminación en backend
-      showSnackbar('Funcionalidad no implementada en el backend', 'warning')
+      const result = await vehicleService.changeVehicleStatus(vehicle.id, 'Suspendido')
+      if (result.success) {
+        showSnackbar('Vehículo suspendido correctamente', 'success')
+        navigate(-1)
+      } else {
+        showSnackbar(result.error || 'Error al suspender el vehículo', 'error')
+      }
     } catch {
-      showSnackbar('Error al eliminar el vehículo', 'error')
+      showSnackbar('Error al suspender el vehículo', 'error')
     } finally {
       setDeleteLoading(false)
     }

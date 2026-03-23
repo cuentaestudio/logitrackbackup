@@ -47,5 +47,10 @@ namespace Back.Repositories
             var vehiculos = _vehiculos.Where(v => v.Activo).ToList();
             return Task.FromResult(vehiculos); 
         }
+
+        public Task<List<Vehiculo>> GetAll()
+        {
+            return Task.FromResult(_vehiculos.ToList());
+        }
     }
 }

@@ -9,19 +9,50 @@ interface RegistarSucursalRequest {
   Telefono: string
 }
 
+// Mapear status del backend al frontend
+const mapStatus = (status: string): Branch['status'] => {
+  switch (status) {
+    case 'Activa': return 'Activa'
+    case 'Inhabilitada': return 'Inhabilitada'
+    case 'Cerrada': return 'Cerrada'
+    default: return 'Activa'
+  }
+}
+
+// Mapear datos del backend al tipo Branch
+const mapToBranch = (sucursal: any): Branch => ({
+  id: sucursal.id,
+  name: sucursal.nombre,
+  address: sucursal.direccion,
+  city: sucursal.ciudad,
+  postalCode: '', // El backend no devuelve CP
+  phone: sucursal.telefono,
+  createdDate: new Date().toISOString().split('T')[0],
+  status: mapStatus(sucursal.estado)
+})
+
 // Convertir respuesta del backend a tipo Branch
 export const branchService = {
   // Obtener todas las sucursales
   getAllBranches: async (): Promise<Branch[]> => {
-    // El backend no tiene endpoint para obtener sucursales, así que devolver array vacío
-    // En una implementación real, se debería agregar un endpoint GET /api/envios/sucursales
-    return []
+    try {
+      const response = await api.get('/envios/sucursales')
+      return response.data.map(mapToBranch)
+    } catch (error) {
+      console.error('Get branches error:', error)
+      return []
+    }
   },
 
   // Obtener una sucursal por ID
-  getBranchById: async (_id: string): Promise<Branch | null> => {
-    // Similar, no hay endpoint
-    return null
+  getBranchById: async (id: string): Promise<Branch | null> => {
+    try {
+      const branches = await branchService.getAllBranches()
+      return branches.find(b => b.id === id) || null
+    } catch (error) {
+      console.error('Get branch by id error:', error)
+      return null
+    }
   },
 
   // Crear una nueva sucursal
@@ -49,14 +80,24 @@ export const branchService = {
   },
 
   // Buscar sucursales por nombre
-  searchBranches: async (_query: string): Promise<Branch[]> => {
-    // No hay endpoint de búsqueda, devolver vacío
-    return []
+  searchBranches: async (query: string): Promise<Branch[]> => {
+    try {
+      const branches = await branchService.getAllBranches()
+      return branches.filter(b => b.name.toLowerCase().includes(query.toLowerCase()))
+    } catch (error) {
+      console.error('Search branches error:', error)
+      return []
+    }
   },
 
   // Verificar si una sucursal existe por nombre
-  branchExists: async (_name: string): Promise<boolean> => {
-    // No hay endpoint, asumir no existe
-    return false
+  branchExists: async (name: string): Promise<boolean> => {
+    try {
+      const branches = await branchService.getAllBranches()
+      return branches.some(b => b.name.toLowerCase() === name.toLowerCase())
+    } catch (error) {
+      console.error('Check branch exists error:', error)
+      return false
+    }
   }
 }

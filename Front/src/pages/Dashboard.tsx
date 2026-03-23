@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useOutletContext, useNavigate } from 'react-router-dom'
+import { useOutletContext, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
   Button,
@@ -62,6 +62,7 @@ function VehicleEstadoChip({ estado }: { estado: VehicleEstado }) {
 function Dashboard() {
   const user = useOutletContext<User>()
   const navigate = useNavigate()
+  const location = useLocation()
   const [shipments, setShipments] = useState<Shipment[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
@@ -81,9 +82,45 @@ function Dashboard() {
     return <CircularProgress />
   }
 
-  // Cargar envíos al montar el componente
+  // Cargar envíos al montar el componente y cuando el usuario vuelve a la página
   useEffect(() => {
     loadData()
+  }, [])
+
+  // Recargar datos cuando el usuario navega de vuelta al Dashboard
+  useEffect(() => {
+    // Solo recargar si estamos en la página principal del Dashboard
+    if (location.pathname === '/app') {
+      // Si hay un estado forceReload, recargar los datos
+      if (location.state?.forceReload) {
+        loadData()
+        // Limpiar el estado para evitar refrescos innecesarios
+        navigate('/app', { replace: true, state: {} })
+      }
+    }
+  }, [location.pathname, location.state])
+
+  // Refrescar datos cuando el usuario vuelve a la pestaña del navegador o navega de vuelta
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Recargar datos cuando la pestaña vuelve a estar visible
+        loadData()
+      }
+    }
+
+    const handleFocus = () => {
+      // Recargar datos cuando la ventana recibe el foco
+      loadData()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [])
 
   const loadData = async () => {
@@ -92,7 +129,7 @@ function Dashboard() {
     try {
       const [shipmentsData, vehiclesData, branchesData] = await Promise.all([
         shipmentService.getAllShipments(),
-        user.role === 'operador' ? vehicleService.getVehiclesByOperator(user.id) : vehicleService.getAllVehicles(),
+        vehicleService.getAllVehicles(),
         branchService.getAllBranches(),
       ])
       setShipments(shipmentsData)
@@ -471,8 +508,8 @@ function BranchStatusChip({ status }: { status: BranchStatus }) {
       bg: '#FFEBEE',
       icon: <DoNotDisturbIcon sx={{ fontSize: 14 }} />,
     },
-    'No Habilitada': {
-      label: 'No Habilitada',
+    'Inhabilitada': {
+      label: 'Inhabilitada',
       color: '#E65100',
       bg: '#FFF3E0',
       icon: <BlockIcon sx={{ fontSize: 14 }} />,
@@ -520,7 +557,7 @@ function BranchesTab({
     all: branches.length,
     Activa: branches.filter((b) => b.status === 'Activa').length,
     Cerrada: branches.filter((b) => b.status === 'Cerrada').length,
-    'No Habilitada': branches.filter((b) => b.status === 'No Habilitada').length,
+    'Inhabilitada': branches.filter((b) => b.status === 'Inhabilitada').length,
   }
 
   return (
@@ -581,7 +618,7 @@ function BranchesTab({
             Cerrada ({counts.Cerrada})
           </ToggleButton>
           <ToggleButton
-            value="No Habilitada"
+            value="Inhabilitada"
             sx={{
               borderRadius: '8px !important',
               fontWeight: 600,
@@ -590,7 +627,7 @@ function BranchesTab({
             }}
           >
             <BlockIcon sx={{ fontSize: 14, mr: 0.5 }} />
-            No Habilitada ({counts['No Habilitada']})
+            Inhabilitada ({counts['Inhabilitada']})
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>

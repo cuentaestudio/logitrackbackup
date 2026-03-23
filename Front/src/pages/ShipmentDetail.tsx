@@ -110,20 +110,30 @@ function ShipmentDetail() {
     }
 
     setUpdatingStatus(true)
+    setError('')
     try {
-      const success = await shipmentService.changeShipmentStatus(id, newStatus)
-      if (success) {
+      let result: { success: boolean; error?: string }
+
+      if (newStatus === 'Cancelado') {
+        // Usar endpoint específico para cancelación con motivo
+        result = await shipmentService.cancelShipment(id, cancellationReason)
+      } else {
+        // Usar endpoint general para otros estados
+        result = await shipmentService.changeShipmentStatus(id, newStatus)
+      }
+
+      if (result.success) {
         // Recargar el envío para obtener el estado actualizado
         const updated = await shipmentService.getShipmentTracking(id)
         if (updated) {
           setShipment(updated)
         }
-        
+
         // Si cambia a Entregado, mostrar mensaje y cerrar después de 3 segundos
         if (newStatus === 'Entregado') {
           setStatusMessage('✓ Envío marcado como Entregado. No se puede modificar su estado.')
           setShowStatusMessage(true)
-          
+
           setTimeout(() => {
             setOpenStatusDialog(false)
             setShowStatusMessage(false)
@@ -133,38 +143,41 @@ function ShipmentDetail() {
           setOpenStatusDialog(false)
           setCancellationReason('')
         }
+      } else {
+        setError(result.error || 'Error al actualizar el estado')
       }
     } catch (err) {
-      setError('Error al actualizar el estado')
+      setError('Error de conexión al actualizar el estado')
     } finally {
       setUpdatingStatus(false)
     }
   }
 
-  // Reenviar envío cancelado (cambiar a En sucursal automáticamente)
+  // Reenviar envío cancelado usando endpoint específico
   const handleResendShipment = async () => {
     if (!id || !shipment) return
 
     setUpdatingStatus(true)
     setError('')
     try {
-      // Cambiar estado a "En sucursal" y limpiar motivo de cancelación
-      const success = await shipmentService.changeShipmentStatus(id, 'EnTransito')
-      if (success) {
+      const result = await shipmentService.resendCancelledShipment(id)
+      if (result.success) {
         const updated = await shipmentService.getShipmentTracking(id)
         if (updated) {
           setShipment(updated)
         }
-        setStatusMessage('✓ Envío reenviado correctamente. Estado: En tránsito')
+        setStatusMessage('✓ Envío reenviado correctamente. Estado: En sucursal')
         setShowStatusMessage(true)
-        
+
         // Limpiar mensaje después de 2 segundos
         setTimeout(() => {
           setShowStatusMessage(false)
         }, 2000)
+      } else {
+        setError(result.error || 'Error al reenviar el envío')
       }
     } catch (err) {
-      setError('Error al reenviar el envío')
+      setError('Error de conexión al reenviar el envío')
     } finally {
       setUpdatingStatus(false)
     }
@@ -172,6 +185,9 @@ function ShipmentDetail() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'Pendiente':
+      case 'En sucursal':
+        return 'default'
       case 'En tránsito':
         return 'info'
       case 'Entregado':
@@ -181,6 +197,14 @@ function ShipmentDetail() {
       default:
         return 'default'
     }
+  }
+
+  const handleBackToDashboard = () => {
+    // Navegar de vuelta y forzar recarga agregando un timestamp
+    navigate('/app', {
+      replace: false,
+      state: { forceReload: Date.now() }
+    })
   }
 
   if (loading) {
@@ -197,7 +221,7 @@ function ShipmentDetail() {
         <Alert severity="error">{error || 'Envío no encontrado'}</Alert>
         <Button
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/app')}
+          onClick={handleBackToDashboard}
           sx={{ mt: 2 }}
         >
           Volver al dashboard
@@ -210,7 +234,7 @@ function ShipmentDetail() {
     <Box>
       <Button
         startIcon={<ArrowBackIcon />}
-        onClick={() => navigate('/app')}
+        onClick={handleBackToDashboard}
         sx={{ mb: 2 }}
       >
         Volver

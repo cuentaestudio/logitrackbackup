@@ -85,10 +85,39 @@ export const authService = {
     return password.length >= 6
   },
 
-  // Obtener transportistas (mock por ahora, ya que no hay endpoint)
+  // Obtener transportistas
   getTransportistas: async (): Promise<User[]> => {
-    // En una implementación real, habría un endpoint GET /api/users?role=transportista
-    // Por ahora, devolver array vacío
-    return []
+    try {
+      const response = await api.get('/auth/transportistas')
+      return response.data.map((transportista: any) => ({
+        id: transportista.id,
+        name: transportista.nombre,
+        lastname: transportista.apellido,
+        email: transportista.email,
+        dni: transportista.dni,
+        role: 'transportista' as const
+      }))
+    } catch (error) {
+      console.error('Get transportistas error:', error)
+      return []
+    }
+  },
+
+  // Obtener todos los usuarios
+  getUsuarios: async (): Promise<User[]> => {
+    try {
+      const response = await api.get('/auth/usuarios')
+      return response.data.map((usuario: any) => ({
+        id: usuario.id,
+        name: usuario.nombre,
+        lastname: usuario.apellido,
+        email: usuario.email,
+        dni: usuario.dni,
+        role: usuario.role.toLowerCase() as UserRole
+      }))
+    } catch (error) {
+      console.error('Get usuarios error:', error)
+      return []
+    }
   }
 }

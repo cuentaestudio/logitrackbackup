@@ -7,19 +7,21 @@ namespace Back.Repositories
     {
 
         List<Paquete> _paquetes = [];
-        List<Sucursal> _sucursales = [new Sucursal("Sucursal Central", "Av. Corrientes 1234", "CABA", "011-4567-8901"),
+        List<Sucursal> _sucursales = [
+            new Sucursal("Sucursal Central", "Av. Corrientes 1234", "CABA", "011-4567-8901"),
             new Sucursal("Sucursal Almagro", "Rivadavia 3800", "CABA", "011-4981-2233"),
-            new Sucursal("Sucursal Belgrano", "Cabildo 2100", "CABA", "011-4784-5566"),
+            new Sucursal("Sucursal Belgrano", "Cabildo 2100", "CABA", "011-4784-5566", SucursalStatus.Cerrada),
             new Sucursal("Sucursal Flores", "Av. Gaona 2900", "CABA", "011-4612-7788"),
-            new Sucursal("Sucursal Palermo", "Santa Fe 3200", "CABA", "011-4823-9900"),
+            new Sucursal("Sucursal Palermo", "Santa Fe 3200", "CABA", "011-4823-9900", SucursalStatus.Inhabilitada),
             new Sucursal("Sucursal La Plata", "Calle 7 500", "La Plata", "0221-423-4455"),
-            new Sucursal("Sucursal Mar del Plata", "Av. Luro 2500", "Mar del Plata", "0223-491-6677"),
+            new Sucursal("Sucursal Mar del Plata", "Av. Luro 2500", "Mar del Plata", "0223-491-6677", SucursalStatus.Cerrada),
             new Sucursal("Sucursal Rosario Centro", "Córdoba 1400", "Rosario", "0341-424-8899"),
-            new Sucursal("Sucursal Rosario Norte", "Bv. Rondeau 300", "Rosario", "0341-455-1122"),
+            new Sucursal("Sucursal Rosario Norte", "Bv. Rondeau 300", "Rosario", "0341-455-1122", SucursalStatus.Inhabilitada),
             new Sucursal("Sucursal Córdoba Capital", "Av. Colón 700", "Córdoba", "0351-421-3344"),
             new Sucursal("Sucursal Villa Carlos Paz", "Av. Libertad 150", "Villa Carlos Paz", "03541-422-5566"),
             new Sucursal("Sucursal Mendoza Centro", "Av. San Martín 1100", "Mendoza", "0261-423-7788"),
-            new Sucursal("Sucursal San Rafael", "Hipólito Yrigoyen 500", "San Rafael", "0261-422-3344")];
+            new Sucursal("Sucursal San Rafael", "Hipólito Yrigoyen 500", "San Rafael", "0261-422-3344")
+        ];
 
 
         public Task Add(Paquete envio)
@@ -66,6 +68,11 @@ namespace Back.Repositories
             var paquetes = _paquetes.Where(p => p.DestinatarioCompleto.Contains(destinatario ?? string.Empty, StringComparison.OrdinalIgnoreCase)).ToList();
 
             return Task.FromResult(paquetes);
+        }
+
+        public Task<List<Paquete>> GetAll()
+        {
+            return Task.FromResult(_paquetes.ToList());
         }
 
         public Task<List<Paquete>> GetPaquetesByIds(List<Guid> paqueteIds)

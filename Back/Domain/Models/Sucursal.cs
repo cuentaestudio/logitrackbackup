@@ -13,12 +13,13 @@ namespace Back.Domain.Models
         {
         }
 
-        public Sucursal(string nombre, string direccion, string ciudad, string telefono)
+        public Sucursal(string nombre, string direccion, string ciudad, string telefono, SucursalStatus estado = SucursalStatus.Activa)
         {
             Nombre = nombre;
             Direccion = direccion;
             Ciudad = ciudad;
             Telefono = telefono;
+            Estado = estado;
         }
     }
 

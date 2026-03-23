@@ -24,11 +24,29 @@ interface RegistrarPaqueteRequest {
 // Mapear status del backend al frontend
 const mapStatus = (status: string): Shipment['status'] => {
   switch (status) {
-    case 'EnSucursal': return 'Pendiente'
+    case 'EnSucursal': return 'En sucursal'
     case 'EnTransito': return 'En tránsito'
     case 'Entregado': return 'Entregado'
     case 'Cancelado': return 'Cancelado'
-    default: return 'Pendiente'
+    default: return 'En sucursal'
+  }
+}
+
+// Mapear status del frontend al backend
+const mapStatusToBackend = (status: string): string => {
+  switch (status) {
+    case 'Pendiente':
+    case 'En sucursal':
+      return 'EnSucursal'
+    case 'En tránsito':
+    case 'EnTransito':
+      return 'EnTransito'
+    case 'Entregado':
+      return 'Entregado'
+    case 'Cancelado':
+      return 'Cancelado'
+    default:
+      return 'EnSucursal'
   }
 }
 
@@ -51,31 +69,43 @@ const mapToShipment = (paquete: any): Shipment => ({
   status: mapStatus(paquete.status),
   origin: paquete.remitente.direccion.ciudad,
   destination: paquete.destinatario.direccion.ciudad,
-  createdDate: paquete.createdDate || new Date().toISOString().split('T')[0],
-  lastUpdate: paquete.lastUpdate || new Date().toISOString().split('T')[0],
-  estimatedDelivery: paquete.estimatedDelivery || '',
+  createdDate: paquete.creadoEn ? new Date(paquete.creadoEn).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+  lastUpdate: new Date().toISOString().split('T')[0],
+  estimatedDelivery: '',
   weight: paquete.peso,
   description: paquete.descripcion || '',
-  routeId: paquete.routeId
+  routeId: undefined,
+  cancellationReason: paquete.razonCancelacion
 })
+
+// Helper para separar nombre y apellido (si no hay apellido, usa "-")
+const splitName = (fullName: string): { nombre: string; apellido: string } => {
+  const parts = fullName.trim().split(' ')
+  const nombre = parts[0] || '-'
+  const apellido = parts.slice(1).join(' ') || '-'
+  return { nombre, apellido }
+}
 
 export const shipmentService = {
   // Registrar un nuevo paquete
   registerShipment: async (shipment: Omit<Shipment, 'id' | 'trackingId' | 'status' | 'createdDate' | 'lastUpdate' | 'estimatedDelivery' | 'routeId'>): Promise<Shipment | null> => {
     try {
+      const remitente = splitName(shipment.sender.name)
+      const destinatario = splitName(shipment.receiver.name)
+
       const request: RegistrarPaqueteRequest = {
         Peso: shipment.weight,
         Comentarios: shipment.description,
         Remitente: {
-          Nombre: shipment.sender.name.split(' ')[0],
-          Apellido: shipment.sender.name.split(' ').slice(1).join(' '),
+          Nombre: remitente.nombre,
+          Apellido: remitente.apellido,
           Direccion: shipment.sender.address,
           Localidad: shipment.sender.city,
           CP: shipment.sender.postalCode
         },
         Destinatario: {
-          Nombre: shipment.receiver.name.split(' ')[0],
-          Apellido: shipment.receiver.name.split(' ').slice(1).join(' '),
+          Nombre: destinatario.nombre,
+          Apellido: destinatario.apellido,
           Direccion: shipment.receiver.address,
           Localidad: shipment.receiver.city,
           CP: shipment.receiver.postalCode
@@ -84,30 +114,49 @@ export const shipmentService = {
 
       await api.post('/envios/registrar-paquete', request)
 
-      // En una implementación real, el backend debería devolver el paquete creado
-      // Por ahora, devolver un objeto simulado
-      return {
-        ...shipment,
-        id: Date.now().toString(),
-        trackingId: `LT-${Date.now()}`,
-        status: 'Pendiente',
-        createdDate: new Date().toISOString().split('T')[0],
-        lastUpdate: new Date().toISOString().split('T')[0],
-        estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      // Obtener lista actualizada y buscar el paquete recién creado
+      const allShipments = await shipmentService.getAllShipments()
+
+      // Buscar el paquete más reciente que coincida con los datos del destinatario
+      const createdShipment = allShipments.find(s =>
+        s.receiver.name.includes(destinatario.nombre) &&
+        s.receiver.address === shipment.receiver.address
+      )
+
+      if (createdShipment) {
+        return createdShipment
       }
+
+      // Fallback: devolver el más reciente (último creado)
+      return allShipments[allShipments.length - 1] || null
     } catch (error) {
       console.error('Register shipment error:', error)
       return null
     }
   },
 
-  // Obtener seguimiento de un paquete
-  getShipmentTracking: async (trackingId: string): Promise<Shipment | null> => {
+  // Obtener seguimiento de un paquete por ID (GUID)
+  getShipmentTracking: async (paqueteId: string): Promise<Shipment | null> => {
     try {
-      const response = await api.get(`/envios/seguimiento/${trackingId}`)
-      return mapToShipment(response.data)
+      const response = await api.get(`/envios/paquete/${paqueteId}`)
+      console.log('[DEBUG] Backend response for paquete:', response.data)
+      console.log('[DEBUG] Status from backend:', response.data.status)
+      const mapped = mapToShipment(response.data)
+      console.log('[DEBUG] Mapped shipment status:', mapped.status)
+      return mapped
     } catch (error) {
       console.error('Get shipment tracking error:', error)
+      return null
+    }
+  },
+
+  // Obtener seguimiento por código de seguimiento
+  getShipmentByTrackingCode: async (codigoSeguimiento: string): Promise<Shipment | null> => {
+    try {
+      const response = await api.get(`/envios/seguimiento/${codigoSeguimiento}`)
+      return mapToShipment(response.data)
+    } catch (error) {
+      console.error('Get shipment by tracking code error:', error)
       return null
     }
   },
@@ -124,13 +173,40 @@ export const shipmentService = {
   },
 
   // Cambiar estado de paquete
-  changeShipmentStatus: async (shipmentId: string, status: string): Promise<boolean> => {
+  changeShipmentStatus: async (shipmentId: string, status: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      await api.post(`/envios/cambiar-estado-paquete/${shipmentId}/estado/${status}`)
-      return true
-    } catch (error) {
+      const backendStatus = mapStatusToBackend(status)
+      console.log('[DEBUG] Changing status:', { shipmentId, frontendStatus: status, backendStatus })
+      await api.post(`/envios/cambiar-estado-paquete/${shipmentId}/estado/${backendStatus}`)
+      return { success: true }
+    } catch (error: any) {
       console.error('Change shipment status error:', error)
-      return false
+      const errorMessage = error.response?.data || 'Error al cambiar el estado del envío'
+      return { success: false, error: errorMessage }
+    }
+  },
+
+  // Reenviar paquete cancelado
+  resendCancelledShipment: async (shipmentId: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      await api.post(`/envios/reenviar-paquete/${shipmentId}`)
+      return { success: true }
+    } catch (error: any) {
+      console.error('Resend shipment error:', error)
+      const errorMessage = error.response?.data || 'Error al reenviar el paquete'
+      return { success: false, error: errorMessage }
+    }
+  },
+
+  // Cancelar paquete con motivo específico
+  cancelShipment: async (shipmentId: string, reason: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      await api.post(`/envios/cancelar-paquete/${shipmentId}`, { Motivo: reason })
+      return { success: true }
+    } catch (error: any) {
+      console.error('Cancel shipment error:', error)
+      const errorMessage = error.response?.data || 'Error al cancelar el paquete'
+      return { success: false, error: errorMessage }
     }
   },
 
@@ -160,20 +236,21 @@ export const shipmentService = {
     }
   },
 
-  // Obtener todos los envíos (usar getShipmentsInBranch por ahora)
+  // Obtener todos los envíos (todos los estados)
   getAllShipments: async (): Promise<Shipment[]> => {
     try {
-      return await shipmentService.getShipmentsInBranch()
+      const response = await api.get('/envios/todos-los-paquetes')
+      return response.data.map(mapToShipment)
     } catch (error) {
       console.error('Get all shipments error:', error)
       return []
     }
   },
 
-  // Buscar por tracking ID
+  // Buscar por tracking ID (código de seguimiento)
   searchByTrackingId: async (trackingId: string): Promise<Shipment | null> => {
     try {
-      return await shipmentService.getShipmentTracking(trackingId)
+      return await shipmentService.getShipmentByTrackingCode(trackingId)
     } catch (error) {
       console.error('Search by tracking ID error:', error)
       return null

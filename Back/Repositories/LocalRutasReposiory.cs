@@ -10,6 +10,11 @@ namespace Back.Repositories
 
         public Task Add(Ruta ruta)
         {
+            var existingRuta = _rutas.FirstOrDefault(r => r.Id == ruta.Id);
+            if (existingRuta != null)
+            {
+                _rutas.Remove(existingRuta);
+            }
             _rutas.Add(ruta);
             return Task.CompletedTask;
         }

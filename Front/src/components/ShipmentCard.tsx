@@ -11,6 +11,9 @@ function ShipmentCard({ shipment }: ShipmentCardProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'En sucursal':
+      case 'Pendiente':
+        return 'default'
       case 'En tránsito':
         return 'info'
       case 'Entregado':
@@ -19,6 +22,22 @@ function ShipmentCard({ shipment }: ShipmentCardProps) {
         return 'error'
       default:
         return 'default'
+    }
+  }
+
+  const getStatusLabel = (status: string) => {
+    // Mapear posibles variaciones de estado a display consistente
+    switch (status) {
+      case 'EnSucursal':
+        return 'En sucursal'
+      case 'EnTransito':
+        return 'En tránsito'
+      case 'Entregado':
+        return 'Entregado'
+      case 'Cancelado':
+        return 'Cancelado'
+      default:
+        return status
     }
   }
 
@@ -47,12 +66,29 @@ function ShipmentCard({ shipment }: ShipmentCardProps) {
             <Typography variant="body1">{shipment.sender.name}</Typography>
           </Box>
           <Box>
+            <Typography variant="body2" color="textSecondary">
+              Destinatario
+            </Typography>
+            <Typography variant="body1">{shipment.receiver.name}</Typography>
+          </Box>
+          <Box>
+            <Typography variant="body2" color="textSecondary">
+              Estado
+            </Typography>
             <Chip
-              label={shipment.status}
+              label={getStatusLabel(shipment.status)}
               color={getStatusColor(shipment.status) as any}
               size="small"
             />
           </Box>
+          {shipment.createdDate && (
+            <Box>
+              <Typography variant="body2" color="textSecondary">
+                Creado
+              </Typography>
+              <Typography variant="caption">{shipment.createdDate}</Typography>
+            </Box>
+          )}
         </Stack>
       </CardContent>
       <CardActions>

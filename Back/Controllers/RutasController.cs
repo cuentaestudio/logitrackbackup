@@ -25,79 +25,143 @@ namespace Back.Controllers
         }
 
         [HttpGet()]
-        public async Task<IResult> Index()
+        public async Task<IActionResult> Index()
         {
             var rutas = await _rutasRepository.GetRutas();
 
-            return Results.Ok(rutas);
+            return Ok(rutas);
+        }
+
+        [HttpGet("transportista/{transportistaId:guid}")]
+        public async Task<IActionResult> GetRutasByTransportista(Guid transportistaId)
+        {
+            var rutas = await _rutasRepository.GetHistorialRutas(transportistaId);
+
+            // Mapear a un objeto sin referencias circulares
+            var rutasResponse = rutas.Select(r => new
+            {
+                id = r.Id,
+                estado = r.Estado.ToString(),
+                iniciadoEn = r.IniciadoEn,
+                finalizadoEn = r.FinalizadoEn,
+                razonCancelacion = r.RazonCancelacion,
+                transportista = new
+                {
+                    id = r.Transportista.Id,
+                    nombre = r.Transportista.Nombre,
+                    apellido = r.Transportista.Apellido,
+                    email = r.Transportista.Email
+                },
+                vehiculo = new
+                {
+                    id = r.Vehiculo.Id,
+                    patente = r.Vehiculo.Patente,
+                    marca = r.Vehiculo.Marca,
+                    capacidadCarga = r.Vehiculo.CapacidadCarga,
+                    estado = r.Vehiculo.Estado.ToString()
+                },
+                paquetes = r.Paquetes.Select(p => new
+                {
+                    id = p.Id,
+                    codigoSeguimiento = p.CodigoSeguimiento,
+                    peso = p.Peso,
+                    descripcion = p.Descripcion,
+                    status = p.Status.ToString(),
+                    creadoEn = p.CreadoEn,
+                    remitente = new
+                    {
+                        nombre = p.Remitente.Nombre,
+                        apellido = p.Remitente.Apellido,
+                        direccion = new
+                        {
+                            calle = p.Remitente.Direccion.Calle,
+                            ciudad = p.Remitente.Direccion.Ciudad,
+                            cp = p.Remitente.Direccion.CP
+                        }
+                    },
+                    destinatario = new
+                    {
+                        nombre = p.Destinatario.Nombre,
+                        apellido = p.Destinatario.Apellido,
+                        direccion = new
+                        {
+                            calle = p.Destinatario.Direccion.Calle,
+                            ciudad = p.Destinatario.Direccion.Ciudad,
+                            cp = p.Destinatario.Direccion.CP
+                        }
+                    }
+                }).ToList()
+            }).ToList();
+
+            return Ok(rutasResponse);
         }
 
         [HttpGet("historial")]
-        public async Task<IResult> GetHistorialRutas()
+        public async Task<IActionResult> GetHistorialRutas()
         {
             var rutas = await _rutasRepository.GetHistorialRutas(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value is string userIdStr && Guid.TryParse(userIdStr, out var userId) ? userId : Guid.Empty);
 
-            return Results.Ok(rutas);
+            return Ok(rutas);
         }
 
         [HttpPost("comenzar-ruta/{rutaId:guid}")]
-        public async Task<IResult> AddRuta(Guid rutaId)
+        public async Task<IActionResult> AddRuta(Guid rutaId)
         {
 
             var ruta = await _rutasRepository.GetRutaById(rutaId);
 
             if (ruta is null)
-                return Results.NotFound();
+                return NotFound();
 
             ruta.Iniciar();
 
-            return Results.Ok();
+            return Ok();
         }
 
         [HttpPost("finalizar-ruta/{rutaId:guid}")]
-        public async Task<IResult> FinalizarRuta(Guid rutaId)
+        public async Task<IActionResult> FinalizarRuta(Guid rutaId)
         {
             var ruta = await _rutasRepository.GetRutaById(rutaId);
 
             if (ruta is null)
-                return Results.NotFound();
+                return NotFound();
 
             ruta.Finalizar();
 
-            return Results.Ok();
+            return Ok();
         }
 
         [HttpPost("cancelar-ruta/{rutaId:guid}")]
-        public async Task<IResult> CancelarRuta(Guid rutaId, [FromBody] string razon)
+        public async Task<IActionResult> CancelarRuta(Guid rutaId, [FromBody] string razon)
         {
             var ruta = await _rutasRepository.GetRutaById(rutaId);
 
             if (ruta is null)
-                return Results.NotFound();
+                return NotFound();
 
             ruta.Cancelar(razon);
 
-            return Results.Ok();
+            return Ok();
         }
 
 
         [HttpPost("reasignar-ruta/ruta/{rutaId:guid}/transportista/{transportistaId:guid}")]
-        public async Task<IResult> ReasignarRuta(Guid rutaId, Guid transportistaId)
+        public async Task<IActionResult> ReasignarRuta(Guid rutaId, Guid transportistaId)
         {
 
             await _enviosService.ReasignarRuta(rutaId, transportistaId);
 
-            return Results.Ok();
+            return Ok();
         }
 
         [HttpPost("crear-ruta")]
-        public async Task<IResult> CrearRuta([FromBody] CrearRutaRequest request)
+        public async Task<IActionResult> CrearRuta([FromBody] CrearRutaRequest request)
         {
 
             await _rutasService.CrearRuta(request);
 
-            
-            return Results.Ok();
+
+            return Ok();
         }
     }
 

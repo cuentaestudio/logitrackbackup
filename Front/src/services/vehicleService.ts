@@ -19,12 +19,23 @@ const mapEstado = (estado: string): Vehicle['estado'] => {
   }
 }
 
+// Mapear estado del frontend al backend
+const mapEstadoToBackend = (estado: Vehicle['estado']): string => {
+  switch (estado) {
+    case 'Disponible': return 'Disponible'
+    case 'En uso': return 'EnUso'
+    case 'Mantenimiento': return 'Mantenimiento'
+    case 'Suspendido': return 'Suspendido'
+    default: return 'Disponible'
+  }
+}
+
 // Convertir respuesta del backend a tipo Vehicle
 const mapToVehicle = (vehiculo: any): Vehicle => ({
   id: vehiculo.id,
   patente: vehiculo.patente,
-  marca: vehiculo.modelo, // Asumiendo que modelo incluye marca
-  capacidadCarga: vehiculo.capacidad,
+  marca: vehiculo.marca,
+  capacidadCarga: vehiculo.capacidadCarga,
   estado: mapEstado(vehiculo.estado),
   createdDate: vehiculo.createdDate || new Date().toISOString().split('T')[0],
   operator: vehiculo.operator,
@@ -70,13 +81,21 @@ export const vehicleService = {
     try {
       const request: RegistrarVehiculoRequest = {
         Patente: vehicle.patente,
-        Modelo: vehicle.marca, // Usando marca como modelo
+        Modelo: vehicle.marca,
         Capacidad: vehicle.capacidadCarga
       }
 
       await api.post('/envios/vehiculos/registrar-vehiculo', request)
 
-      // Devolver objeto simulado
+      // Obtener lista actualizada y buscar el vehículo recién creado por patente
+      const vehicles = await vehicleService.getAllVehicles()
+      const createdVehicle = vehicles.find(v => v.patente.toUpperCase() === vehicle.patente.toUpperCase())
+
+      if (createdVehicle) {
+        return createdVehicle
+      }
+
+      // Fallback si no se encuentra (no debería pasar)
       return {
         ...vehicle,
         id: Date.now().toString(),
@@ -107,6 +126,31 @@ export const vehicleService = {
     } catch (error) {
       console.error('Get vehicles by operator error:', error)
       return []
+    }
+  },
+
+  // Suspender vehículo
+  suspendVehicle: async (vehicleId: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      await api.post(`/envios/vehiculos/${vehicleId}/suspender`)
+      return { success: true }
+    } catch (error: any) {
+      console.error('Suspend vehicle error:', error)
+      const errorMessage = error.response?.data || 'Error al suspender el vehículo'
+      return { success: false, error: errorMessage }
+    }
+  },
+
+  // Cambiar estado del vehículo
+  changeVehicleStatus: async (vehicleId: string, estado: Vehicle['estado']): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const backendEstado = mapEstadoToBackend(estado)
+      await api.post(`/envios/vehiculos/${vehicleId}/estado/${backendEstado}`)
+      return { success: true }
+    } catch (error: any) {
+      console.error('Change vehicle status error:', error)
+      const errorMessage = error.response?.data || 'Error al cambiar el estado del vehículo'
+      return { success: false, error: errorMessage }
     }
   }
 }
