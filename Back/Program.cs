@@ -14,15 +14,31 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-// Configurar CORS para permitir requests desde el frontend
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // Puerto de desarrollo de Vite
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+        policy
+            .SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrWhiteSpace(origin)) return false;
+
+                if (origin.Equals("http://localhost:5173", StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                    return false;
+
+                if (!uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                // Netlify dominio principal + deploy previews dinámicos del mismo sitio.
+                return uri.Host.Equals("logitrack-08.netlify.app", StringComparison.OrdinalIgnoreCase)
+                    || uri.Host.EndsWith("--logitrack-08.netlify.app", StringComparison.OrdinalIgnoreCase);
+            })
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
 

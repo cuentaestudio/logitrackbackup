@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:5240/api'
+const DEFAULT_API_BASE_URL = 'https://logitrack-api-4d2k.onrender.com/api'
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, '')
 
 const api = axios.create({
   baseURL: API_BASE_URL,
