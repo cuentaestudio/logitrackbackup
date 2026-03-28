@@ -18,12 +18,11 @@ builder.Services.AddControllers()
 // Configurar CORS para permitir requests desde el frontend
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // Puerto de desarrollo de Vite
+        policy.AllowAnyOrigin()
               .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+              .AllowAnyHeader();
     });
 });
 
@@ -45,7 +44,7 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Habilitar CORS
-app.UseCors("AllowFrontend");
+app.UseCors("AllowAll");
 
 // Cargar datos de prueba si está habilitado
 var enableSeedData = app.Configuration.GetValue<bool>("Database:EnableSeedData");
