@@ -16,8 +16,6 @@ namespace Back.Infrastructure.Database
 
         public async Task SeedAsync()
         {
-            _context.Database.EnsureCreated();
-
             List<Operador> operadores = UsuarioGenerator.GenerarOperadores(20);
 
             List<Supervisor> supervisores = UsuarioGenerator.GenerarSupervisores(20);
