@@ -27,6 +27,8 @@ builder.Services.AddCors(options =>
 
 var connectionString = builder.Configuration.GetConnectionString("PostgresConnection");
 
+Console.WriteLine($"Connection String: {connectionString}"); // Agrega esta línea para verificar la cadena de conexión
+
 // Configurar EF Core con PostgreSQL
 builder.Services.AddDbContext<LogiTrackDbContext>(options =>
     options.UseNpgsql(connectionString));
