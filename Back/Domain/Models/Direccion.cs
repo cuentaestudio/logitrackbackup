@@ -1,12 +1,15 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace Back.Domain.Models
 {
+    [Owned]
     public class Direccion
     {
         public string Calle { get; set; } = string.Empty;
         public string Ciudad { get; set; } = string.Empty;
         public string CP { get; set; } = string.Empty;
         public string? Referencia { get; set; }
-        public Ubicacion? Ubicacion { get; set; }
+        // public Ubicacion? Ubicacion { get; set; }
 
 
         private Direccion()
@@ -20,19 +23,21 @@ namespace Back.Domain.Models
             Ciudad = ciudad;
             CP = cp;
             Referencia = referencia;
-            Ubicacion = ubicacion;
+            // Ubicacion = ubicacion;
         }
     }
+    [Owned]
     public class Ubicacion
     {
         public double Latitud { get; set; }
         public double Longitud { get; set; }
     }
 
+    [Owned]
     public class Cliente
     {
-        public string Nombre { get; private set; } = string.Empty;  
-        public string Apellido { get; private set; } = string.Empty;
+        public string Nombre { get; private set; } 
+        public string Apellido { get; private set; }
         public Direccion Direccion { get; private set; }
 
         private Cliente()
@@ -44,6 +49,12 @@ namespace Back.Domain.Models
             Nombre = nombre;
             Apellido = apellido;
             Direccion = direccion;
+        }
+
+
+        public override string ToString()
+        {
+            return Nombre + " " + Apellido;
         }
     }
 }

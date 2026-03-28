@@ -1,5 +1,6 @@
 using Back.Application.Services;
 using Back.Domain.Repositories;
+using Back.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Back.Controllers
@@ -16,8 +17,14 @@ namespace Back.Controllers
 
         private readonly IRutasRepository _rutasRepository;
 
-        public RutasController(IEnviosRepository enviosRepository, EnviosService enviosService, RutasService rutasService,IRutasRepository rutasRepository)
+        private readonly LogiTrackDbContext _context;
+
+
+        public RutasController(
+            LogiTrackDbContext context,
+            IEnviosRepository enviosRepository, EnviosService enviosService, RutasService rutasService, IRutasRepository rutasRepository)
         {
+            _context = context;
             _rutasService = rutasService;
             _rutasRepository = rutasRepository;
             _enviosRepository = enviosRepository;
@@ -115,6 +122,8 @@ namespace Back.Controllers
 
             ruta.Iniciar();
 
+            await _context.SaveChangesAsync();
+
             return Ok();
         }
 
@@ -129,6 +138,7 @@ namespace Back.Controllers
             try
             {
                 ruta.Finalizar();
+                await _context.SaveChangesAsync();
                 return Ok();
             }
             catch (InvalidOperationException ex)
@@ -151,6 +161,8 @@ namespace Back.Controllers
 
             ruta.Cancelar(razon);
 
+            await _context.SaveChangesAsync();
+
             return Ok();
         }
 
@@ -159,6 +171,8 @@ namespace Back.Controllers
         public async Task<IActionResult> ReasignarRuta(Guid rutaId, Guid transportistaId)
         {
             await _enviosService.ReasignarRuta(rutaId, transportistaId);
+
+            await _context.SaveChangesAsync();
 
             return Ok();
         }
@@ -169,6 +183,7 @@ namespace Back.Controllers
 
             await _rutasService.CrearRuta(request);
 
+            await _context.SaveChangesAsync();
 
             return Ok();
         }

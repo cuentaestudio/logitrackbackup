@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Back.Application.Services;
 using Back.Domain.Models;
 using Back.Domain.Repositories;
+using Back.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Back.Controllers
@@ -15,9 +16,16 @@ namespace Back.Controllers
 
         private readonly IRutasRepository _rutasRepository;
         private readonly EnviosService _enviosService;
+        private readonly LogiTrackDbContext _context;
 
-        public EnviosController(IEnviosRepository enviosRepository, IVehiculoRepository vehiculoRepository, EnviosService enviosService)
+
+        public EnviosController(
+            LogiTrackDbContext context,
+            IRutasRepository rutasRepository,
+            IEnviosRepository enviosRepository, IVehiculoRepository vehiculoRepository, EnviosService enviosService)
         {
+            _context = context;
+            _rutasRepository = rutasRepository;
             _enviosService = enviosService;
             _vehiculoRepository = vehiculoRepository;
             _enviosRepository = enviosRepository;
@@ -27,6 +35,9 @@ namespace Back.Controllers
         public async Task<IActionResult> RegistrarPaquete([FromBody] RegistrarPaqueteRequest request)
         {
             await _enviosService.RegistrarPaquete(request);
+
+
+            await _context.SaveChangesAsync();
 
             return Ok();
         }
@@ -41,6 +52,8 @@ namespace Back.Controllers
             if (paquete is null)
                 return NotFound();
 
+            await _context.SaveChangesAsync();
+
             return Ok(paquete);
         }
 
@@ -52,6 +65,8 @@ namespace Back.Controllers
             if (paquete is null)
                 return NotFound();
 
+            await _context.SaveChangesAsync();
+
             return Ok(paquete);
         }
 
@@ -60,6 +75,8 @@ namespace Back.Controllers
         {
             var paquetes = await _enviosRepository.GetPaquetesEnSucursal();
 
+            await _context.SaveChangesAsync();
+
             return Ok(paquetes);
         }
 
@@ -67,6 +84,7 @@ namespace Back.Controllers
         public async Task<IActionResult> GetTodosLosPaquetes()
         {
             var paquetes = await _enviosRepository.GetAll();
+            await _context.SaveChangesAsync();
             return Ok(paquetes);
         }
 
@@ -75,6 +93,8 @@ namespace Back.Controllers
         public async Task<IActionResult> BusquedaDePaquetes([FromBody] BusquedaDePaquetesRequest request)
         {
             var paquetes = await _enviosRepository.GetPaquetes(request.CodigoSeguimiento, request.Destinatario);
+
+            await _context.SaveChangesAsync();
 
             return Ok(paquetes);
         }
@@ -90,6 +110,8 @@ namespace Back.Controllers
 
             await _vehiculoRepository.Add(vehiculo);
 
+            await _context.SaveChangesAsync();
+
             return Ok();
         }
 
@@ -97,6 +119,8 @@ namespace Back.Controllers
         public async Task<IActionResult> GetVehiculos()
         {
             var vehiculos = await _vehiculoRepository.GetVehiculosActivos();
+
+            await _context.SaveChangesAsync();
 
             return Ok(vehiculos);
         }
@@ -108,6 +132,8 @@ namespace Back.Controllers
 
             if (vehiculo is null)
                 return NotFound("Vehículo no encontrado");
+
+            await _context.SaveChangesAsync();
 
             return Ok(vehiculo);
         }
@@ -122,6 +148,8 @@ namespace Back.Controllers
 
             vehiculo.Suspender();
 
+            await _context.SaveChangesAsync();
+
             return Ok();
         }
 
@@ -135,6 +163,8 @@ namespace Back.Controllers
 
             vehiculo.CambiarEstado(estado);
 
+            await _context.SaveChangesAsync();
+
             return Ok();
         }
 
@@ -142,6 +172,7 @@ namespace Back.Controllers
         public async Task<IActionResult> GetSucursales()
         {
             var sucursales = await _enviosRepository.GetSucursales();
+            await _context.SaveChangesAsync();
             return Ok(sucursales);
         }
 
@@ -156,6 +187,8 @@ namespace Back.Controllers
             );
 
             await _enviosRepository.Add(sucursal);
+
+            await _context.SaveChangesAsync();
 
             return Ok();
         }
@@ -198,6 +231,8 @@ namespace Back.Controllers
                         return BadRequest("Estado no válido");
                 }
 
+                await _context.SaveChangesAsync();
+
                 return Ok();
             }
             catch (InvalidOperationException ex)
@@ -221,6 +256,7 @@ namespace Back.Controllers
                     : "Cancelado desde el sistema";
 
                 paquete.Cancelar(motivo);
+                await _context.SaveChangesAsync();
                 return Ok();
             }
             catch (InvalidOperationException ex)
@@ -240,6 +276,7 @@ namespace Back.Controllers
             try
             {
                 paquete.ReEnviar();
+                await _context.SaveChangesAsync();
                 return Ok();
             }
             catch (InvalidOperationException ex)
@@ -259,62 +296,63 @@ namespace Back.Controllers
 
             ruta.EntregarPaquete(paqueteId);
 
+            await _context.SaveChangesAsync();
 
             return Ok();
         }
-}
+    }
 
 
-public class CancelarPaqueteRequest
-{
-    public string Motivo { get; set; } = string.Empty;
-}
+    public class CancelarPaqueteRequest
+    {
+        public string Motivo { get; set; } = string.Empty;
+    }
 
-public class RegistrarPaqueteRequest
-{
-    public double Peso { get; set; }
-    public string? Comentarios { get; set; }
-    public RegistrarClienteRequest Remitente { get; set; }
-    public RegistrarClienteRequest Destinatario { get; set; }
-}
+    public class RegistrarPaqueteRequest
+    {
+        public double Peso { get; set; }
+        public string? Comentarios { get; set; }
+        public RegistrarClienteRequest Remitente { get; set; }
+        public RegistrarClienteRequest Destinatario { get; set; }
+    }
 
-public class RegistrarClienteRequest
-{
-    [Required]
-    public string Direccion { get; set; } = string.Empty;
-    [Required]
-    public string Localidad { get; set; } = string.Empty;
-    [Required]
-    public string CP { get; set; } = string.Empty;
-    [Required]
-    public string Nombre { get; set; } = string.Empty;
-    [Required]
-    public string Apellido { get; set; } = string.Empty;
-}
+    public class RegistrarClienteRequest
+    {
+        [Required]
+        public string Direccion { get; set; } = string.Empty;
+        [Required]
+        public string Localidad { get; set; } = string.Empty;
+        [Required]
+        public string CP { get; set; } = string.Empty;
+        [Required]
+        public string Nombre { get; set; } = string.Empty;
+        [Required]
+        public string Apellido { get; set; } = string.Empty;
+    }
 
-public class RegistrarVehiculoRequest
-{
-    public string Patente { get; set; } = string.Empty;
-    public string Modelo { get; set; } = string.Empty;
-    public double Capacidad { get; set; }
-}
+    public class RegistrarVehiculoRequest
+    {
+        public string Patente { get; set; } = string.Empty;
+        public string Modelo { get; set; } = string.Empty;
+        public double Capacidad { get; set; }
+    }
 
-public class RegistarSucursal
-{
-    [Required]
-    public string Nombre { get; set; } = string.Empty;
-    [Required]
-    public string Direccion { get; set; } = string.Empty;
-    [Required]
-    public string Ciudad { get; set; } = string.Empty;
-    [Required]
-    public string Telefono { get; set; } = string.Empty;
+    public class RegistarSucursal
+    {
+        [Required]
+        public string Nombre { get; set; } = string.Empty;
+        [Required]
+        public string Direccion { get; set; } = string.Empty;
+        [Required]
+        public string Ciudad { get; set; } = string.Empty;
+        [Required]
+        public string Telefono { get; set; } = string.Empty;
 
-}
+    }
 
-public class BusquedaDePaquetesRequest
-{
-    public string? CodigoSeguimiento { get; set; }
-    public string? Destinatario { get; set; }
-}
+    public class BusquedaDePaquetesRequest
+    {
+        public string? CodigoSeguimiento { get; set; }
+        public string? Destinatario { get; set; }
+    }
 }

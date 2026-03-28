@@ -1,9 +1,10 @@
 using Back.Application.Services;
 using Back.Domain.Repositories;
-using Back.Repositories;
-using Back.Infrastructure;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Back.Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
+using Back.Infrastructure.Database.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,13 +27,20 @@ builder.Services.AddCors(options =>
     });
 });
 
+var connectionString = builder.Configuration.GetConnectionString("PostgresConnection");
+
+// Configurar EF Core con PostgreSQL
+builder.Services.AddDbContext<LogiTrackDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
 builder.Services.AddScoped<AuthService>().AddScoped<EnviosService>().AddScoped<RutasService>();
 builder.Services.AddScoped<DatabaseSeeder>();
 
-builder.Services.AddSingleton<IUserRepository, LocalUsuariosRepository>().AddSingleton<IEnviosRepository, LocalEnviosRepository>().AddSingleton<IVehiculoRepository, LocalVehiculoRepository>().AddSingleton<IRutasRepository, LocalRutasReposiory>();
+builder.Services.AddScoped<IUserRepository, UsuariosRepository>().AddScoped<IEnviosRepository, EnviosRepository>().AddScoped<IVehiculoRepository, VehiculosRepository>().AddScoped<IRutasRepository, RutasRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 
 var app = builder.Build();
 

@@ -1,6 +1,7 @@
 using System.Security.Cryptography.X509Certificates;
 using Back.Domain.Models;
 using Back.Domain.Repositories;
+using Back.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Back.Controllers
@@ -14,15 +15,17 @@ namespace Back.Controllers
         private readonly IRutasRepository _rutasRepository;
         private readonly IEnviosRepository _enviosRepository;
         private readonly IVehiculoRepository _vehiculoRepository;
+        private readonly LogiTrackDbContext _context;
 
 
-        public SeedController(IUserRepository userRepository, IRutasRepository rutasRepository, IEnviosRepository enviosRepository, IVehiculoRepository vehiculoRepository )
+        public SeedController(IUserRepository userRepository, IRutasRepository rutasRepository, IEnviosRepository enviosRepository, IVehiculoRepository vehiculoRepository, LogiTrackDbContext context )
         {
 
             _userRepository = userRepository;
             _rutasRepository = rutasRepository;
             _enviosRepository = enviosRepository;
             _vehiculoRepository = vehiculoRepository;
+            _context = context;
         }
 
         [HttpPost]
@@ -53,6 +56,8 @@ namespace Back.Controllers
                     await _rutasRepository.Add(ruta);
                 }
             }
+
+            await _context.SaveChangesAsync();
 
             return Results.Ok();
         }

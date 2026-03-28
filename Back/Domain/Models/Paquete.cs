@@ -1,4 +1,5 @@
 using Back.Application.Util;
+using Microsoft.EntityFrameworkCore;
 
 namespace Back.Domain.Models
 {
@@ -20,8 +21,8 @@ namespace Back.Domain.Models
 
         public DateTime CreadoEn { get; init; } = DateTime.UtcNow;
         public PaqueteStatus Status { get; private set; } = PaqueteStatus.EnSucursal;
-        public Cliente Remitente { get; set; }
-        public Cliente Destinatario { get; set; }
+        public Cliente Remitente { get; private set; }
+        public Cliente Destinatario { get; private set; }
         public string DestinatarioCompleto => $"{Destinatario.Nombre} {Destinatario.Apellido}";
         public string? Descripcion { get; set; } = string.Empty;
         public string? RazonCancelacion { get; private set; }
@@ -89,6 +90,11 @@ namespace Back.Domain.Models
         {
             Status = status;
         }
-    
+
+        public override string ToString()
+        {
+            return $"Paquete: {Id}, Código: {CodigoSeguimiento}, Peso: {Peso}, Altura: {Altura}, Ancho: {Ancho}, CreadoEn: {CreadoEn}, Status: {Status}, Remitente: {{ Nombre: {Remitente.Nombre}, Apellido: {Remitente.Apellido}, Direccion: {Remitente.Direccion.Calle}, {Remitente.Direccion.Ciudad} }}, Destinatario: {{ Nombre: {Destinatario.Nombre}, Apellido: {Destinatario.Apellido}, Direccion: {Destinatario.Direccion.Calle}, {Destinatario.Direccion.Ciudad} }}, Descripcion: {Descripcion}, RazonCancelacion: {RazonCancelacion}";
+        }
+
     }
 }

@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using Back.Application.Services;
 using Back.Domain.Models;
 using Back.Domain.Repositories;
+using Back.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
 using static Back.Domain.Models.Transportista;
 
@@ -16,11 +17,13 @@ namespace Back.Controllers
 
         private readonly AuthService _authService;
         private readonly IUserRepository _userRepository;
+        private readonly LogiTrackDbContext _context;
 
-        public AuthController(AuthService authService, IUserRepository userRepository)
+        public AuthController(AuthService authService, IUserRepository userRepository, LogiTrackDbContext context)
         {
             _authService = authService;
             _userRepository = userRepository;
+            _context = context;
         }
 
         [HttpPost("login")]
@@ -37,6 +40,7 @@ namespace Back.Controllers
             try
             {
                 await _authService.Registrarse(request);
+                await _context.SaveChangesAsync();
                 return Ok();
             }
             catch (InvalidOperationException ex)
@@ -70,6 +74,8 @@ namespace Back.Controllers
             var result = await _authService.RegistrarTransportista(request);
             var transportista = result.Transportista;
 
+            await _context.SaveChangesAsync();
+
             return Ok(new UserInfoResponse
             {
                 Id = transportista.Id.ToString(),
@@ -89,6 +95,8 @@ namespace Back.Controllers
         {
             var transportista = await _authService.ActualizarLicenciaTransportista(transportistaId, request.Licencia);
 
+            await _context.SaveChangesAsync();
+
             return Ok(new UserInfoResponse
             {
                 Id = transportista.Id.ToString(),
@@ -106,6 +114,8 @@ namespace Back.Controllers
         public async Task<IActionResult> CambiarEstadoTransportista(Guid transportistaId, [FromBody] CambiarEstadoTransportistaRequest request)
         {
             var transportista = await _authService.CambiarEstadoTransportista(transportistaId, request.Estado);
+
+            await _context.SaveChangesAsync();
 
             return Ok(new UserInfoResponse
             {
