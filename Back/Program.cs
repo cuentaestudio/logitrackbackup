@@ -15,7 +15,6 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-// Configurar CORS para permitir requests desde el frontend
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
