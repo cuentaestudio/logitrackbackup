@@ -47,33 +47,22 @@ var app = builder.Build();
 // Habilitar CORS
 app.UseCors("AllowAll");
 
-// Cargar datos de prueba si está habilitado
-var enableSeedData = app.Configuration.GetValue<bool>("Database:EnableSeedData");
-if (enableSeedData)
-{
-    using (var scope = app.Services.CreateScope())
-    {
-        var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
-        await seeder.SeedAsync();
-    }
-}
-
 app.MapControllers();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<LogiTrackDbContext>();
-        context.Database.Migrate(); // Esto aplica las migraciones pendientes
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ocurrió un error al migrar la base de datos.");
-    }
+    var context = services.GetRequiredService<LogiTrackDbContext>();
+    
+    // 1. Esto CREA las tablas basadas en tus clases C#
+    await context.Database.MigrateAsync(); 
+    
+    // 2. Esto CARGA los datos iniciales
+    var seeder = services.GetRequiredService<DatabaseSeeder>();
+    await seeder.SeedAsync();
 }
+
 app.Run();
