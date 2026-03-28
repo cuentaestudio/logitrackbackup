@@ -61,5 +61,18 @@ app.MapControllers();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<LogiTrackDbContext>();
+        context.Database.Migrate(); // Esto aplica las migraciones pendientes
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Ocurrió un error al migrar la base de datos.");
+    }
+}
 app.Run();
