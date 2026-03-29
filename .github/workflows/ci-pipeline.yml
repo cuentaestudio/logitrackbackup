@@ -26,6 +26,9 @@ jobs:
 
     - name: Compilar proyecto
       run: dotnet build Back/Back.csproj --configuration Release --no-restore
+    
+    - name: Ejecutar pruebas unitarias (.NET)
+      run: dotnet test Back/Back.csproj --no-build --verbosity normal
 
   build-frontend:
       name: Build React App
@@ -46,3 +49,7 @@ jobs:
       - name: Compilar Frontend
         working-directory: ./Front
         run: npm run build
+      
+      - name: Ejecutar pruebas (React)
+        working-directory: ./Front
+        run: npm run test    
