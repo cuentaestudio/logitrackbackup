@@ -39,7 +39,6 @@ namespace Back.Infrastructure.Database
 
             var vehiculos = PaquetesGenerator.GenerarVehiculos(20);
 
-            await _context.Vehiculos.AddRangeAsync();
 
 
             var paquetes = PaquetesGenerator.GenerarPaquetes(500);

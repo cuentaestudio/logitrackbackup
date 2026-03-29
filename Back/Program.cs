@@ -6,7 +6,20 @@ using Back.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Back.Infrastructure.Database.Repositories;
 
+using System.Reflection;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSwaggerGen(options =>
+{
+    // 1. Obtener el nombre del archivo XML (suele ser NombreDeTuProyecto.xml)
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+    // 2. Decirle a Swagger que lo use
+    options.IncludeXmlComments(xmlPath);
+});
+
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -55,14 +68,22 @@ app.UseSwaggerUI();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    
     var context = services.GetRequiredService<LogiTrackDbContext>();
-    
     // 1. Esto CREA las tablas basadas en tus clases C#
-    await context.Database.MigrateAsync(); 
-    
+    await context.Database.MigrateAsync();
+
     // 2. Esto CARGA los datos iniciales
-    var seeder = services.GetRequiredService<DatabaseSeeder>();
-    await seeder.SeedAsync();
+
+    var configuration = services.GetRequiredService<IConfiguration>();
+    
+    if (configuration.GetValue<bool>("EnableDatabaseSeeder"))
+    {
+
+        var seeder = services.GetRequiredService<DatabaseSeeder>();
+
+        await seeder.SeedAsync();
+    }
 }
 
 app.Run();

@@ -26,16 +26,38 @@ namespace Back.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// Endpoint para iniciar sesión. Recibe email y contraseña, y devuelve un token JWT con la información del usuario.
+        /// </summary>
+        /// <remarks>
+        /// Valida el usuario y contraseña. En caso de credenciales no válidas retorna BadRequest.
+        /// </remarks>
+        /// <param name="request">Credentials de inicio de sesión</param>
+        /// <returns>Token y datos del usuario</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
         {
             var result = await _authService.Login(request);
+
             return Ok(result);
         }
 
 
+        /// <summary>
+        /// Endpoint para registrarse. Recibe los datos del usuario y lo registra en el sistema.
+        /// </summary>
+        /// <remarks>
+        /// Crea un usuario nuevo con rol por defecto y devuelve OK si la creación fue exitosa.
+        /// </remarks>
+        /// <param name="request">Datos de registro del usuario</param>
+        /// <returns>Resultado de la operación</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPost("registrarse")]
-        public async Task<IActionResult> Registrarse([FromBody] RegisterRequest request)
+        public async Task<ActionResult> Registrarse([FromBody] RegisterRequest request)
         {
             try
             {
@@ -49,8 +71,14 @@ namespace Back.Controllers
             }
         }
 
+        /// <summary>
+        /// Obtiene el listado de transportistas registrados.
+        /// </summary>
+        /// <returns>Lista de transportistas</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpGet("transportistas")]
-        public async Task<IActionResult> GetTransportistas()
+        public async Task<ActionResult<List<UserInfoResponse>>> GetTransportistas()
         {
             var transportistas = await _userRepository.GetAll();
             var transportistasList = transportistas.OfType<Transportista>().Select(t => new UserInfoResponse
@@ -68,8 +96,16 @@ namespace Back.Controllers
             return Ok(transportistasList);
         }
 
+        /// <summary>
+        /// Registra un nuevo transportista y genera contraseña temporal.
+        /// </summary>
+        /// <param name="request">Datos del transportista a registrar</param>
+        /// <returns>Información del transportista registrado</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpPost("transportistas")]
-        public async Task<IActionResult> RegistrarTransportista([FromBody] RegistrarTransportistaRequest request)
+        public async Task<ActionResult<UserInfoResponse>> RegistrarTransportista([FromBody] RegistrarTransportistaRequest request)
         {
             var result = await _authService.RegistrarTransportista(request);
             var transportista = result.Transportista;
@@ -90,8 +126,18 @@ namespace Back.Controllers
             });
         }
 
+        /// <summary>
+        /// Actualiza la licencia de un transportista existente.
+        /// </summary>
+        /// <param name="transportistaId">ID del transportista a actualizar</param>
+        /// <param name="request">Nueva licencia</param>
+        /// <returns>Información actualizada del transportista</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpPut("transportistas/{transportistaId:guid}/licencia")]
-        public async Task<IActionResult> ActualizarLicenciaTransportista(Guid transportistaId, [FromBody] ActualizarLicenciaTransportistaRequest request)
+        public async Task<ActionResult<UserInfoResponse>> ActualizarLicenciaTransportista(Guid transportistaId, [FromBody] ActualizarLicenciaTransportistaRequest request)
         {
             var transportista = await _authService.ActualizarLicenciaTransportista(transportistaId, request.Licencia);
 
@@ -110,8 +156,18 @@ namespace Back.Controllers
             });
         }
 
+        /// <summary>
+        /// Cambia el estado de un transportista (activo/inactivo, etc.).
+        /// </summary>
+        /// <param name="transportistaId">ID del transportista a actualizar</param>
+        /// <param name="request">Estado deseado</param>
+        /// <returns>Información actualizada del transportista</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpPut("transportistas/{transportistaId:guid}/estado")]
-        public async Task<IActionResult> CambiarEstadoTransportista(Guid transportistaId, [FromBody] CambiarEstadoTransportistaRequest request)
+        public async Task<ActionResult<UserInfoResponse>> CambiarEstadoTransportista(Guid transportistaId, [FromBody] CambiarEstadoTransportistaRequest request)
         {
             var transportista = await _authService.CambiarEstadoTransportista(transportistaId, request.Estado);
 
@@ -130,8 +186,14 @@ namespace Back.Controllers
             });
         }
 
+        /// <summary>
+        /// Obtiene el listado completo de usuarios (supervisores, operadores y transportistas).
+        /// </summary>
+        /// <returns>Lista de usuarios</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpGet("usuarios")]
-        public async Task<IActionResult> GetUsuarios()
+        public async Task<ActionResult<List<UserInfoResponse>>> GetUsuarios()
         {
             var usuarios = await _userRepository.GetAll();
             var usuariosList = usuarios.Select(u => new UserInfoResponse
@@ -230,7 +292,7 @@ namespace Back.Controllers
         [Required]
         public string Apellido { get; set; }
         [Required]
-        [EmailAddress(ErrorMessage = "El correo electrónico no es válido.")]   
+        [EmailAddress(ErrorMessage = "El correo electrónico no es válido.")]
         public string Email { get; set; }
         [Required]
         [MinLength(8, ErrorMessage = "La contraseña debe tener al menos 8 caracteres.")]

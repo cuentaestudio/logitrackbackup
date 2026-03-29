@@ -1,4 +1,5 @@
 using Back.Application.Services;
+using Back.Domain.Models;
 using Back.Domain.Repositories;
 using Back.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
@@ -31,16 +32,30 @@ namespace Back.Controllers
             _enviosService = enviosService;
         }
 
+        /// <summary>
+        /// Obtiene todas las rutas disponibles.
+        /// </summary>
+        /// <returns>Lista de rutas</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpGet()]
-        public async Task<IActionResult> Index()
+        public async Task<ActionResult<List<Ruta>>> Index()
         {
             var rutas = await _rutasRepository.GetRutas();
 
             return Ok(rutas);
         }
 
+        /// <summary>
+        /// Obtiene historial de rutas de un transportista específico.
+        /// </summary>
+        /// <param name="transportistaId">ID del transportista</param>
+        /// <returns>Listado de rutas del transportista</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpGet("transportista/{transportistaId:guid}")]
-        public async Task<IActionResult> GetRutasByTransportista(Guid transportistaId)
+        public async Task<ActionResult<List<Ruta>>> GetRutasByTransportista(Guid transportistaId)
         {
             var rutas = await _rutasRepository.GetHistorialRutas(transportistaId);
 
@@ -103,16 +118,30 @@ namespace Back.Controllers
             return Ok(rutasResponse);
         }
 
+        /// <summary>
+        /// Obtiene el historial de rutas del transportista logueado.
+        /// </summary>
+        /// <returns>Historial de rutas</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpGet("historial")]
-        public async Task<IActionResult> GetHistorialRutas()
+        public async Task<ActionResult<List<Ruta>>> GetHistorialRutas()
         {
             var rutas = await _rutasRepository.GetHistorialRutas(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value is string userIdStr && Guid.TryParse(userIdStr, out var userId) ? userId : Guid.Empty);
 
             return Ok(rutas);
         }
 
+        /// <summary>
+        /// Marca una ruta como comenzada.
+        /// </summary>
+        /// <param name="rutaId">ID de la ruta</param>
+        /// <returns>Resultado de la operación</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpPost("comenzar-ruta/{rutaId:guid}")]
-        public async Task<IActionResult> AddRuta(Guid rutaId)
+        public async Task<ActionResult> ComenzarRuta(Guid rutaId)
         {
 
             var ruta = await _rutasRepository.GetRutaById(rutaId);
@@ -127,8 +156,17 @@ namespace Back.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Finaliza una ruta existente.
+        /// </summary>
+        /// <param name="rutaId">ID de la ruta</param>
+        /// <returns>Resultado de la operación</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpPost("finalizar-ruta/{rutaId:guid}")]
-        public async Task<IActionResult> FinalizarRuta(Guid rutaId)
+        public async Task<ActionResult> FinalizarRuta(Guid rutaId)
         {
             var ruta = await _rutasRepository.GetRutaById(rutaId);
 
@@ -147,8 +185,17 @@ namespace Back.Controllers
             }
         }
 
+        /// <summary>
+        /// Cancela una ruta existente con una razón opcional.
+        /// </summary>
+        /// <param name="rutaId">ID de la ruta</param>
+        /// <param name="request">Motivo de cancelación</param>
+        /// <returns>Resultado de la operación</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpPost("cancelar-ruta/{rutaId:guid}")]
-        public async Task<IActionResult> CancelarRuta(Guid rutaId, [FromBody] CancelarRutaRequest request)
+        public async Task<ActionResult> CancelarRuta(Guid rutaId, [FromBody] CancelarRutaRequest request)
         {
             var ruta = await _rutasRepository.GetRutaById(rutaId);
 
@@ -167,8 +214,17 @@ namespace Back.Controllers
         }
 
 
+        /// <summary>
+        /// Reasigna una ruta a otro transportista.
+        /// </summary>
+        /// <param name="rutaId">ID de la ruta</param>
+        /// <param name="transportistaId">ID del transportista</param>
+        /// <returns>Resultado de la operación</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpPost("reasignar-ruta/ruta/{rutaId:guid}/transportista/{transportistaId:guid}")]
-        public async Task<IActionResult> ReasignarRuta(Guid rutaId, Guid transportistaId)
+        public async Task<ActionResult> ReasignarRuta(Guid rutaId, Guid transportistaId)
         {
             await _enviosService.ReasignarRuta(rutaId, transportistaId);
 
@@ -177,8 +233,16 @@ namespace Back.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Crea una nueva ruta con un vehículo, transportista y paquetes.
+        /// </summary>
+        /// <param name="request">Datos para crear la ruta</param>
+        /// <returns>Resultado de la operación</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpPost("crear-ruta")]
-        public async Task<IActionResult> CrearRuta([FromBody] CrearRutaRequest request)
+        public async Task<ActionResult> CrearRuta([FromBody] CrearRutaRequest request)
         {
 
             await _rutasService.CrearRuta(request);
