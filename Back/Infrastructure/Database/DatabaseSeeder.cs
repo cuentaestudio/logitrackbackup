@@ -9,39 +9,46 @@ namespace Back.Infrastructure.Database
 
         private readonly LogiTrackDbContext _context;
 
-        public DatabaseSeeder(LogiTrackDbContext context)
+        private readonly IConfiguration _configuration;
+
+        public DatabaseSeeder(LogiTrackDbContext context, IConfiguration configuration)
         {
             this._context = context;
+            this._configuration = configuration;
+
         }
 
         public async Task SeedAsync()
         {
-            List<Operador> operadores = UsuarioGenerator.GenerarOperadores(20);
 
-            List<Supervisor> supervisores = UsuarioGenerator.GenerarSupervisores(20);
 
-            List<Transportista> transportistas = UsuarioGenerator.GenerarTransportistas(50);
+            DatabaseSeederConfiguration config = _configuration.GetSection("DatabaseSeederConfiguration").Get<DatabaseSeederConfiguration>() ?? new DatabaseSeederConfiguration();
+
+            List<Operador> operadores = UsuarioGenerator.GenerarOperadores(config.CantidadOperadores);
+
+            List<Supervisor> supervisores = UsuarioGenerator.GenerarSupervisores(config.CantidadSupervisores);
+
+            List<Transportista> transportistas = UsuarioGenerator.GenerarTransportistas(config.CantidadTransportistas);
 
 
             _context.Usuarios.AddRange([.. operadores, .. supervisores, .. transportistas]);
 
             _context.Sucursales.AddRange(new List<Sucursal>
             {
+                new Sucursal("Sucursal Quilmes", "Rivadavia 350", "Quilmes", "4253-1122"),
+                new Sucursal("Sucursal Morón", "9 de Julio 450", "Morón", "4483-5566"),
+                new Sucursal("Sucursal Ramos Mejía", "Av. de Mayo 200", "La Matanza", "4654-7788"),
+                new Sucursal("Sucursal Olivos", "Av. Maipú 2300", "Vicente López", "4799-3344"),
+                new Sucursal("Sucursal Tigre", "Cazón 1100", "Tigre", "4749-0011"),
+                new Sucursal("Sucursal Lanús", "25 de Mayo 150", "Lanús", "4241-9900")
 
-                new Sucursal("Sucursal Principal", "Calle", "Ciudad", "123456789"),
-                new Sucursal("Sucursal Secundaria", "Avenida", "Ciudad", "987654321"),
-                new Sucursal("Sucursal Secundaria", "Avenida", "Ciudad", "987654321"),
-                new Sucursal("Sucursal Secundaria", "Avenida", "Ciudad", "987654321"),
-                new Sucursal("Sucursal Secundaria", "Avenida", "Ciudad", "987654321"),
-                new Sucursal("Sucursal Secundaria", "Avenida", "Ciudad", "987654321"),
-                new Sucursal("Sucursal Secundaria", "Avenida", "Ciudad", "987654321")
             });
 
-            var vehiculos = PaquetesGenerator.GenerarVehiculos(20);
+            var vehiculos = PaquetesGenerator.GenerarVehiculos(config.CantidadVehiculos);
 
 
 
-            var paquetes = PaquetesGenerator.GenerarPaquetes(500);
+            var paquetes = PaquetesGenerator.GenerarPaquetes(config.CantidadPaquetes);
 
 
             var rutas = RutasGenerator.GenerarRutas(paquetes, transportistas, vehiculos);
@@ -230,9 +237,14 @@ namespace Back.Infrastructure.Database
             }
 
         }
+    }
 
-        public static void FinalizarRuta(Ruta ruta)
-        {
-        }
+    public class DatabaseSeederConfiguration
+    {
+        public int CantidadTransportistas { get; set; } = 50;
+        public int CantidadOperadores { get; set; } = 20;
+        public int CantidadSupervisores { get; set; } = 20;
+        public int CantidadVehiculos { get; set; } = 20;
+        public int CantidadPaquetes { get; set; } = 150;
     }
 }
