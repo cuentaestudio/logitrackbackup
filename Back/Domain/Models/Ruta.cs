@@ -84,6 +84,11 @@ namespace Back.Domain.Models
             RazonCancelacion = razon;
             FinalizadoEn = DateTimeOffset.UtcNow;
 
+            foreach (var paquete in Paquetes)
+            {
+                paquete.VolverASucursal();
+            }
+
             Vehiculo.MarcarDisponible();
         }
 

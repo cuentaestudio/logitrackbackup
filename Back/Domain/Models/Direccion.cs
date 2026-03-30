@@ -11,7 +11,6 @@ namespace Back.Domain.Models
         public string? Referencia { get; set; }
         public Ubicacion? Ubicacion { get; set; }
 
-
         private Direccion()
         {
             
