@@ -18,7 +18,7 @@ namespace Back.Domain.Models
         public double Peso { get; set; }
         public double Altura { get; set; }
         public double Ancho { get; set; }
-
+        public float Prioridad { get; set; }
         public DateTime CreadoEn { get; init; } = DateTime.UtcNow;
         public PaqueteStatus Status { get; private set; } = PaqueteStatus.EnSucursal;
         public Cliente Remitente { get; private set; }
@@ -33,18 +33,19 @@ namespace Back.Domain.Models
         {
         }
 
-        public Paquete(double peso, double altura, double ancho, Cliente origen, Cliente destino, string? descripcion)
+        public Paquete(double peso, double altura, double ancho, Cliente origen, Cliente destino, float prioridad, string? descripcion)
         {
             Peso = peso;
             Altura = altura;
             Ancho = ancho;
+            Prioridad = prioridad;
             Remitente = origen;
             Destinatario = destino;
             Descripcion = descripcion;
         }
 
-        public Paquete(string codigoSeguimiento, double peso, double altura, double ancho, Cliente origen, Cliente destino, string? descripcion)
-            : this(peso, altura, ancho, origen, destino, descripcion)
+        public Paquete(string codigoSeguimiento, double peso, double altura, double ancho, Cliente origen, Cliente destino, float prioridad,string? descripcion)
+            : this(peso, altura, ancho, origen, destino, prioridad, descripcion)
         {
             CodigoSeguimiento = codigoSeguimiento;
         }

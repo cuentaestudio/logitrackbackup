@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Back.Infrastructure.Database.Repositories;
 
 using System.Reflection;
+using Microsoft.Extensions.ML;
+using Back.Application.Abstractions;
+using Back.Ml.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +23,11 @@ builder.Services.AddSwaggerGen(options =>
     options.IncludeXmlComments(xmlPath);
 });
 
+
+// Registrar el PredictionEnginePool
+builder.Services.AddPredictionEnginePool<PaqueteData, PrioridadPrediction>()
+    .FromFile("ML/Models/prioridad_model.zip");
+builder.Services.AddScoped<IMLPrioridadPrediction, MLNetPrioridadService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

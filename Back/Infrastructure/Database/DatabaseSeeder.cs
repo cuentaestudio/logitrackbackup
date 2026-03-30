@@ -46,16 +46,13 @@ namespace Back.Infrastructure.Database
 
             var vehiculos = PaquetesGenerator.GenerarVehiculos(config.CantidadVehiculos);
 
-
-
             var paquetes = PaquetesGenerator.GenerarPaquetes(config.CantidadPaquetes);
-
 
             var rutas = RutasGenerator.GenerarRutas(paquetes, transportistas, vehiculos);
 
             RutaRandomizerManager.Randomizar(rutas);
 
-
+            _context.Paquetes.AddRange([..PaquetesGenerator.GenerarPaquetes(20)]);
             _context.Rutas.AddRange(rutas);
 
             await _context.SaveChangesAsync();
@@ -83,6 +80,31 @@ namespace Back.Infrastructure.Database
             "Castillo", "Romero", "Méndez", "Guzmán", "Álvarez", "Moreno", "Ibarra", "Rojas",
             "Ortega", "Vargas", "Mendoza", "Silva", "Farías", "Acosta", "Ríos", "Benítez"
         };
+
+
+        static readonly List<string> municipios = new List<string>
+{
+    "Almirante Brown", "Avellaneda", "Bahía Blanca", "Berazategui", "Berisso",
+    "Campana", "Cañuelas", "Chivilcoy", "Escobar", "Esteban Echeverría",
+    "Ezeiza", "Florencio Varela", "General Pueyrredón", "General Rodríguez", "General San Martín",
+    "Hurlingham", "Ituzaingó", "José C. Paz", "Junín", "La Matanza",
+    "La Plata", "Lanús", "Lomas de Zamora", "Luján", "Malvinas Argentinas",
+    "Merlo", "Moreno", "Morón", "Olavarría", "Pilar",
+    "Quilmes", "San Fernando", "San Isidro", "San Miguel", "San Nicolás",
+    "San Vicente", "Tandil", "Tigre", "Tres de Febrero", "Vicente López",
+    "Zárate", "Córdoba Capital", "Río Cuarto", "Villa María", "Villa Carlos Paz",
+    "San Francisco", "Alta Gracia", "Río Tercero", "Bell Ville", "La Calera",
+    "Rosario", "Santa Fe Capital", "Rafaela", "Venado Tuerto", "Reconquista",
+    "Santo Tomé", "Villa Constitución", "Esperanza", "Granadero Baigorria", "San Lorenzo",
+    "Mendoza Capital", "Guaymallén", "Godoy Cruz", "Las Heras", "Maipú",
+    "San Rafael", "Luján de Cuyo", "San Martín", "Rivadavia", "Tunuyán",
+    "San Miguel de Tucumán", "Yerba Buena", "Tafí Viejo", "Concepción", "Banda del Río Salí",
+    "Salta Capital", "San Ramón de la Nueva Orán", "Tartagal", "General Güemes", "Rosario de la Frontera",
+    "San Salvador de Jujuy", "San Pedro de Jujuy", "Palpalá", "Perico", "Libertador General San Martín",
+    "Resistencia", "Presidencia Roque Sáenz Peña", "Villa Ángela", "Charata", "Fontana",
+    "Posadas", "Oberá", "Eldorado", "Puerto Iguazú", "Apóstoles",
+    "Corrientes Capital", "Goya", "Paso de los Libres", "Curuzú Cuatiá", "Mercedes"
+};
 
 
         private static List<string> calles = new List<string>
@@ -127,7 +149,7 @@ namespace Back.Infrastructure.Database
             return new Cliente(
                 nombres[_random.Next(nombres.Count)],
                 apellidos[_random.Next(apellidos.Count)],
-                new Direccion(calles[_random.Next(calles.Count)] + " " + _random.Next(100, 999), "Springfield", "12345", null, CoordenadasGenerator.GenerarCoodenadasEnRadio(BuenosAires, 150))
+                new Direccion(calles[_random.Next(calles.Count)] + " " + _random.Next(100, 999), municipios[_random.Next(municipios.Count)], _random.Next(100, 9999).ToString(), null, CoordenadasGenerator.GenerarCoodenadasEnRadio(BuenosAires, 150))
             );
         }
 
@@ -174,9 +196,15 @@ namespace Back.Infrastructure.Database
 
             for (int i = 0; i < count; i++)
             {
-
-                Paquete paquete = new Paquete(_random.NextDouble() * 20 + 0.5, _random.Next(10, 100), _random.Next(10, 100), GenerarCliente(), GenerarCliente(), descripciones[_random.Next(descripciones.Count)]);
-
+                Paquete paquete = new Paquete(
+                    _random.NextDouble() * 20 + 0.5,
+                    _random.Next(10, 100),
+                    _random.Next(10, 100),
+                    GenerarCliente(),
+                    GenerarCliente(),
+                    PrioridadCalculator.CalcularPrioridad(_random.NextDouble() * 20 + 0.5, GenerarCliente().Direccion.Ubicacion!, false), // Prioridad calculada
+                    descripciones[_random.Next(descripciones.Count)]
+                );
 
                 result.Add(paquete);
             }
@@ -242,21 +270,31 @@ namespace Back.Infrastructure.Database
         {
             var decision = _random.Next(0, 100);
 
-            if (decision < 10) // 10% chance to cancel the route
+            // 1. Probabilidad de que NO SUCEDA NADA (ej. 15%)
+            if (decision < 15)
+            {
+                // La ruta queda en su estado actual (creada/pendiente)
+                return;
+            }
+
+            // 2. Probabilidad de CANCELAR (10%)
+            if (decision < 25) // De 15 a 25
             {
                 ruta.Cancelar("Cancelación aleatoria por simulación");
                 return;
             }
 
-            // Start the route to put packages in transit
+            // A partir de aquí, la ruta SIEMPRE se inicia
             ruta.Iniciar();
 
-            if (decision < 30) // 20% chance to stay in progress with all packages in transit
+            // 3. Probabilidad de quedar EN TRÁNSITO sin entregas (20%)
+            if (decision < 45) // De 25 a 45
             {
                 return;
             }
 
-            if (decision < 80) // 50% chance to deliver some packages
+            // 4. Probabilidad de ENTREGA PARCIAL (40%)
+            if (decision < 85) // De 45 a 85
             {
                 var paquetesAEntregar = ruta.Paquetes.Take(_random.Next(1, ruta.Paquetes.Count)).ToList();
                 foreach (var p in paquetesAEntregar)
@@ -264,7 +302,8 @@ namespace Back.Infrastructure.Database
                     ruta.EntregarPaquete(p.Id);
                 }
             }
-            else // 20% chance to complete everything
+            // 5. Probabilidad de ENTREGA TOTAL (15%)
+            else // De 85 a 100
             {
                 var paquetesIds = ruta.Paquetes.Select(p => p.Id).ToList();
                 foreach (var id in paquetesIds)
@@ -272,7 +311,6 @@ namespace Back.Infrastructure.Database
                     ruta.EntregarPaquete(id);
                 }
             }
-
         }
     }
 
@@ -306,4 +344,179 @@ namespace Back.Infrastructure.Database
             return new Ubicacion(ubicacion.Latitud + deltaLat, ubicacion.Longitud + deltaLon);
         }
     }
+
+
+
+    public static class UsuarioGenerator
+    {
+
+
+        private static List<string> nombres = new List<string>
+        {
+            "Juan",
+            "María",
+            "Carlos",
+            "Ana",
+            "Luis",
+            "Sofía",
+            "Diego",
+            "Valentina",
+            "Matías",
+            "Camila",
+            "Federico",
+            "Lucía",
+            "Martín",
+            "Isabella",
+            "Santiago",
+            "Alejandro",
+            "Beatriz",
+            "Daniel",
+            "Elena",
+            "Facundo",
+            "Gabriela",
+            "Hugo",
+            "Irene",
+            "Javier",
+            "Karina",
+            "Leonardo",
+            "Mónica",
+            "Nicolás",
+            "Olivia",
+            "Pablo",
+            "Raquel",
+            "Sebastián",
+            "Teresa",
+            "Ulises",
+            "Victoria",
+
+            "Roberto",
+        };
+
+        private static List<string> apellidos = new List<string>
+        {
+            "Pérez",
+            "Gómez",
+            "Rodríguez",
+            "Martínez",
+            "López",
+            "Fernández",
+            "Díaz",
+            "Morales",
+            "Castro",
+            "Ortiz",
+            "Sánchez",
+            "Torres",
+            "Ramírez",
+            "Flores",
+            "Herrera",
+            "García",
+            "Pellegrini",
+            "Sarmiento",
+            "Vázquez",
+            "Blanco",
+            "Ramos",
+            "Ruiz",
+            "Medina",
+            "Suárez",
+            "Castillo",
+            "Romero",
+            "Méndez",
+            "Guzmán",
+            "Álvarez",
+            "Moreno"
+
+        };
+
+        static List<string> emailProviders = new List<string>
+    {
+        "gmail.com",
+        "hotmail.com",
+        "yahoo.com",
+        "logitrack.com"
+    };
+
+        private static readonly Random random = new Random();
+        public static Supervisor GenerateSupervisor(string nombre, string apellido, string email, string password, string dni)
+        {
+            return new Supervisor(nombre, apellido, email, password, dni);
+        }
+
+        public static Operador GenerateOperador(string nombre, string apellido, string email, string password, string dni)
+        {
+            return new Operador(nombre, apellido, email, password, dni);
+        }
+
+        public static Transportista GenerateTransportista(string nombre, string apellido, string email, string password, string dni, string licencia)
+        {
+            return new Transportista(nombre, apellido, email, password, dni, licencia);
+        }
+
+        public static List<Transportista> GenerarTransportistas(int count)
+        {
+            var result = new List<Transportista>();
+
+            for (int i = 0; i < count; i++)
+            {
+                var nombre = nombres[random.Next(nombres.Count)];
+                var apellido = apellidos[random.Next(apellidos.Count)];
+
+                result.Add(new Transportista(
+                    nombre,
+                    apellido,
+                    $"transportista{i + 1}@logitrack.com",
+                    PasswordHasher.HashPassword($"kjkszpj1234"),
+                    $"{random.Next(10000000, 99999999)}",
+                    $"LIC-{random.Next(1000, 9999)}"
+                ));
+            }
+
+            return result;
+        }
+
+        public static List<Operador> GenerarOperadores(int count)
+        {
+            var result = new List<Operador>();
+
+            for (int i = 0; i < count; i++)
+            {
+                var nombre = nombres[random.Next(nombres.Count)];
+                var apellido = apellidos[random.Next(apellidos.Count)];
+
+                result.Add(new Operador(
+                    nombre,
+                    apellido,
+                    $"operador{i + 1}@logitrack.com",
+                    PasswordHasher.HashPassword($"kjkszpj1234"),
+                    $"{random.Next(10000000, 99999999)}"
+                ));
+            }
+
+            return result;
+        }
+
+
+        public static List<Supervisor> GenerarSupervisores(int count)
+        {
+            var result = new List<Supervisor>();
+
+            for (int i = 0; i < count; i++)
+            {
+                var nombre = nombres[random.Next(nombres.Count)];
+                var apellido = apellidos[random.Next(apellidos.Count)];
+
+
+                result.Add(new Supervisor(
+                    nombre,
+                    apellido,
+                    $"supervisor{i + 1}@logitrack.com",
+                    PasswordHasher.HashPassword($"kjkszpj1234"),
+                    $"{random.Next(10000000, 99999999)}"
+                ));
+            }
+
+            return result;
+        }
+    }
+
+
 }

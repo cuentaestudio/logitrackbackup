@@ -1,7 +1,9 @@
+using Back.Application.Abstractions;
 using Back.Application.Util;
 using Back.Controllers;
 using Back.Domain.Models;
 using Back.Domain.Repositories;
+using Back.Infrastructure.Database;
 
 namespace Back.Application.Services
 {
@@ -10,9 +12,12 @@ namespace Back.Application.Services
         private readonly IEnviosRepository _enviosRepository;
         private readonly IUserRepository _userRepository;
         private readonly IRutasRepository _rutasRepository;
+        private readonly IMLPrioridadPrediction _prediction;
 
-        public EnviosService(IEnviosRepository enviosRepository, IUserRepository userRepository, IRutasRepository rutasRepository)
+        public EnviosService(IEnviosRepository enviosRepository, IUserRepository userRepository, IRutasRepository rutasRepository, IMLPrioridadPrediction prediction)
         {
+
+            _prediction = prediction;
             _rutasRepository = rutasRepository;
             _enviosRepository = enviosRepository;
             _userRepository = userRepository;
@@ -21,12 +26,21 @@ namespace Back.Application.Services
 
         public async Task RegistrarPaquete(RegistrarPaqueteRequest request)
         {
+
+            Ubicacion destino = CoordenadasGenerator.GenerarCoodenadasEnRadio(PrioridadCalculator.sucursal, 200000); // Genera coordenadas aleatorias dentro de un radio de 50km desde la sucursal
+
             var paquete = new Paquete(
                 request.Peso,
                 0,
                 0,
                 new Cliente(request.Remitente.Nombre, request.Remitente.Apellido, new Direccion(request.Remitente.Direccion, request.Remitente.Localidad, request.Remitente.CP)),
                 new Cliente(request.Destinatario.Nombre, request.Destinatario.Apellido, new Direccion(request.Destinatario.Direccion, request.Destinatario.Localidad, request.Destinatario.CP)),
+                (await _prediction.Predecir(new PaqueteData
+                {
+                    Distancia = DistanciasService.CalcularDistanciaDeSucursalADestino(destino),
+                    Peso = float.Parse(request.Peso.ToString()),
+                    EsReentrega = false ? 1 : 0
+                })).Prioridad,
                 request.Comentarios
             );
 
