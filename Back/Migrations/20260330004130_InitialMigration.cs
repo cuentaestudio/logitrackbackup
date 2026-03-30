@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Back.Infrastructure.Database.Migrations
+namespace Back.Migrations
 {
     /// <inheritdoc />
     public partial class InitialMigration : Migration
@@ -107,12 +107,16 @@ namespace Back.Infrastructure.Database.Migrations
                     Remitente_Direccion_Ciudad = table.Column<string>(type: "text", nullable: false),
                     Remitente_Direccion_CP = table.Column<string>(type: "text", nullable: false),
                     Remitente_Direccion_Referencia = table.Column<string>(type: "text", nullable: true),
+                    Remitente_Ubicacion_Latitud = table.Column<double>(type: "double precision", nullable: true),
+                    Remitente_Ubicacion_Longitud = table.Column<double>(type: "double precision", nullable: true),
                     Destinatario_Nombre = table.Column<string>(type: "text", nullable: false),
                     Destinatario_Apellido = table.Column<string>(type: "text", nullable: false),
                     Destinatario_Direccion_Calle = table.Column<string>(type: "text", nullable: false),
                     Destinatario_Direccion_Ciudad = table.Column<string>(type: "text", nullable: false),
                     Destinatario_Direccion_CP = table.Column<string>(type: "text", nullable: false),
                     Destinatario_Direccion_Referencia = table.Column<string>(type: "text", nullable: true),
+                    Destinatario_Ubicacion_Latitud = table.Column<double>(type: "double precision", nullable: true),
+                    Destinatario_Ubicacion_Longitud = table.Column<double>(type: "double precision", nullable: true),
                     Descripcion = table.Column<string>(type: "text", nullable: true),
                     RazonCancelacion = table.Column<string>(type: "text", nullable: true),
                     RutaId = table.Column<Guid>(type: "uuid", nullable: true)

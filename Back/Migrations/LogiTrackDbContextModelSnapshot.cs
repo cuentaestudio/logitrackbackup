@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Back.Infrastructure.Database.Migrations
+namespace Back.Migrations
 {
     [DbContext(typeof(LogiTrackDbContext))]
     partial class LogiTrackDbContextModelSnapshot : ModelSnapshot

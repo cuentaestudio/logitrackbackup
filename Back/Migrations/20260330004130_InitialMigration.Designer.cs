@@ -9,11 +9,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Back.Infrastructure.Database.Migrations
+namespace Back.Migrations
 {
     [DbContext(typeof(LogiTrackDbContext))]
-    [Migration("20260330001334_CoordendasEnCliente")]
-    partial class CoordendasEnCliente
+    [Migration("20260330004130_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
