@@ -12,12 +12,9 @@ namespace Back.Application.Services
         private readonly IEnviosRepository _enviosRepository;
         private readonly IUserRepository _userRepository;
         private readonly IRutasRepository _rutasRepository;
-        private readonly IMLPrioridadPrediction _prediction;
 
-        public EnviosService(IEnviosRepository enviosRepository, IUserRepository userRepository, IRutasRepository rutasRepository, IMLPrioridadPrediction prediction)
+        public EnviosService(IEnviosRepository enviosRepository, IUserRepository userRepository, IRutasRepository rutasRepository)
         {
-
-            _prediction = prediction;
             _rutasRepository = rutasRepository;
             _enviosRepository = enviosRepository;
             _userRepository = userRepository;

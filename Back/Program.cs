@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Back.Infrastructure.Database.Repositories;
 
 using System.Reflection;
-using Microsoft.Extensions.ML;
-using Back.Application.Abstractions;
-using Back.Ml.Service;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,10 +24,6 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 
-// Registrar el PredictionEnginePool
-builder.Services.AddPredictionEnginePool<PaqueteData, PrioridadPrediction>()
-    .FromFile("./ML/Models/prioridad_model.zip");
-builder.Services.AddScoped<IMLPrioridadPrediction, MLNetPrioridadService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -60,13 +56,42 @@ builder.Services.AddScoped<DatabaseSeeder>();
 builder.Services.AddScoped<IUserRepository, UsuariosRepository>().AddScoped<IEnviosRepository, EnviosRepository>().AddScoped<IVehiculoRepository, VehiculosRepository>().AddScoped<IRutasRepository, RutasRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Configurar autenticación JWT
+var jwtSecretKey = "Grupo8SuperSecretKeyWithAtLeast32Characters";
+var key = Encoding.ASCII.GetBytes(jwtSecretKey);
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = true,
+            ValidIssuer = "LogiTrack",
+            ValidateAudience = true,
+            ValidAudience = "LogiTrack",
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 
 var app = builder.Build();
 
 // Habilitar CORS
 app.UseCors("AllowAll");
+
+// Autenticación y autorización
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
@@ -76,7 +101,7 @@ app.UseSwaggerUI();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    
+
     var context = services.GetRequiredService<LogiTrackDbContext>();
     // 1. Esto CREA las tablas basadas en tus clases C#
     await context.Database.MigrateAsync();
@@ -84,7 +109,7 @@ using (var scope = app.Services.CreateScope())
     // 2. Esto CARGA los datos iniciales
 
     var configuration = services.GetRequiredService<IConfiguration>();
-    
+
     if (configuration.GetValue<bool>("EnableDatabaseSeeder"))
     {
 

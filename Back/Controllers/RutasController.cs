@@ -124,16 +124,15 @@ namespace Back.Controllers
         /// </summary>
         /// <returns>Historial de rutas</returns>
         /// 
-        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpGet("historial")]
+        [Authorize]
         public async Task<ActionResult<List<Ruta>>> GetHistorialRutas()
         {
+            Console.WriteLine("holaa");
 
-
-            Console.Write(User ?.Identity?.Name);
-            Console.Write(User.ToString());
+            HttpContext.User.Claims.ToList().ForEach(c => Console.WriteLine($"Claim: {c.Type} - {c.Value}"));
 
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
