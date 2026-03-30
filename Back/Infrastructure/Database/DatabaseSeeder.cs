@@ -20,16 +20,16 @@ namespace Back.Infrastructure.Database
 
         public async Task SeedAsync()
         {
-
-
             DatabaseSeederConfiguration config = _configuration.GetSection("DatabaseSeederConfiguration").Get<DatabaseSeederConfiguration>() ?? new DatabaseSeederConfiguration();
 
+            // Generar usuarios específicos (establecidos)
+            var usuariosEspecificos = UsuarioGenerator.GenerarUsuariosEspecificos();
+            _context.Usuarios.AddRange(usuariosEspecificos);
+
+            // Generar usuarios aleatorios adicionales
             List<Operador> operadores = UsuarioGenerator.GenerarOperadores(config.CantidadOperadores);
-
             List<Supervisor> supervisores = UsuarioGenerator.GenerarSupervisores(config.CantidadSupervisores);
-
             List<Transportista> transportistas = UsuarioGenerator.GenerarTransportistas(config.CantidadTransportistas);
-
 
             _context.Usuarios.AddRange([.. operadores, .. supervisores, .. transportistas]);
 
@@ -44,6 +44,11 @@ namespace Back.Infrastructure.Database
 
             });
 
+            // Generar vehículos específicos (establecidos)
+            var vehiculosEspecificos = PaquetesGenerator.GenerarVehiculosEspecificos();
+            _context.Vehiculos.AddRange(vehiculosEspecificos);
+
+            // Generar vehículos aleatorios adicionales
             var vehiculos = PaquetesGenerator.GenerarVehiculos(config.CantidadVehiculos);
 
             var paquetes = PaquetesGenerator.GenerarPaquetes(config.CantidadPaquetes);
@@ -56,9 +61,13 @@ namespace Back.Infrastructure.Database
             var paquetesEspecificos = PaquetesGenerator.GenerarPaquetesEspecificos();
             _context.Paquetes.AddRange(paquetesEspecificos);
 
-            if (transportistas.Any() && vehiculos.Any())
+            // Asignar ruta específica al transportista luis.lopez con vehículo específico
+            var transportistaLuis = usuariosEspecificos.FirstOrDefault(u => u.Email == "luis.lopez@logitrack.com") as Transportista;
+            var vehiculoEspecifico = vehiculosEspecificos.FirstOrDefault(v => v.Patente == "ABC123"); // Usar el primer vehículo específico
+
+            if (transportistaLuis != null && vehiculoEspecifico != null)
             {
-                var rutaEspecifica = new Ruta(transportistas.First(), vehiculos.Last());
+                var rutaEspecifica = new Ruta(transportistaLuis, vehiculoEspecifico);
                 rutaEspecifica.AgregarPaquetes(paquetesEspecificos.Where(p => p.EstaEnSucursal).ToList());
                 rutas.Add(rutaEspecifica);
             }
@@ -175,6 +184,29 @@ namespace Back.Infrastructure.Database
                 var marca = marcas[_random.Next(marcas.Count)];
                 var capacidad = _random.Next(500, 2000);
 
+                result.Add(new Vehiculo(patente, marca, capacidad));
+            }
+
+            return result;
+        }
+
+        public static List<Vehiculo> GenerarVehiculosEspecificos()
+        {
+            var result = new List<Vehiculo>();
+            
+            var vehiculosData = new List<(string patente, string marca, int capacidad)>
+            {
+                ("ABC123", "Ford", 1500),
+                ("DEF456", "Chevrolet", 1200),
+                ("GHI789", "Toyota", 1800),
+                ("JKL012", "Renault", 1000),
+                ("MNO345", "Volkswagen", 1600),
+                ("PQR678", "Ford", 1400),
+                ("STU901", "Chevrolet", 1300)
+            };
+
+            foreach (var (patente, marca, capacidad) in vehiculosData)
+            {
                 result.Add(new Vehiculo(patente, marca, capacidad));
             }
 
@@ -579,6 +611,49 @@ namespace Back.Infrastructure.Database
 
             return result;
         }
+
+        public static List<Usuario> GenerarUsuariosEspecificos()
+        {
+            var result = new List<Usuario>();
+            
+            var usuariosData = new List<(string nombre, string apellido, string rol)>
+            {
+                ("juan", "perez", "Operador"),
+                ("maria", "gomez", "Operador"),
+                ("carlos", "rodriguez", "Supervisor"),
+                ("ana", "martinez", "Supervisor"),
+                ("luis", "lopez", "Transportista"),
+                ("sofia", "fernandez", "Transportista")
+            };
+
+            foreach (var (nombre, apellido, rol) in usuariosData)
+            {
+                string email = $"{nombre}.{apellido}@logitrack.com";
+                string password = "kjkszpj1234";
+                
+                Usuario usuario;
+                string dni = random.Next(10000000, 99999999).ToString();
+                switch (rol)
+                {
+                    case "Operador":
+                        usuario = new Operador(nombre, apellido, email, PasswordHasher.HashPassword(password), dni);
+                        break;
+                    case "Supervisor":
+                        usuario = new Supervisor(nombre, apellido, email, PasswordHasher.HashPassword(password), dni);
+                        break;
+                    case "Transportista":
+                        usuario = new Transportista(nombre, apellido, email, PasswordHasher.HashPassword(password), dni);
+                        break;
+                    default:
+                        continue;
+                }
+                
+                result.Add(usuario);
+            }
+
+            return result;
+        }
+
     }
 
 
