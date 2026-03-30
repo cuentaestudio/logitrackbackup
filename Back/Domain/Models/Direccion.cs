@@ -9,7 +9,7 @@ namespace Back.Domain.Models
         public string Ciudad { get; set; } = string.Empty;
         public string CP { get; set; } = string.Empty;
         public string? Referencia { get; set; }
-        // public Ubicacion? Ubicacion { get; set; }
+        public Ubicacion? Ubicacion { get; set; }
 
 
         private Direccion()
@@ -23,7 +23,7 @@ namespace Back.Domain.Models
             Ciudad = ciudad;
             CP = cp;
             Referencia = referencia;
-            // Ubicacion = ubicacion;
+            Ubicacion = ubicacion;
         }
     }
     [Owned]
@@ -31,6 +31,16 @@ namespace Back.Domain.Models
     {
         public double Latitud { get; set; }
         public double Longitud { get; set; }
+
+        private Ubicacion()
+        {
+        }
+
+        public Ubicacion(double latitud, double longitud)
+        {
+            Latitud = latitud;
+            Longitud = longitud;
+        }
     }
 
     [Owned]
@@ -39,6 +49,7 @@ namespace Back.Domain.Models
         public string Nombre { get; private set; } 
         public string Apellido { get; private set; }
         public Direccion Direccion { get; private set; }
+
 
         private Cliente()
         {

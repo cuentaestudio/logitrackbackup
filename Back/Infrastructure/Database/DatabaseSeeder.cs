@@ -64,6 +64,7 @@ namespace Back.Infrastructure.Database
 
     public static class PaquetesGenerator
     {
+        private static readonly Ubicacion BuenosAires = new Ubicacion(-34.6037, -58.3816);
         private static List<string> nombres = new List<string>
         {
             "Juan", "María", "Carlos", "Ana", "Luis", "Sofía", "Diego", "Valentina",
@@ -83,6 +84,42 @@ namespace Back.Infrastructure.Database
             "Ortega", "Vargas", "Mendoza", "Silva", "Farías", "Acosta", "Ríos", "Benítez"
         };
 
+
+        private static List<string> calles = new List<string>
+        {
+            "Avenida de Mayo", "9 de Julio", "Corrientes", "Rivadavia", "Belgrano",
+            "San Martín", "Santa Fe", "Callao", "Córdoba", "Leandro N. Alem",
+            "Paseo Colón", "Libertador", "Juan B. Justo", "Pueyrredón", "Jujuy",
+            "Entre Ríos", "Las Heras", "Alvear", "Quintana", "Sarmiento",
+            "Mitre", "Roca", "Urquiza", "Saavedra", "Moreno",
+            "Castelli", "Paso", "Larrea", "Azcuénaga", "Matheu",
+            "Alberti", "Hipólito Yrigoyen", "Florida", "Lavalle", "Esmeralda",
+            "Maipú", "Chacabuco", "Suipacha", "Reconquista", "25 de Mayo",
+            "Defensa", "Balcarce", "Bolívar", "Perú", "Chile",
+            "México", "Venezuela", "Estados Unidos", "Carlos Calvo", "Humberto 1°",
+            "San Juan", "Cochabamba", "Constitución", "Pavón", "Garay",
+            "Brasil", "Caseros", "Monteagudo", "Iguazú", "Uspallata",
+            "Almafuerte", "Pedro de Mendoza", "Regimiento de Patricios", "Montes de Oca", "Suárez",
+            "Olavarría", "Brandsen", "Pinzón", "Aristóbulo del Valle", "Wenceslao Villafañe",
+            "Benito Quinquela Martín", "Magallanes", "Rocha", "Mendoza", "Juramento",
+            "Echeverría", "Sucre", "La Pampa", "Triunvirato", "Olazábal",
+            "Blanco Encalada", "Monroe", "Roosevelt", "Congreso", "Ugarte",
+            "Quesada", "Iberá", "Guayra", "Campos Salles", "Manuela Pedraza",
+            "Juana Azurduy", "Crisólogo Larralde", "Núñez", "Comodoro Rivadavia", "Vilela",
+            "Paroissien", "García del Río", "San Isidro Labrador", "Pico", "Deheza",
+            "Arias", "Ramallo", "Correa", "Ruiz Huidobro", "Besares",
+            "Vedia", "General Paz", "Donado", "Holmberg", "Estomba",
+            "Tronador", "Plaza", "Melián", "Conesa", "Zapiola",
+            "Pinto", "Freire", "Conde", "Superí", "Capdevila",
+            "Bauness", "Bucarelli", "Andonaegui", "Barzana", "Mariano Acha",
+            "Lugones", "Miller", "Valdenegro", "Galván", "Constituyentes",
+            "Beiró", "Lope de Vega", "Segurola", "Chivilcoy", "Bahía Blanca",
+            "Joaquín V. González", "Mercedes", "Gualeguaychú", "Cuenca", "Campana",
+            "Llavallol", "Concordia", "Helguera", "Argerich", "Artigas",
+            "Bolivia", "Condarco", "Terrada", "Nazca", "Argerich"
+        };
+
+
         private static Random _random = new Random();
 
         public static Cliente GenerarCliente()
@@ -90,7 +127,7 @@ namespace Back.Infrastructure.Database
             return new Cliente(
                 nombres[_random.Next(nombres.Count)],
                 apellidos[_random.Next(apellidos.Count)],
-                new Direccion("Calle Falsa 123", "Springfield", "12345")
+                new Direccion(calles[_random.Next(calles.Count)] + " " + _random.Next(100, 999), "Springfield", "12345", null, CoordenadasGenerator.GenerarCoodenadasEnRadio(BuenosAires, 150))
             );
         }
 
@@ -246,5 +283,27 @@ namespace Back.Infrastructure.Database
         public int CantidadSupervisores { get; set; } = 20;
         public int CantidadVehiculos { get; set; } = 20;
         public int CantidadPaquetes { get; set; } = 150;
+    }
+
+    public class CoordenadasGenerator
+    {
+        private static Random rand = new Random();
+        public static Ubicacion GenerarCoodenadasEnRadio(Ubicacion ubicacion, double maxRadiusKm)
+        {
+
+            // 111km por grado de latitud
+            // 111 * cos(lat) para longitud (aprox 91km en BA)
+            double kgPerLat = 111.0;
+            double kgPerLon = 111.0 * Math.Cos(ubicacion.Latitud * Math.PI / 180);
+
+            // Generar desfase en KM
+            double theta = rand.NextDouble() * 2 * Math.PI;
+            double dist = maxRadiusKm * Math.Sqrt(rand.NextDouble());
+
+            double deltaLat = dist * Math.Sin(theta) / kgPerLat;
+            double deltaLon = dist * Math.Cos(theta) / kgPerLon;
+
+            return new Ubicacion(ubicacion.Latitud + deltaLat, ubicacion.Longitud + deltaLon);
+        }
     }
 }

@@ -37,10 +37,7 @@ namespace Back.Application.Services
                 throw new InvalidOperationException("El vehículo ya está asignado a una ruta activa.");
             }
 
-
-
             var paquetes = await _enviosRepository.GetPaquetesByIds(request.PaqueteIds);
-
 
             Usuario? user = await _userRepository.GetUsuarioById(request.TransportistaId);
 

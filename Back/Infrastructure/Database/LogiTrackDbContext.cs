@@ -30,6 +30,11 @@ namespace Back.Infrastructure.Database
 
                     r.OwnsOne(x => x.Direccion, d =>
                     {
+                        d.OwnsOne(x => x.Ubicacion, ubicacion =>
+                        {
+                            ubicacion.Property(u => u.Latitud).HasColumnName("Remitente_Ubicacion_Latitud");
+                            ubicacion.Property(u => u.Longitud).HasColumnName("Remitente_Ubicacion_Longitud");
+                        });   
                     });
                 });
 
@@ -38,8 +43,13 @@ namespace Back.Infrastructure.Database
                     d.Property(c => c.Nombre).HasColumnName("Destinatario_Nombre");
                     d.Property(c => c.Apellido).HasColumnName("Destinatario_Apellido");
 
-                    d.OwnsOne(x => x.Direccion, d =>
-           {
+                    d.OwnsOne(x => x.Direccion, dir =>
+                    {
+                        dir.OwnsOne(x => x.Ubicacion, ubicacion =>
+                        {
+                            ubicacion.Property(u => u.Latitud).HasColumnName("Destinatario_Ubicacion_Latitud");
+                            ubicacion.Property(u => u.Longitud).HasColumnName("Destinatario_Ubicacion_Longitud");
+                        });
                     });
                 });
             });

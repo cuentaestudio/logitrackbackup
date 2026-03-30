@@ -28,6 +28,7 @@ namespace Back.Domain.Models
             Id = Guid.NewGuid();
             Transportista = transportista;
             Vehiculo = vehiculo;
+            vehiculo.MarcarEnUso();
         }
 
 
