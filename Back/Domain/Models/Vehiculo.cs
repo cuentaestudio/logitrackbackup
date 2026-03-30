@@ -40,5 +40,11 @@ namespace Back.Domain.Models
 
             Estado = VehiculoEstado.EnUso;
         }
+
+
+        public void MarcarDisponible()
+        {
+            Estado = VehiculoEstado.Disponible;
+        }
     }
 }

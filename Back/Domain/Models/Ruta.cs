@@ -83,6 +83,8 @@ namespace Back.Domain.Models
             Estado = RutaStatus.Cancelada;
             RazonCancelacion = razon;
             FinalizadoEn = DateTimeOffset.UtcNow;
+
+            Vehiculo.MarcarDisponible();
         }
 
         public void Finalizar()
@@ -95,6 +97,8 @@ namespace Back.Domain.Models
 
             Estado = RutaStatus.Finalizada;
             FinalizadoEn = DateTimeOffset.UtcNow;
+
+            Vehiculo.MarcarDisponible();
         }
 
         public void ReasignarTransportista(Transportista nuevoTransportista)
