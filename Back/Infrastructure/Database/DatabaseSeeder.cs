@@ -52,6 +52,17 @@ namespace Back.Infrastructure.Database
 
             RutaRandomizerManager.Randomizar(rutas);
 
+            // Generar paquetes específicos y crear una ruta con ellos
+            var paquetesEspecificos = PaquetesGenerator.GenerarPaquetesEspecificos();
+            _context.Paquetes.AddRange(paquetesEspecificos);
+
+            if (transportistas.Any() && vehiculos.Any())
+            {
+                var rutaEspecifica = new Ruta(transportistas.First(), vehiculos.Last());
+                rutaEspecifica.AgregarPaquetes(paquetesEspecificos.Where(p => p.EstaEnSucursal).ToList());
+                rutas.Add(rutaEspecifica);
+            }
+
             _context.Paquetes.AddRange([..PaquetesGenerator.GenerarPaquetes(20)]);
             _context.Rutas.AddRange(rutas);
 
@@ -205,6 +216,58 @@ namespace Back.Infrastructure.Database
                     PrioridadCalculator.CalcularPrioridad(_random.NextDouble() * 20 + 0.5, GenerarCliente().Direccion.Ubicacion!, false), // Prioridad calculada
                     descripciones[_random.Next(descripciones.Count)]
                 );
+
+                result.Add(paquete);
+            }
+
+            return result;
+        }
+
+        public static List<Paquete> GenerarPaquetesEspecificos()
+        {
+            var result = new List<Paquete>();
+            
+            var paquetesData = new List<(string codigo, string estado, string descripcion)>
+            {
+                ("LOG-2024-001", "EnSucursal", "En espera de ser enviado"),
+                ("LOG-2024-002", "EnTransito", "En ruta de entrega"),
+                ("LOG-2024-003", "Entregado", "Ya fue entregado"),
+                ("LOG-2024-004", "Cancelado", "Cancelado por cliente"),
+                ("LOG-2024-005", "EnSucursal", "Pequeño documento"),
+                ("LOG-2024-006", "EnTransito", "Carga grande"),
+                ("LOG-2024-007", "Entregado", "Histórico")
+            };
+
+            foreach (var (codigo, estado, descripcion) in paquetesData)
+            {
+                Paquete paquete = new Paquete(
+                    codigo,
+                    _random.NextDouble() * 20 + 0.5,
+                    _random.Next(10, 100),
+                    _random.Next(10, 100),
+                    GenerarCliente(),
+                    GenerarCliente(),
+                    PrioridadCalculator.CalcularPrioridad(_random.NextDouble() * 20 + 0.5, GenerarCliente().Direccion.Ubicacion!, false),
+                    descripcion
+                );
+
+                // Establecer el estado del paquete
+                switch (estado)
+                {
+                    case "EnSucursal":
+                        // Estado por defecto
+                        break;
+                    case "EnTransito":
+                        paquete.EnTransito();
+                        break;
+                    case "Entregado":
+                        paquete.EnTransito();
+                        paquete.Entregar();
+                        break;
+                    case "Cancelado":
+                        paquete.Cancelar("Cancelado por cliente");
+                        break;
+                }
 
                 result.Add(paquete);
             }

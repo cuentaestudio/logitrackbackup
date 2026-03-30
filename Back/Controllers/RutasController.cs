@@ -131,6 +131,10 @@ namespace Back.Controllers
         public async Task<ActionResult<List<Ruta>>> GetHistorialRutas()
         {
 
+
+            Console.Write(User ?.Identity?.Name);
+            Console.Write(User.ToString());
+
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
             if (userId == null) return Unauthorized();

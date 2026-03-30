@@ -27,7 +27,7 @@ namespace Back.Application.Services
         public async Task RegistrarPaquete(RegistrarPaqueteRequest request)
         {
 
-            Ubicacion destino = CoordenadasGenerator.GenerarCoodenadasEnRadio(PrioridadCalculator.sucursal, 250); // Genera coordenadas aleatorias dentro de un radio de 50km desde la sucursal
+            // Ubicacion destino = CoordenadasGenerator.GenerarCoodenadasEnRadio(PrioridadCalculator.sucursal, 250); // Genera coordenadas aleatorias dentro de un radio de 50km desde la sucursal
 
             var paquete = new Paquete(
                 request.Peso,
@@ -35,12 +35,7 @@ namespace Back.Application.Services
                 0,
                 new Cliente(request.Remitente.Nombre, request.Remitente.Apellido, new Direccion(request.Remitente.Direccion, request.Remitente.Localidad, request.Remitente.CP)),
                 new Cliente(request.Destinatario.Nombre, request.Destinatario.Apellido, new Direccion(request.Destinatario.Direccion, request.Destinatario.Localidad, request.Destinatario.CP)),
-                (await _prediction.Predecir(new PaqueteData
-                {
-                    Distancia = DistanciasService.CalcularDistanciaDeSucursalADestino(destino),
-                    Peso = float.Parse(request.Peso.ToString()),
-                    EsReentrega = 0
-                })).Prioridad,
+                1,
                 request.Comentarios
             );
 
