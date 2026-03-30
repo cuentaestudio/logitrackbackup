@@ -86,8 +86,10 @@ namespace Back.Domain.Models
             RazonCancelacion = razon;
         }
 
-            public void VolverASucursal()
+        public void VolverASucursal()
         {
+            if(Status == PaqueteStatus.EnSucursal) return;
+
             if (Status != PaqueteStatus.EnTransito)
                 throw new InvalidOperationException("Solo se pueden volver a sucursal los paquetes que están en tránsito.");
 
