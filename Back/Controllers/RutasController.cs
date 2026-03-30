@@ -127,7 +127,12 @@ namespace Back.Controllers
         [HttpGet("historial")]
         public async Task<ActionResult<List<Ruta>>> GetHistorialRutas()
         {
-            var rutas = await _rutasRepository.GetHistorialRutas(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value is string userIdStr && Guid.TryParse(userIdStr, out var userId) ? userId : Guid.Empty);
+
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null) return Unauthorized();
+            
+            var rutas = await _rutasRepository.GetHistorialRutas(Guid.Parse(userId));
 
             return Ok(rutas);
         }
