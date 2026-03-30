@@ -1,4 +1,5 @@
 using Back.Application.Util;
+using Microsoft.EntityFrameworkCore;
 
 namespace Back.Domain.Models
 {
@@ -17,11 +18,11 @@ namespace Back.Domain.Models
         public double Peso { get; set; }
         public double Altura { get; set; }
         public double Ancho { get; set; }
-
+        public float Prioridad { get; set; }
         public DateTime CreadoEn { get; init; } = DateTime.UtcNow;
         public PaqueteStatus Status { get; private set; } = PaqueteStatus.EnSucursal;
-        public Cliente Remitente { get; set; }
-        public Cliente Destinatario { get; set; }
+        public Cliente Remitente { get; private set; }
+        public Cliente Destinatario { get; private set; }
         public string DestinatarioCompleto => $"{Destinatario.Nombre} {Destinatario.Apellido}";
         public string? Descripcion { get; set; } = string.Empty;
         public string? RazonCancelacion { get; private set; }
@@ -32,18 +33,19 @@ namespace Back.Domain.Models
         {
         }
 
-        public Paquete(double peso, double altura, double ancho, Cliente origen, Cliente destino, string? descripcion)
+        public Paquete(double peso, double altura, double ancho, Cliente origen, Cliente destino, float prioridad, string? descripcion)
         {
             Peso = peso;
             Altura = altura;
             Ancho = ancho;
+            Prioridad = prioridad;
             Remitente = origen;
             Destinatario = destino;
             Descripcion = descripcion;
         }
 
-        public Paquete(string codigoSeguimiento, double peso, double altura, double ancho, Cliente origen, Cliente destino, string? descripcion)
-            : this(peso, altura, ancho, origen, destino, descripcion)
+        public Paquete(string codigoSeguimiento, double peso, double altura, double ancho, Cliente origen, Cliente destino, float prioridad,string? descripcion)
+            : this(peso, altura, ancho, origen, destino, prioridad, descripcion)
         {
             CodigoSeguimiento = codigoSeguimiento;
         }
@@ -85,10 +87,25 @@ namespace Back.Domain.Models
             RazonCancelacion = razon;
         }
 
+        public void VolverASucursal()
+        {
+            if(Status == PaqueteStatus.EnSucursal) return;
+
+            if (Status != PaqueteStatus.EnTransito)
+                throw new InvalidOperationException("Solo se pueden volver a sucursal los paquetes que están en tránsito.");
+
+            Status = PaqueteStatus.EnSucursal;
+        }
+
         public void CambiarEstado(PaqueteStatus status)
         {
             Status = status;
         }
-    
+
+        public override string ToString()
+        {
+            return $"Paquete: {Id}, Código: {CodigoSeguimiento}, Peso: {Peso}, Altura: {Altura}, Ancho: {Ancho}, CreadoEn: {CreadoEn}, Status: {Status}, Remitente: {{ Nombre: {Remitente.Nombre}, Apellido: {Remitente.Apellido}, Direccion: {Remitente.Direccion.Calle}, {Remitente.Direccion.Ciudad} }}, Destinatario: {{ Nombre: {Destinatario.Nombre}, Apellido: {Destinatario.Apellido}, Direccion: {Destinatario.Direccion.Calle}, {Destinatario.Direccion.Ciudad} }}, Descripcion: {Descripcion}, RazonCancelacion: {RazonCancelacion}";
+        }
+
     }
 }

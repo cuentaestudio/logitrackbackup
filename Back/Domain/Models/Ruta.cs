@@ -28,6 +28,7 @@ namespace Back.Domain.Models
             Id = Guid.NewGuid();
             Transportista = transportista;
             Vehiculo = vehiculo;
+            vehiculo.MarcarEnUso();
         }
 
 
@@ -82,6 +83,13 @@ namespace Back.Domain.Models
             Estado = RutaStatus.Cancelada;
             RazonCancelacion = razon;
             FinalizadoEn = DateTimeOffset.UtcNow;
+
+            foreach (var paquete in Paquetes)
+            {
+                paquete.VolverASucursal();
+            }
+
+            Vehiculo.MarcarDisponible();
         }
 
         public void Finalizar()
@@ -94,6 +102,8 @@ namespace Back.Domain.Models
 
             Estado = RutaStatus.Finalizada;
             FinalizadoEn = DateTimeOffset.UtcNow;
+
+            Vehiculo.MarcarDisponible();
         }
 
         public void ReasignarTransportista(Transportista nuevoTransportista)

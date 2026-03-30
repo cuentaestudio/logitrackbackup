@@ -1,0 +1,55 @@
+name: CI LogiTrack (Build & Check)
+
+# Se ejecuta automáticamente al hacer push o pull request a la rama main, Dev o Test
+on:
+  push:
+    branches: [ "main", "Dev", "Test" ]
+  pull_request:
+    branches: [ "main", "Dev", "Test" ]
+
+jobs:
+
+  build-backend:
+    name: Build .NET API
+    runs-on: ubuntu-latest
+    steps:
+    - name: Descargar el código
+      uses: actions/checkout@v4
+
+    - name: Configurar .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restaurar dependencias
+      run: dotnet restore Back/Back.csproj
+
+    - name: Compilar proyecto
+      run: dotnet build Back/Back.csproj --configuration Release --no-restore
+    
+    - name: Ejecutar pruebas unitarias (.NET)
+      run: dotnet test Back/Back.csproj --no-build --verbosity normal
+
+  build-frontend:
+      name: Build React App
+      runs-on: ubuntu-latest
+      steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias de npm
+        working-directory: ./Front
+        run: npm install
+
+      - name: Compilar Frontend
+        working-directory: ./Front
+        run: npm run build
+      
+      - name: Ejecutar pruebas (React)
+        working-directory: ./Front
+        run: npm run test    

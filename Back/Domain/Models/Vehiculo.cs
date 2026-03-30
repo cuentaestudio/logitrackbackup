@@ -17,7 +17,7 @@ namespace Back.Domain.Models
         public VehiculoEstado Estado { get; private set; } = VehiculoEstado.Disponible;
 
         // Mantener Activo para compatibilidad
-        public bool Activo => Estado != VehiculoEstado.Suspendido;
+        public bool Activo => Estado == VehiculoEstado.Disponible;
 
         public void CambiarEstado(VehiculoEstado nuevoEstado) => Estado = nuevoEstado;
         public void Suspender() => Estado = VehiculoEstado.Suspendido;
@@ -31,6 +31,20 @@ namespace Back.Domain.Models
             Patente = patente;
             Marca = marca;
             CapacidadCarga = capacidadCarga;
+        }
+
+        public void MarcarEnUso()
+        {
+            if (Estado != VehiculoEstado.Disponible)
+                throw new InvalidOperationException("Solo se pueden marcar como en uso los vehículos disponibles.");
+
+            Estado = VehiculoEstado.EnUso;
+        }
+
+
+        public void MarcarDisponible()
+        {
+            Estado = VehiculoEstado.Disponible;
         }
     }
 }
