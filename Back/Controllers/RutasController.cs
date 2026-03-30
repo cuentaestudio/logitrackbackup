@@ -2,6 +2,7 @@ using Back.Application.Services;
 using Back.Domain.Models;
 using Back.Domain.Repositories;
 using Back.Infrastructure.Database;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Back.Controllers
@@ -122,6 +123,8 @@ namespace Back.Controllers
         /// Obtiene el historial de rutas del transportista logueado.
         /// </summary>
         /// <returns>Historial de rutas</returns>
+        /// 
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpGet("historial")]

@@ -26,7 +26,7 @@ builder.Services.AddSwaggerGen(options =>
 
 // Registrar el PredictionEnginePool
 builder.Services.AddPredictionEnginePool<PaqueteData, PrioridadPrediction>()
-    .FromFile(",/ML/Models/prioridad_model.zip");
+    .FromFile("./ML/Models/prioridad_model.zip");
 builder.Services.AddScoped<IMLPrioridadPrediction, MLNetPrioridadService>();
 
 builder.Services.AddControllers()
