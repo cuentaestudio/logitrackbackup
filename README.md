@@ -6,14 +6,6 @@ Bienvenido al repositorio de LogiTrack. Este sistema permite la gestión integra
 
 El sistema se encuentra desplegado y funcional para su evaluación.
 
-* **Frontend (Interfaz de Usuario):** # 🚚 LogiTrack - Sistema de Gestión Logística
-
-Bienvenido al repositorio oficial del Producto Mínimo Viable (MVP) de LogiTrack. Este sistema permite la gestión integral de paquetes, asignación de rutas y trazabilidad de envíos mediante una arquitectura moderna en la nube.
-
-## 🌐 Entornos de Prueba (Despliegue)
-
-El sistema se encuentra desplegado y funcional para su evaluación. Dado que el backend utiliza un servicio de escalado a cero (Scale-to-Zero), **la primera petición del día puede demorar hasta 50 segundos en responder** mientras el servidor se reactiva.
-
 * **Frontend (Interfaz de Usuario):** https://www.netlify.com/
 * **Backend (API REST):** https://render.com/
 * **Documentación API (Swagger):** https://logitrack-api-4d2k.onrender.com/swagger/index.html
