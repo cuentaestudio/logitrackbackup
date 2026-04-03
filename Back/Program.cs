@@ -131,8 +131,8 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Ocurrió un error durante la migración o el seeding de la base de datos.");
     }
 }
+Console.WriteLine($"Verificando modelo...");
 
-app.Run();// Verificar existencia del modelo de ML en ruta relativa para despliegue
 
 var modelPath = Path.Combine(AppContext.BaseDirectory, "ML", "Models", "prioridad_model.zip");
 if (File.Exists(modelPath))
@@ -143,3 +143,6 @@ else
 {
     Console.WriteLine("Advertencia: No se encontró el archivo del modelo de ML en la ruta esperada.");
 }
+
+
+app.Run();// Verificar existencia del modelo de ML en ruta relativa para despliegue
