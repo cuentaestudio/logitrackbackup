@@ -25,5 +25,9 @@
   <!-- Esto evita que te salgan advertencias amarillas en todo el código -->
   <NoWarn>$(NoWarn);1591</NoWarn> 
 </PropertyGroup>
-
+<ItemGroup>
+  <None Update="ML\Models\prioridad_model.zip">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+</ItemGroup>
 </Project>

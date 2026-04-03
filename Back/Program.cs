@@ -154,18 +154,17 @@ void PrintDirectoryTree(string path, string indent)
 Console.WriteLine("Estructura de carpetas desde la raíz del proyecto:");
 PrintDirectoryTree(AppContext.BaseDirectory, "");
 
-
-var model = @"./ML/Models/prioridad_model.zip";
-var modelPath = Path.Combine(@"./ML/Models/prioridad_model.zip");
-
-if (File.Exists(modelPath))
-{
-    Console.WriteLine($"Modelo de ML encontrado en: {modelPath}");
+// Esto obtiene la ruta de la carpeta donde se está ejecutando el binario
+string rootPath = AppContext.BaseDirectory;
+string modelz = Path.Combine(rootPath, "ML","Models", "prioridad_model.zip");
+if (File.Exists(modelz))
+{   
+    Console.WriteLine($"Modelo de ML encontrado en: {modelz}");
 }
 else
 {
     Console.WriteLine("Advertencia: No se encontró el archivo del modelo de ML en la ruta esperada.");
+    
 }
-
-
+ 
 app.Run();// Verificar existencia del modelo de ML en ruta relativa para despliegue
