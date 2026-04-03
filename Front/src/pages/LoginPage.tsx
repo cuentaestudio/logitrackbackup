@@ -20,9 +20,20 @@ import type { User, LoginCredentials } from '../types'
 
 interface LoginPageProps {
   onLogin: (user: User) => void
+  sessionExpired?: boolean
 }
 
-function LoginPage({ onLogin }: LoginPageProps) {
+const DEMO_PASSWORD = 'kjkszpj1234'
+const demoUsers = [
+  { label: 'Supervisor · Carlos', email: 'carlos.rodriguez@logitrack.com', color: 'error' as const },
+  { label: 'Supervisor · Ana', email: 'ana.martinez@logitrack.com', color: 'error' as const },
+  { label: 'Operador · Juan', email: 'juan.perez@logitrack.com', color: 'primary' as const },
+  { label: 'Operador · Maria', email: 'maria.gomez@logitrack.com', color: 'primary' as const },
+  { label: 'Transportista · Luis', email: 'luis.lopez@logitrack.com', color: 'success' as const },
+  { label: 'Transportista · Sofia', email: 'sofia.fernandez@logitrack.com', color: 'success' as const },
+]
+
+function LoginPage({ onLogin, sessionExpired = false }: LoginPageProps) {
   const showDemoUsers = import.meta.env.VITE_SHOW_DEMO_USERS === 'true'
   const navigate = useNavigate()
   const [credentials, setCredentials] = useState<LoginCredentials>({
@@ -71,7 +82,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
   }
 
   const fillDemo = (email: string) => {
-    setCredentials({ email, password: 'password123' })
+    setCredentials({ email, password: DEMO_PASSWORD })
     setError('')
   }
 
@@ -131,6 +142,12 @@ function LoginPage({ onLogin }: LoginPageProps) {
           {error && (
             <Alert severity="error" sx={{ mb: 2.5 }} onClose={() => setError('')}>
               {error}
+            </Alert>
+          )}
+
+          {!error && sessionExpired && (
+            <Alert severity="warning" sx={{ mb: 2.5 }}>
+              Tu sesión expiró por inactividad. Iniciá sesión nuevamente para continuar.
             </Alert>
           )}
 
@@ -200,34 +217,21 @@ function LoginPage({ onLogin }: LoginPageProps) {
               </Divider>
 
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5, textAlign: 'center' }}>
-                Clic en un rol para autocompletar · contraseña: <strong>password123</strong>
+                Clic en un usuario para autocompletar · contraseña: <strong>{DEMO_PASSWORD}</strong>
               </Typography>
 
               <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" useFlexGap>
-                <Chip
-                  label="Supervisor"
-                  color="error"
-                  variant="outlined"
-                  size="small"
-                  onClick={() => fillDemo('supervisor@logitrack.com')}
-                  sx={{ cursor: 'pointer', fontWeight: 600 }}
-                />
-                <Chip
-                  label="Operador"
-                  color="primary"
-                  variant="outlined"
-                  size="small"
-                  onClick={() => fillDemo('operador@logitrack.com')}
-                  sx={{ cursor: 'pointer', fontWeight: 600 }}
-                />
-                <Chip
-                  label="Transportista"
-                  color="success"
-                  variant="outlined"
-                  size="small"
-                  onClick={() => fillDemo('transportista@logitrack.com')}
-                  sx={{ cursor: 'pointer', fontWeight: 600 }}
-                />
+                {demoUsers.map((demoUser) => (
+                  <Chip
+                    key={demoUser.email}
+                    label={demoUser.label}
+                    color={demoUser.color}
+                    variant="outlined"
+                    size="small"
+                    onClick={() => fillDemo(demoUser.email)}
+                    sx={{ cursor: 'pointer', fontWeight: 600 }}
+                  />
+                ))}
               </Stack>
             </Box>
           )}
