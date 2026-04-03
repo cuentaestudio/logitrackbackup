@@ -134,7 +134,30 @@ using (var scope = app.Services.CreateScope())
 Console.WriteLine($"Verificando modelo...");
 
 
-var modelPath = Path.Combine(AppContext.BaseDirectory, "ML", "Models", "prioridad_model.zip");
+void PrintDirectoryTree(string path, string indent)
+{
+    try
+    {
+        foreach (var directory in Directory.GetDirectories(path))
+        {
+            var dirName = Path.GetFileName(directory);
+            Console.WriteLine($"{indent}└── {dirName}/");
+            PrintDirectoryTree(directory, indent + "    ");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"{indent}[Error accediendo a {path}: {ex.Message}]");
+    }
+}
+
+Console.WriteLine("Estructura de carpetas desde la raíz del proyecto:");
+PrintDirectoryTree(AppContext.BaseDirectory, "");
+
+
+var model = @"./ML/Models/prioridad_model.zip";
+var modelPath = Path.Combine(@"./ML/Models/prioridad_model.zip");
+
 if (File.Exists(modelPath))
 {
     Console.WriteLine($"Modelo de ML encontrado en: {modelPath}");
