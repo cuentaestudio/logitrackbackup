@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 using Back.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Back.Infrastructure.Database.Repositories;
-
 using System.Reflection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -13,17 +12,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSwaggerGen(options =>
-{
-    // 1. Obtener el nombre del archivo XML (suele ser NombreDeTuProyecto.xml)
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-
-    // 2. Decirle a Swagger que lo use
-    options.IncludeXmlComments(xmlPath);
-});
-
-
+// --- CONFIGURACIÓN DE SERVICIOS (Dependency Injection) ---
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -32,6 +21,19 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
+// Configuración de Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath)) 
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
+});
+
+// Configuración de CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -42,21 +44,23 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Base de Datos
 var connectionString = builder.Configuration.GetConnectionString("PostgresConnection");
-
-Console.WriteLine($"Connection String: {connectionString}"); // Agrega esta línea para verificar la cadena de conexión
-
-// Configurar EF Core con PostgreSQL
 builder.Services.AddDbContext<LogiTrackDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-builder.Services.AddScoped<AuthService>().AddScoped<EnviosService>().AddScoped<RutasService>();
+// Inyección de Dependencias de la Lógica de Negocio
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<EnviosService>();
+builder.Services.AddScoped<RutasService>();
 builder.Services.AddScoped<DatabaseSeeder>();
 
-builder.Services.AddScoped<IUserRepository, UsuariosRepository>().AddScoped<IEnviosRepository, EnviosRepository>().AddScoped<IVehiculoRepository, VehiculosRepository>().AddScoped<IRutasRepository, RutasRepository>();
+builder.Services.AddScoped<IUserRepository, UsuariosRepository>();
+builder.Services.AddScoped<IEnviosRepository, EnviosRepository>();
+builder.Services.AddScoped<IVehiculoRepository, VehiculosRepository>();
+builder.Services.AddScoped<IRutasRepository, RutasRepository>();
 
-builder.Services.AddEndpointsApiExplorer();
-// Configurar autenticación JWT
+// Configuración de Autenticación JWT
 var jwtSecretKey = "Grupo8SuperSecretKeyWithAtLeast32Characters";
 var key = Encoding.ASCII.GetBytes(jwtSecretKey);
 
@@ -83,40 +87,59 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-
 var app = builder.Build();
 
-// Habilitar CORS
+// --- CONFIGURACIÓN DEL PIPELINE DE PETICIONES (HTTP Request Pipeline) ---
+
+// 1. Swagger siempre disponible al inicio
+app.UseSwagger();
+app.UseSwaggerUI();
+
+// 2. Routing: Crucial para que CORS sepa a qué endpoint va la petición
+app.UseRouting();
+
+// 3. CORS: Debe ir después de Routing y ANTES de Auth
 app.UseCors("AllowAll");
 
-// Autenticación y autorización
+// 4. Seguridad: Autenticación antes que Autorización
 app.UseAuthentication();
 app.UseAuthorization();
 
+// 5. Mapeo de Controladores
 app.MapControllers();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+// --- TAREAS DE INICIO (Migraciones y Seed) ---
 
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-
-    var context = services.GetRequiredService<LogiTrackDbContext>();
-    // 1. Esto CREA las tablas basadas en tus clases C#
-    await context.Database.MigrateAsync();
-
-    // 2. Esto CARGA los datos iniciales
-
-    var configuration = services.GetRequiredService<IConfiguration>();
-
-    if (configuration.GetValue<bool>("EnableDatabaseSeeder"))
+    try 
     {
+        var context = services.GetRequiredService<LogiTrackDbContext>();
+        await context.Database.MigrateAsync();
 
-        var seeder = services.GetRequiredService<DatabaseSeeder>();
-
-        await seeder.SeedAsync();
+        var configuration = services.GetRequiredService<IConfiguration>();
+        if (configuration.GetValue<bool>("EnableDatabaseSeeder"))
+        {
+            var seeder = services.GetRequiredService<DatabaseSeeder>();
+            await seeder.SeedAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Ocurrió un error durante la migración o el seeding de la base de datos.");
     }
 }
 
-app.Run();
+app.Run();// Verificar existencia del modelo de ML en ruta relativa para despliegue
+
+var modelPath = Path.Combine(AppContext.BaseDirectory, "ML", "Models", "prioridad_model.zip");
+if (File.Exists(modelPath))
+{
+    Console.WriteLine($"Modelo de ML encontrado en: {modelPath}");
+}
+else
+{
+    Console.WriteLine("Advertencia: No se encontró el archivo del modelo de ML en la ruta esperada.");
+}
