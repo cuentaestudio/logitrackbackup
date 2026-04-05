@@ -18,13 +18,9 @@ import {
 } from '@mui/material'
 import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded'
 import { authService } from '../services/authService'
-import type { User, RegisterData, UserRole } from '../types'
+import type { RegisterData, UserRole } from '../types'
 
-interface RegisterPageProps {
-  onLogin: (user: User) => void
-}
-
-function RegisterPage({ onLogin }: RegisterPageProps) {
+function RegisterPage() {
   const nameRegex = /^[A-Za-zÀ-ÿ\s'-]+$/
   const navigate = useNavigate()
   const [formData, setFormData] = useState<RegisterData>({
@@ -124,12 +120,16 @@ function RegisterPage({ onLogin }: RegisterPageProps) {
     setLoading(true)
 
     try {
-      const user = await authService.register(formData)
-      if (user) {
-        onLogin(user)
-        navigate(user.role === 'transportista' ? '/transportista' : '/app')
+      const registered = await authService.register(formData)
+      if (registered) {
+        navigate('/login', {
+          state: {
+            registrationSuccess: true,
+            registeredEmail: formData.email,
+          },
+        })
       } else {
-        setGeneralError('El DNI o email ya están registrados, o las contraseñas no coinciden')
+        setGeneralError('No se pudo completar el registro')
       }
     } catch (err: any) {
       setGeneralError(err?.message || 'Error al registrarse')

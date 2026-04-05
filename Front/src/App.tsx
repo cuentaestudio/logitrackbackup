@@ -137,7 +137,7 @@ function App() {
         <Route
           path="/register"
           element={
-            user ? <Navigate to={user.role === 'transportista' ? '/transportista' : '/app'} /> : <RegisterPage onLogin={handleLogin} />
+            user ? <Navigate to={user.role === 'transportista' ? '/transportista' : '/app'} /> : <RegisterPage />
           }
         />
 

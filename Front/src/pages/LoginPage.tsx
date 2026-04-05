@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, type ComponentType } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Box,
   TextField,
@@ -15,6 +15,7 @@ import {
 } from '@mui/material'
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import LocalShippingIcon from '@mui/icons-material/LocalShipping'
+import ReCAPTCHA from 'react-google-recaptcha'
 import { authService } from '../services/authService'
 import type { User, LoginCredentials } from '../types'
 
@@ -23,7 +24,19 @@ interface LoginPageProps {
   sessionExpired?: boolean
 }
 
+interface LoginLocationState {
+  registrationSuccess?: boolean
+  registeredEmail?: string
+}
+
 const DEMO_PASSWORD = 'kjkszpj1234'
+const DEFAULT_RECAPTCHA_SITE_KEY = '6LdRraUsAAAAABDom6H8iyjAqSoigIn5qPgQXqfR'
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || DEFAULT_RECAPTCHA_SITE_KEY
+const RecaptchaWidget = ReCAPTCHA as unknown as ComponentType<{
+  sitekey: string
+  onChange: (token: string | null) => void
+  onExpired: () => void
+}>
 const demoUsers = [
   { label: 'Supervisor · Carlos', email: 'carlos.rodriguez@logitrack.com', color: 'error' as const },
   { label: 'Supervisor · Ana', email: 'ana.martinez@logitrack.com', color: 'error' as const },
@@ -34,12 +47,15 @@ const demoUsers = [
 ]
 
 function LoginPage({ onLogin, sessionExpired = false }: LoginPageProps) {
+  const location = useLocation()
   const showDemoUsers = import.meta.env.VITE_SHOW_DEMO_USERS === 'true'
   const navigate = useNavigate()
-  const [credentials, setCredentials] = useState<LoginCredentials>({
+  const locationState = location.state as LoginLocationState | null
+  const [credentials, setCredentials] = useState<Omit<LoginCredentials, 'recaptchaToken'>>({
     email: '',
     password: '',
   })
+  const [captchaToken, setCaptchaToken] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -66,19 +82,35 @@ function LoginPage({ onLogin, sessionExpired = false }: LoginPageProps) {
       return
     }
 
+    if (!captchaToken) {
+      setError('Completá el captcha para continuar')
+      setLoading(false)
+      return
+    }
+
     try {
-      const user = await authService.login(credentials)
+      const user = await authService.login({
+        email: credentials.email,
+        password: credentials.password,
+        recaptchaToken: captchaToken,
+      })
+
       if (user) {
         onLogin(user)
         navigate(user.role === 'transportista' ? '/transportista' : '/app')
       } else {
         setError('Email o contraseña incorrectos')
       }
-    } catch {
-      setError('Error al iniciar sesión')
+    } catch (err: any) {
+      setError(err?.message || 'Error al iniciar sesión')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleCaptchaChange = (token: string | null) => {
+    setCaptchaToken(token ?? '')
+    setError('')
   }
 
   const fillDemo = (email: string) => {
@@ -151,6 +183,12 @@ function LoginPage({ onLogin, sessionExpired = false }: LoginPageProps) {
             </Alert>
           )}
 
+          {!error && !sessionExpired && locationState?.registrationSuccess && (
+            <Alert severity="success" sx={{ mb: 2.5 }}>
+              Cuenta creada correctamente{locationState.registeredEmail ? ` para ${locationState.registeredEmail}` : ''}. Iniciá sesión para continuar.
+            </Alert>
+          )}
+
           <form onSubmit={handleSubmit} noValidate>
             <Stack spacing={2.5}>
               <TextField
@@ -173,6 +211,23 @@ function LoginPage({ onLogin, sessionExpired = false }: LoginPageProps) {
                 disabled={loading}
                 fullWidth
               />
+
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <Box
+                  sx={{
+                    transform: { xs: 'scale(0.85)', sm: 'scale(1)' },
+                    transformOrigin: 'center',
+                    height: { xs: 66, sm: 78 },
+                  }}
+                >
+                  <RecaptchaWidget
+                    sitekey={RECAPTCHA_SITE_KEY}
+                    onChange={handleCaptchaChange}
+                    onExpired={() => setCaptchaToken('')}
+                  />
+                </Box>
+              </Box>
+
               <Button
                 type="submit"
                 variant="contained"

@@ -21,6 +21,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs" />
+  </ItemGroup>
+
   <PropertyGroup>
   <GenerateDocumentationFile>true</GenerateDocumentationFile>
   <!-- Esto evita que te salgan advertencias amarillas en todo el código -->

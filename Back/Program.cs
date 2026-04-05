@@ -1,4 +1,5 @@
 using Back.Application.Services;
+using Back.Application.Abstractions;
 using Back.Domain.Repositories;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -11,7 +12,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.ML;
 using Back.Ml.Service;
-using Back.Application.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +57,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<EnviosService>();
 builder.Services.AddScoped<RutasService>();
 builder.Services.AddScoped<DatabaseSeeder>();
+builder.Services.AddHttpClient<IRecaptchaValidationService, GoogleRecaptchaValidationService>();
 
 builder.Services.AddScoped<IUserRepository, UsuariosRepository>();
 builder.Services.AddScoped<IEnviosRepository, EnviosRepository>();
