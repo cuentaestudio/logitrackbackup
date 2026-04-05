@@ -9,6 +9,9 @@ using System.Reflection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.Extensions.ML;
+using Back.Ml.Service;
+using Back.Application.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,6 +66,13 @@ builder.Services.AddScoped<IRutasRepository, RutasRepository>();
 // Configuración de Autenticación JWT
 var jwtSecretKey = "Grupo8SuperSecretKeyWithAtLeast32Characters";
 var key = Encoding.ASCII.GetBytes(jwtSecretKey);
+
+string rootPath = AppContext.BaseDirectory;
+string modelz = Path.Combine(rootPath, "ML","Models", "prioridad_model.zip");
+
+builder.Services.AddPredictionEnginePool<PaqueteData, PrioridadPrediction>().FromFile(modelz);
+
+builder.Services.AddScoped<IMLPrioridadPrediction, MLNetPrioridadService>();
 
 builder.Services
     .AddAuthentication(options =>
@@ -131,40 +141,7 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Ocurrió un error durante la migración o el seeding de la base de datos.");
     }
 }
-Console.WriteLine($"Verificando modelo...");
 
 
-void PrintDirectoryTree(string path, string indent)
-{
-    try
-    {
-        foreach (var directory in Directory.GetDirectories(path))
-        {
-            var dirName = Path.GetFileName(directory);
-            Console.WriteLine($"{indent}└── {dirName}/");
-            PrintDirectoryTree(directory, indent + "    ");
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"{indent}[Error accediendo a {path}: {ex.Message}]");
-    }
-}
-
-Console.WriteLine("Estructura de carpetas desde la raíz del proyecto:");
-PrintDirectoryTree(AppContext.BaseDirectory, "");
-
-// Esto obtiene la ruta de la carpeta donde se está ejecutando el binario
-string rootPath = AppContext.BaseDirectory;
-string modelz = Path.Combine(rootPath, "ML","Models", "prioridad_model.zip");
-if (File.Exists(modelz))
-{   
-    Console.WriteLine($"Modelo de ML encontrado en: {modelz}");
-}
-else
-{
-    Console.WriteLine("Advertencia: No se encontró el archivo del modelo de ML en la ruta esperada.");
-    
-}
  
 app.Run();// Verificar existencia del modelo de ML en ruta relativa para despliegue
