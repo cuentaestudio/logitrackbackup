@@ -15,6 +15,7 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Snackbar,
 } from '@mui/material'
 import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded'
 import { authService } from '../services/authService'
@@ -138,6 +139,10 @@ function RegisterPage() {
     }
   }
 
+  const closeGeneralErrorToast = () => {
+    setGeneralError('')
+  }
+
   return (
     <Container maxWidth="sm">
       <Box
@@ -174,12 +179,6 @@ function RegisterPage() {
               Crear nueva cuenta
             </Typography>
           </Box>
-
-          {generalError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {generalError}
-            </Alert>
-          )}
 
           <form onSubmit={handleSubmit}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -300,6 +299,22 @@ function RegisterPage() {
           </Box>
         </Card>
       </Box>
+
+      <Snackbar
+        open={Boolean(generalError)}
+        autoHideDuration={4000}
+        onClose={closeGeneralErrorToast}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          severity="error"
+          variant="filled"
+          onClose={closeGeneralErrorToast}
+          sx={{ width: '100%' }}
+        >
+          {generalError}
+        </Alert>
+      </Snackbar>
     </Container>
   )
 }

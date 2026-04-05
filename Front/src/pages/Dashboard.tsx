@@ -16,6 +16,7 @@ import {
   Chip,
   ToggleButtonGroup,
   ToggleButton,
+  Snackbar,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import FileDownloadIcon from '@mui/icons-material/FileDownload'
@@ -76,6 +77,22 @@ function Dashboard() {
   const [hasSearched, setHasSearched] = useState(false)
   const [tab, setTab] = useState(0)
   const [branchStatusFilter, setBranchStatusFilter] = useState<BranchStatus | 'all'>('all')
+  const [actionToast, setActionToast] = useState<{
+    open: boolean
+    message: string
+    severity: 'success' | 'info' | 'warning' | 'error'
+  }>({ open: false, message: '', severity: 'success' })
+
+  const showActionToast = (
+    message: string,
+    severity: 'success' | 'info' | 'warning' | 'error' = 'success',
+  ) => {
+    setActionToast({ open: true, message, severity })
+  }
+
+  const closeActionToast = () => {
+    setActionToast((prev) => ({ ...prev, open: false, message: '' }))
+  }
 
   // Retornar si no hay usuario (evitar errores)
   if (!user) {
@@ -180,10 +197,14 @@ function Dashboard() {
       if (newShipment) {
         setShipments((prev) => [newShipment, ...prev])
         setFilteredShipments((prev) => [newShipment, ...prev])
+        showActionToast('Envío creado correctamente', 'success')
+        setOpenShipmentForm(false)
+        return
       }
-      setOpenShipmentForm(false)
+      throw new Error('No se pudo crear el envío')
     } catch (err) {
-      setError('Error al crear el envío')
+      showActionToast('Error al crear el envío', 'error')
+      throw err
     }
   }
 
@@ -191,21 +212,24 @@ function Dashboard() {
     try {
       const newVehicle = await vehicleService.createVehicle(vehicle)
       setVehicles((prev) => [newVehicle, ...prev])
+      showActionToast('Vehículo creado correctamente', 'success')
       setOpenVehicleForm(false)
     } catch (err) {
-      setError('Error al crear el vehículo')
+      showActionToast('Error al crear el vehículo', 'error')
+      throw err
     }
   }
 
   const handleCreateBranch = (branch: Branch) => {
     setBranches((prev) => [branch, ...prev])
+    showActionToast('Sucursal creada correctamente', 'success')
     setOpenBranchForm(false)
   }
 
   // Descargar envíos como CSV
   const handleDownloadShipments = () => {
     if (shipments.length === 0) {
-      alert('No hay envíos para descargar')
+      showActionToast('No hay envíos para descargar', 'warning')
       return
     }
 
@@ -228,7 +252,7 @@ function Dashboard() {
     // Crear contenido CSV
     const csvContent = [
       headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(';')),
     ].join('\n')
 
     // Descargar archivo
@@ -239,6 +263,7 @@ function Dashboard() {
     document.body.appendChild(element)
     element.click()
     document.body.removeChild(element)
+    showActionToast('CSV descargado correctamente', 'info')
   }
 
   return (
@@ -504,6 +529,22 @@ function Dashboard() {
         onClose={() => setOpenBranchForm(false)}
         onBranchCreated={handleCreateBranch}
       />
+
+      <Snackbar
+        open={actionToast.open}
+        autoHideDuration={3500}
+        onClose={closeActionToast}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          severity={actionToast.severity}
+          variant="filled"
+          onClose={closeActionToast}
+          sx={{ width: '100%' }}
+        >
+          {actionToast.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

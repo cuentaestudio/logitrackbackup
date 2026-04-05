@@ -1,4 +1,4 @@
-import { useState, type ComponentType } from 'react'
+import { useEffect, useState, type ComponentType, type SyntheticEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -12,6 +12,7 @@ import {
   Divider,
   Stack,
   Chip,
+  Snackbar,
 } from '@mui/material'
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import LocalShippingIcon from '@mui/icons-material/LocalShipping'
@@ -58,6 +59,20 @@ function LoginPage({ onLogin, sessionExpired = false }: LoginPageProps) {
   const [captchaToken, setCaptchaToken] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [registrationToast, setRegistrationToast] = useState({
+    open: false,
+    message: '',
+  })
+
+  useEffect(() => {
+    if (!locationState?.registrationSuccess) return
+
+    const message = `Cuenta creada correctamente${locationState.registeredEmail ? ` para ${locationState.registeredEmail}` : ''}. Iniciá sesión para continuar.`
+    setRegistrationToast({ open: true, message })
+
+    // Limpiar el estado para no volver a mostrar el toast al regresar a /login.
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.pathname, locationState, navigate])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -116,6 +131,11 @@ function LoginPage({ onLogin, sessionExpired = false }: LoginPageProps) {
   const fillDemo = (email: string) => {
     setCredentials({ email, password: DEMO_PASSWORD })
     setError('')
+  }
+
+  const handleRegistrationToastClose = (_event: Event | SyntheticEvent, reason?: string) => {
+    if (reason === 'clickaway') return
+    setRegistrationToast((prev) => ({ ...prev, open: false }))
   }
 
   return (
@@ -180,12 +200,6 @@ function LoginPage({ onLogin, sessionExpired = false }: LoginPageProps) {
           {!error && sessionExpired && (
             <Alert severity="warning" sx={{ mb: 2.5 }}>
               Tu sesión expiró por inactividad. Iniciá sesión nuevamente para continuar.
-            </Alert>
-          )}
-
-          {!error && !sessionExpired && locationState?.registrationSuccess && (
-            <Alert severity="success" sx={{ mb: 2.5 }}>
-              Cuenta creada correctamente{locationState.registeredEmail ? ` para ${locationState.registeredEmail}` : ''}. Iniciá sesión para continuar.
             </Alert>
           )}
 
@@ -291,6 +305,22 @@ function LoginPage({ onLogin, sessionExpired = false }: LoginPageProps) {
             </Box>
           )}
         </Card>
+
+        <Snackbar
+          open={registrationToast.open}
+          autoHideDuration={4500}
+          onClose={handleRegistrationToastClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert
+            severity="success"
+            variant="filled"
+            onClose={handleRegistrationToastClose}
+            sx={{ width: '100%' }}
+          >
+            {registrationToast.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </Box>
    ) 
