@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const DEFAULT_API_BASE_URL = 'https://logitrack-api-4d2k.onrender.com/api'
+const DEFAULT_API_BASE_URL = 'https://logitrackbackup.onrender.com/api'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, '')
 
