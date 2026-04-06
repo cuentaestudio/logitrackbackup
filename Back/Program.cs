@@ -12,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.ML;
 using Back.Ml.Service;
+using Back.Background;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,7 +59,11 @@ builder.Services.AddScoped<EnviosService>();
 builder.Services.AddScoped<RutasService>();
 builder.Services.AddScoped<DatabaseSeeder>();
 builder.Services.AddHttpClient<IRecaptchaValidationService, GoogleRecaptchaValidationService>();
-
+// Registrar el HttpClient
+builder.Services.AddHttpClient();
+builder.Services.AddHealthChecks();
+// Registrar el servicio de fondo
+builder.Services.AddHostedService<UptimerService>();
 builder.Services.AddScoped<IUserRepository, UsuariosRepository>();
 builder.Services.AddScoped<IEnviosRepository, EnviosRepository>();
 builder.Services.AddScoped<IVehiculoRepository, VehiculosRepository>();
@@ -100,6 +105,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+
 // --- CONFIGURACIÓN DEL PIPELINE DE PETICIONES (HTTP Request Pipeline) ---
 
 // 1. Swagger siempre disponible al inicio
@@ -118,6 +124,7 @@ app.UseAuthorization();
 
 // 5. Mapeo de Controladores
 app.MapControllers();
+app.MapHealthChecks("api/health");
 
 // --- TAREAS DE INICIO (Migraciones y Seed) ---
 
