@@ -31,7 +31,7 @@ import type { Route, User } from '../../types'
 import { routeService } from '../../services/routeService'
 import { shipmentService } from '../../services/shipmentService'
 import { authService } from '../../services/authService'
-import { useTransportistaState } from '../../hooks/useTransportistaState'
+import { useRepartidorState } from '../../hooks/useRepartidorState'
 import StatusBadge from '../../components/StatusBadge'
 import LoadingState from '../../components/LoadingState'
 
@@ -49,7 +49,7 @@ export default function RoutesDashboard({ user }: RoutesDashboardProps) {
     updateRoute,
     showSnackbar,
     allShipmentsCompleted,
-  } = useTransportistaState()
+  } = useRepartidorState()
 
   const [cancelDialog, setCancelDialog] = useState<{ open: boolean; routeId: string | null }>({
     open: false,
@@ -64,21 +64,21 @@ export default function RoutesDashboard({ user }: RoutesDashboardProps) {
       try {
         // Intentar con el ID actual del usuario logueado
         const [initialRoutes, shipments] = await Promise.all([
-          routeService.getRoutesByTransportista(user.id),
+          routeService.getRoutesByRepartidor(user.id),
           shipmentService.getAllShipments(),
         ])
 
         let routes = initialRoutes
 
-        // Fallback para sesiones viejas: resolver transportista por email y reintentar
+        // Fallback para sesiones viejas: resolver repartidor por email y reintentar
         if (routes.length === 0 && user.email) {
-          const transportistas = await authService.getTransportistas()
-          const transportistaActual = transportistas.find(
+          const repartidores = await authService.getRepartidores()
+          const repartidorActual = repartidores.find(
             (t) => t.email.toLowerCase() === user.email.toLowerCase(),
           )
 
-          if (transportistaActual && transportistaActual.id !== user.id) {
-            routes = await routeService.getRoutesByTransportista(transportistaActual.id)
+          if (repartidorActual && repartidorActual.id !== user.id) {
+            routes = await routeService.getRoutesByRepartidor(repartidorActual.id)
           }
         }
 
@@ -102,7 +102,7 @@ export default function RoutesDashboard({ user }: RoutesDashboardProps) {
       if (updated) {
         updateRoute(updated)
         showSnackbar(`Ruta ${route.routeId} iniciada correctamente`, 'success')
-        navigate(`/transportista/ruta/${route.id}`)
+        navigate(`/repartidor/ruta/${route.id}`)
       }
     } finally {
       setLoading(false)
@@ -110,7 +110,7 @@ export default function RoutesDashboard({ user }: RoutesDashboardProps) {
   }
 
   const handleViewRoute = (routeId: string) => {
-    navigate(`/transportista/ruta/${routeId}`)
+    navigate(`/repartidor/ruta/${routeId}`)
   }
 
   const handleFinishRoute = async (route: Route) => {
